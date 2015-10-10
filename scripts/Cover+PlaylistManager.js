@@ -556,12 +556,17 @@ PlaylistManager = function() {
 				break;
 			case 101:
 				plman.RemovePlaylist(plid);
+				if (plid < fb.PlaylistCount) {
+					fb.ActivePlaylist = plid;
+				};
 				break;
 			case 102:
-				fb.SavePlaylist();
 				break;
 			case 103:
+				fb.SavePlaylist();
+			case 104:
 				fb.LoadPlaylist();
+				break;
 			case 105:
 				break;
 			case 106:
