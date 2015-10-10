@@ -351,10 +351,11 @@ Playlist = function() {
 
 					var p = 5;
 					// track number
-					var tn = $("%tracknumber%", metadb);
+					var tn = $("[%discnumber%.]%tracknumber%", metadb);
 					var tn_x = rx + p;
-					var tn_w = 40;
-					gr.GdiDrawText(tn, g_fonts.item, g_colors.txt_normal, tn_x, ry, tn_w, rh, dt_cc);
+					var tn_w = 30;
+					gr.GdiDrawText(tn, g_fonts.item, g_colors.txt_normal, tn_x, ry, tn_w, rh, dt_rc);
+
 					// length
 					var trk_length = $("%length%", metadb);
 					var trk_length_x = rx + rw - 50 - p;
@@ -367,7 +368,7 @@ Playlist = function() {
 					gr.GdiDrawText(list_index, g_fonts.item, blendColors(g_colors.txt_normal, g_colors.highlight, 0.5), list_index_x, ry, list_index_w, rh, dt_cc);
 					// title
 					var title = $("%title%", metadb);
-					var title_x = tn_x + tn_w + p;
+					var title_x = tn_x + tn_w + p * 2;
 					var title_w = list_index_x - title_x - p;
 					gr.GdiDrawText(title, g_fonts.item, font_color, title_x, ry, title_w, rh, dt_lc);
 			
@@ -597,7 +598,7 @@ prop = new function() {
 	this.use_sys_color = window.GetProperty("_prop_color: Use sys color", false);
 	this.colorscheme = window.GetProperty("_prop_color: Colorscheme(light, dark, user)", "dark");
 	this.font_name = window.GetProperty("_prop_font: Default font name", "Segoe UI");
-	this.grp_format = window.GetProperty("_prop_grp: Group format", "%album artist% | %album% | %discnumber%");
+	this.grp_format = window.GetProperty("_prop_grp: Group format", "%album artist% | %album%");
 	this.grp_header_rows = window.GetProperty("_prop_grp: Group header rows", 4);
 	this.grp_min_rows = window.GetProperty("_prop_grp: Min group rows", 0);
 	this.grp_extra_rows = window.GetProperty("_prop_grp: Extra group rows", 0);
