@@ -208,6 +208,7 @@ Playlist = function() {
 		var metadb;
 		var light_bg = Luminance(g_colors.bg_normal) > 0.6;
 		var odd_color, even_color;
+		var bool;
 
 		if (light_bg) { 
 			even_color = RGBA(255, 255, 255, 5);
@@ -309,7 +310,6 @@ Playlist = function() {
 								var line_y = grp_y + grp_h / 2  - 1;
 								gr.DrawLine(line_x1, line_y, line_x2, line_y, 1, color);
 							};
-
 						};
 
 						//
@@ -319,17 +319,10 @@ Playlist = function() {
 					//=================
 					// draw track items
 					//=================
-
-					is_focused = false;
-					is_selected = false;
-					is_playing = false;
 				
-					if (plman.IsPlaylistItemSelected(fb.ActivePlaylist, item.list_id)) is_selected = true;
-					if (fb.IsPlaying && fb.PlayingPlaylist == fb.ActivePlaylist &&
-							plman.GetPlayingItemLocation().PlaylistItemIndex == item.list_id) {
-								is_playing = true;
-							};
-					if (plman.GetPlaylistFocusItemIndex(fb.ActivePlaylist) == item.list_id) is_focused = true;
+					is_selected = plman.IsPlaylistItemSelected(fb.ActivePlaylist, item.list_id);
+					is_playing = (fb.PlayingPlaylist == fb.ActivePlaylist && plman.GetPlayingItemLocation().PlaylistItemIndex == item.list_id);
+					is_focused = plman.GetPlaylistFocusItemIndex(fb.ActivePlaylist) == item.list_id;
 
 					if (prop.enable_odd_even) {
 						if (item.is_odd) gr.FillSolidRect(rx, ry+1, rw, rh-1, odd_color);
@@ -373,7 +366,6 @@ Playlist = function() {
 					gr.GdiDrawText(title, g_fonts.item, font_color, title_x, ry, title_w, rh, dt_lc);
 			
 				} else if (item.type == -1) {
-					//gr.FillSolidRect(this.list_x, ry, this.list_w, rh, 0xffe6cfb0);
 					if (prop.enable_odd_even) {
 						if (item.is_odd) gr.FillSolidRect(rx, ry+1, rw, rh-1, odd_color)
 						else gr.FillSolidRect(rx, ry+1, rw, rh-1, even_color);
@@ -431,11 +423,15 @@ Playlist = function() {
 	};
 
 	this.on_mouse = function(event, x, y, mask) {
+
+		if (!this.items.length) return;
+
 		var shift_pressed = utils.IsKeyPressed(VK_SHIFT);
 		var ctrl_pressed = utils.IsKeyPressed(VK_CONTROL);
 
 		this.is_hover_area = this.is_hover_list(x, y);
 		this.is_hover_scrb = this.scrb.is_hover_object(x, y);
+
 
 		this.hover_item_id = -1;
 		if (this.is_hover_area) {
@@ -445,13 +441,52 @@ Playlist = function() {
 			};
 		};
 
+		this.hover_item = null;
+		if (this.hover_item_id > -1) {
+			this.hover_item = this.items[this.hover_item_id];
+		};
+
 		switch (event) {
 			case "down":
-
 				if (this.is_hover_scrb) {
 					this.scrb.on_mouse("down", x, y, mask);
-				};
+				} else {
+					if (this.hover_item) {
+						//
+						var item_type = this.hover_item.type;
+						this.drag_clicked = true;
+						//
+						switch(true) {
+							case (item_type > 0):
+								var grp_id = this.hover_item.grp_id;
+								//if (shift_pressed) {
+									/*
+									if (this.focus_id != this.groups[grp_id].first) {
+										if (this.SHIFT_start_id != null) {
+											this.select_a_to_b(this.SHIFT_start_id, list_id);
+										} else {
+											this.select_a_to_b(this.focus_id, this.groups[grp_id].first);
+										};
+									}
+									*/
+								//} else 
+								if (ctrl_pressed) {
+									this.select_group_tracks(grp_id);
+									this.SHIFT_start_id = null;
+								} else {
+									plman.ClearPlaylistSelection(fb.ActivePlaylist);
+									this.select_group_tracks(this.hover_item.grp_id);
+									this.SHIFT_start_id = null;
+								};
+								plman.SetPlaylistFocusItem(fb.ActivePlaylist, this.groups[grp_id].first);
+								break;
+							case (item_type == 0):
+								var list_id = this.hover_item.list_id;
+								break;
 
+						};
+					};
+				};
 				break;
 			case "dblclk":
 				if (this.is_hover_scrb) {
@@ -475,6 +510,15 @@ Playlist = function() {
 				this.scrb.on_mouse("wheel", 0, 0, mask * delta);
 				break;
 		};
+	};
+
+	this.is_group_selected = function (grp_id) {
+		var grp = this.groups[grp_id];
+		for (var i = grp.first; i <= grp.last; i++) {
+			if (!plman.IsPlaylistItemSelected(fb.ActivePlaylist, this.items[i].list_id)) 
+				return false;
+		};
+		return true;
 	};
 
 };
@@ -732,6 +776,9 @@ function on_playlist_items_selection_change() {
 	plst.repaint();
 };
 
+function on_item_focus_change(playlist, from, to) {
+	plst.repaint();
+};
 
 //// misc
 
