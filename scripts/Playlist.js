@@ -28,18 +28,27 @@ Playlist = function() {
 
 	this.start_item_indexes = [];
 
-	this.update_all_start_id = function() {
-		this.start_item_indexes = [];
+	this.get_start_id = function() {
+		this.start_arr = [];
 		var start_id = [];
 		var s = window.GetProperty("sys.List start id", "");
-		s.indexOf(",") != -1 ? start_id = s.split(",") : start_id[0] = Math.max(0, s);
-		
-		for (var i = 0; i < fb.PlaylistCount; i++) {
-			this.start_item_indexes[i] = (start_id[i] == undefined ? 0 : (isNaN(start_id[i]) ? 0 : Math.max(0, start_id[i])));
+		if (s.indexOf(",") != -1) {
+			start_id = s.split(",");
+		} else {
+			start_id[0] = Math.max(0, s);
 		};
 
-		this.start_id = this.start_item_indexes[g_active_playlist];
-		window.SetProperty("sys.List start id", this.start_item_indexes.toString());
+		for (var i = 0; i < fb.PlaylistCount; i++) {
+			this.start_arr[i] = (start_id[i] == undefined ? 0 : (isNaN(start_id[i]) ? 0 : Math.max(0, start_id[i])));
+		};
+
+		this.start_id = this.start_arr[g_active_playlist];
+		window.SetProperty("sys.List start id", this.start_arr.toString());
+	};
+
+	this.save_start_id = function() {
+		this.start_arr[g_active_playlist] = this.start_id;
+		window.SetProperty("sys.List start id", this.start_arr.toString());
 	};
 
 	this.check_start_id = function() {
@@ -190,7 +199,7 @@ Playlist = function() {
 
 		this.set_size(resize = false);
 
-		this.update_all_start_id();
+		this.get_start_id();
 		this.scrb.update_cursor();
 
 		this.repaint();
@@ -551,6 +560,7 @@ Playlist = function() {
 				break;
 			case "move":
 				this.scrb.on_mouse("move", x, y);
+				this.save_start_id();
 				//if (this.scrb.cursor_clicked)  this.update_all_start_id();
 				break;
 			case "up":
@@ -608,7 +618,7 @@ Playlist = function() {
 				if (shift_pressed) delta = this.total_rows;
 				if (ctrl_pressed) delta = 1;
 				this.scrb.on_mouse("wheel", 0, 0, mask * delta);
-				//this.update_all_start_id();
+				this.save_start_id();
 				break;
 		};
 	};
@@ -647,9 +657,8 @@ Playlist = function() {
 				}
 			};
 
-			this.start_id = j - Math.floor(this.total_rows / 2);
-			if (this.start_id < 0) this.start_id = 0;
-			this.repaint();
+			this.on_mouse("wheel", 0, 0, this.start_id - delta);
+			//this.repaint();
 
 		};
 	};
@@ -1033,11 +1042,6 @@ function on_playback_stop(reason) {
 function on_metadb_changed(handles, fromhook) {
 	plst.repaint();
 };
-
-function on_script_unload() {
-	plst.update_all_start_id();
-};
-
 
 function on_colors_changed() {
 	get_colors();
