@@ -657,8 +657,9 @@ Playlist = function() {
 				}
 			};
 
-			this.on_mouse("wheel", 0, 0, this.start_id - delta);
-			//this.repaint();
+			this.scrb.on_mouse("wheel", 0, 0, this.start_id - delta);
+			this.save_start_id();
+			this.repaint();
 
 		};
 	};
