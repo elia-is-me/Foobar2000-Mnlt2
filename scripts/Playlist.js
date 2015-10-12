@@ -117,7 +117,7 @@ Playlist = function() {
 				this.groups[grp_id].first = i;
 
 				// prev-grp: add empty row items, type -1
-				if (grp_id > 0) {
+				if (grp_id > 0 && !this.groups[grp_id].collapsed) {
 					this.groups[grp_id - 1].last = i - 1;
 					grp_item_count = this.groups[grp_id - 1].last - this.groups[grp_id - 1].first + 1;
 
@@ -159,17 +159,19 @@ Playlist = function() {
 			};
 
 			// curr-grp: add track items, type 0
-			this.items[item_id] = {};
-			this.items[item_id].metadb = metadb;
-			this.items[item_id].list_id = i;
-			this.items[item_id].type = 0;
-			this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
-			item_id++;
-			list_item_id++;
-			grp_list_item_id++;
+			if (!this.groups[grp_id].collapsed) {
+				this.items[item_id] = {};
+				this.items[item_id].metadb = metadb;
+				this.items[item_id].list_id = i;
+				this.items[item_id].type = 0;
+				this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
+				item_id++;
+				list_item_id++;
+				grp_list_item_id++;
+			};
 		};
 
-		if (grp_id > 0) {
+		if (grp_id > 0 && !this.groups[grp_id].collapsed) {
 
 			this.groups[grp_id - 1].last = i - 1;
 			grp_item_count = this.groups[grp_id - 1].last - this.groups[grp_id - 1].first + 1;
@@ -561,7 +563,6 @@ Playlist = function() {
 			case "move":
 				this.scrb.on_mouse("move", x, y);
 				this.save_start_id();
-				//if (this.scrb.cursor_clicked)  this.update_all_start_id();
 				break;
 			case "up":
 				this.scrb.on_mouse("up", x, y);
@@ -981,6 +982,10 @@ function on_playlists_changed() {
 	};
 	if (g_active_playlist < 0) {
 		g_active_playlist = 0;
+	};
+	if (g_active_playlist != fb.ActivePlaylist) {
+		g_active_playlist = fb.ActivePlaylist;
+		plst.update_list();
 	};
 };
 
