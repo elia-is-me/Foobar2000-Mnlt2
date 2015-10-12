@@ -20,24 +20,26 @@ Playlist = function() {
 	this.extra_grp_items = prop.grp_extra_rows;
 	this.items_to_add;
 
-	this.list_offsets = [];
+	this.playing_item_visible = false;
 
 	this.repaint = function () {
 		window.Repaint();
 	};
 
+	this.start_item_indexes = [];
+
 	this.update_all_start_id = function() {
-		this.start_id_arr = [];
+		this.start_item_indexes = [];
 		var start_id = [];
 		var s = window.GetProperty("sys.List start id", "");
 		s.indexOf(",") != -1 ? start_id = s.split(",") : start_id[0] = Math.max(0, s);
 		
 		for (var i = 0; i < fb.PlaylistCount; i++) {
-			this.start_id_arr[i] = (start_id[i] == undefined ? 0 : (isNaN(start_id[i]) ? 0 : Math.max(0, start_id[i])));
+			this.start_item_indexes[i] = (start_id[i] == undefined ? 0 : (isNaN(start_id[i]) ? 0 : Math.max(0, start_id[i])));
 		};
 
-		this.start_id = this.start_id_arr[g_active_playlist];
-		window.SetProperty("sys.List start id", this.start_id_arr.toString());
+		this.start_id = this.start_item_indexes[g_active_playlist];
+		window.SetProperty("sys.List start id", this.start_item_indexes.toString());
 	};
 
 	this.check_start_id = function() {
@@ -210,6 +212,8 @@ Playlist = function() {
 		var odd_color, even_color;
 		var bool;
 
+		this.playing_item_visible = false;
+
 		if (light_bg) { 
 			even_color = RGBA(255, 255, 255, 5);
 			odd_color = RGBA(0, 0, 0, 5);
@@ -323,6 +327,7 @@ Playlist = function() {
 					is_selected = plman.IsPlaylistItemSelected(g_active_playlist, item.list_id);
 					is_playing = (fb.PlayingPlaylist == g_active_playlist && plman.GetPlayingItemLocation().PlaylistItemIndex == item.list_id);
 					is_focused = plman.GetPlaylistFocusItemIndex(g_active_playlist) == item.list_id;
+					if (is_playing) this.playing_item_visible = true;
 
 					if (prop.enable_odd_even) {
 						if (item.is_odd) gr.FillSolidRect(rx, ry+1, rw, rh-1, odd_color);
@@ -546,6 +551,7 @@ Playlist = function() {
 				break;
 			case "move":
 				this.scrb.on_mouse("move", x, y);
+				//if (this.scrb.cursor_clicked)  this.update_all_start_id();
 				break;
 			case "up":
 				this.scrb.on_mouse("up", x, y);
@@ -602,6 +608,7 @@ Playlist = function() {
 				if (shift_pressed) delta = this.total_rows;
 				if (ctrl_pressed) delta = 1;
 				this.scrb.on_mouse("wheel", 0, 0, mask * delta);
+				//this.update_all_start_id();
 				break;
 		};
 	};
@@ -616,12 +623,39 @@ Playlist = function() {
 	};
 
 	this.show_now_playing = function () {
-		fb.RunMainMenuCommand("View/Show now playing in playlist");
+		if (!fb.IsPlaying) return;
+		this.playing_item = plman.GetPlayingItemLocation();
+		if (this.playing_item.IsValid) {
+			if (this.playing_item.PlaylistIndex != g_active_playlist) {
+				plman.ActivePlaylist = plman.PlayingPlaylist;
+			};
+
+			var playing_item_list_id = this.playing_item.PlaylistItemIndex;
+			plman.ClearPlaylistSelection(g_active_playlist);
+			plman.SetPlaylistSelectionSingle(g_active_playlist, playing_item_list_id, true);
+			plman.SetPlaylistFocusItem(g_active_playlist, playing_item_list_id);
+
+			var delta;
+			for (var j = 0; j < this.total; j++) {
+				if (this.items[j].type == 0) {
+					if (this.items[j].list_id == playing_item_list_id) {
+						delta = j - Math.floor(this.total_rows / 2);
+						break;
+					} else {
+						// todo
+					}
+				}
+			};
+
+			this.start_id = j - Math.floor(this.total_rows / 2);
+			if (this.start_id < 0) this.start_id = 0;
+			this.repaint();
+
+		};
 	};
 
 	this.context_menu = function(x, y, type) {
 		var _menu = window.CreatePopupMenu();
-		//var _sel = window.CreatePopupMenu();
 		var Context = fb.CreateContextMenuManager();
 		var context_base_id;
 
@@ -880,6 +914,8 @@ var plst = new Playlist();
 get_fonts();
 get_colors();
 
+window.DlgCode = DLGC_WANTALLKEYS;
+
 function on_size() {
 	ww = window.Width;
 	wh = window.Height;
@@ -968,7 +1004,35 @@ function on_item_focus_change(playlist, from, to) {
 	plst.repaint();
 };
 
+
+//// playback callbacks
+
+function on_playback_pause(state) {
+	if (plst.playing_item_visible) plst.repaint();
+};
+
+function on_playback_starting(cmd, is_paused) {
+	if (plst.playing_item_visible)  plst.repaint();
+};
+
+function on_playback_edited(metadb) {
+	plst.repaint();
+};
+
+function on_playback_new_track(metadb) {
+	plst.repaint();
+};
+
+function on_playback_stop(reason) {
+	if (reason != 2) {
+		plst.repaint();
+	};
+}
+
 //// misc
+function on_metadb_changed(handles, fromhook) {
+	plst.repaint();
+};
 
 function on_script_unload() {
 	plst.update_all_start_id();
