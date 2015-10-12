@@ -87,8 +87,61 @@ Playlist = function() {
 		};
 	};
 
+	this.collapse_group = function(grp_id) {
+		if (!this.groups[grp_id]) return;
+		if (this.groups[grp_id].collapsed) return;
+		for (var i = 0; i < this.total; i++) {
+			if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
+				var prev = this.items.slice(0, i + prop.grp_header_rows);
+				this.items = this.items.slice(i + prop.grp_header_rows + this.groups[grp_id].last - this.groups[grp_id].first + 1, this.items.length);
+				this.items = prev.concat(this.items);
+				prev = null;
+				break;
+			};
+		};
+		this.groups[grp_id].collapsed = true;
+		this.total = this.items.length;
+		this.visible_rows = Math.max(0, Math.min(this.total_rows, this.total));
+		//console(this.items.length);
+	};
 
-	this.update_list = function() {
+	this.expand_group = function (grp_id) {
+		//console(grp_id);
+		//if (!this.groups[grp_id]) return;
+		if (this.groups[grp_id].collapsed) {
+			for (var i = 0; i < this.total; i++) {
+				if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
+					var after = this.items.slice(i+prop.grp_header_rows, this.items.length);
+					//console(after.length);
+					this.items = this.items.splice(0, i+prop.grp_header_rows);
+					//console("items 1: " + this.items.length);
+					var is_odd = true;
+					var item_id = i + prop.grp_header_rows;
+					for (var j = this.groups[grp_id].first; j <= this.groups[grp_id].last; j++) {
+						this.items[item_id] = {};
+						this.items[item_id].type = 0;
+						this.items[item_id].list_id = j;
+						this.items[item_id].metadb = this.handles.Item(j);
+						this.items[item_id].is_odd = is_odd;
+						is_odd = !is_odd;
+						item_id++;
+					};
+					console("console: expanded: " + this.items.length);
+					this.items = this.items.concat(after);
+					after = null;
+					break;
+				};
+			};
+			this.groups[grp_id].collapsed = false;
+			this.total = this.items.length;
+			console(this.total);
+			this.visible_rows = Math.max(0, Math.min(this.total_rows, this.total));
+			this.repaint();
+		};
+	};
+
+
+	this.update_list = function(coll) {
 		var current, previous;
 		var metadb;
 		var grp_tf = prop.grp_format;
@@ -115,31 +168,36 @@ Playlist = function() {
 				this.groups[grp_id] = {};
 				this.groups[grp_id].metadb = metadb;
 				this.groups[grp_id].first = i;
+				this.groups[grp_id].collapsed = prop.auto_collaspe;
 
 				// prev-grp: add empty row items, type -1
-				if (grp_id > 0 && !this.groups[grp_id].collapsed) {
+				if (grp_id > 0) {
 					this.groups[grp_id - 1].last = i - 1;
 					grp_item_count = this.groups[grp_id - 1].last - this.groups[grp_id - 1].first + 1;
 
-					if (grp_item_count < this.min_grp_items) {
-						this.items_to_add = this.min_grp_items - grp_item_count;
-						for (var k = 0; k < this.items_to_add; k++) {
-							this.items[item_id] = {};
-							this.items[item_id].type = -1;
-							this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
-							item_id++;
-							list_item_id++;
-							grp_list_item_id++;
+					if (!this.groups[grp_id - 1].collapsed) {
+
+						if (grp_item_count < this.min_grp_items) {
+							this.items_to_add = this.min_grp_items - grp_item_count;
+							for (var k = 0; k < this.items_to_add; k++) {
+								this.items[item_id] = {};
+								this.items[item_id].type = -1;
+								this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
+								item_id++;
+								list_item_id++;
+								grp_list_item_id++;
+							};
 						};
-					};
 
-					for (var k = 0; k < this.extra_grp_items; k++) {
-						this.items[item_id] = {};
-						this.items[item_id].type = -2;
-						item_id++;
-					};
+						for (var k = 0; k < this.extra_grp_items; k++) {
+							this.items[item_id] = {};
+							this.items[item_id].type = -2;
+							item_id++;
+						};
 
-					grp_list_item_id = 0;
+						grp_list_item_id = 0;
+
+					};
 
 				};
 
@@ -159,7 +217,7 @@ Playlist = function() {
 			};
 
 			// curr-grp: add track items, type 0
-			if (!this.groups[grp_id].collapsed) {
+			if (!this.groups[grp_id - 1].collapsed) {
 				this.items[item_id] = {};
 				this.items[item_id].metadb = metadb;
 				this.items[item_id].list_id = i;
@@ -171,28 +229,32 @@ Playlist = function() {
 			};
 		};
 
-		if (grp_id > 0 && !this.groups[grp_id].collapsed) {
+		if (grp_id > 0) {
 
 			this.groups[grp_id - 1].last = i - 1;
 			grp_item_count = this.groups[grp_id - 1].last - this.groups[grp_id - 1].first + 1;
 
-			if (grp_item_count < this.min_grp_items) {
-				this.items_to_add = this.min_grp_items - grp_item_count;
-				for (var k = 0; k < this.items_to_add; k++) {
+			if (!this.groups[grp_id - 1].collapsed) {
+
+				if (grp_item_count < this.min_grp_items) {
+					this.items_to_add = this.min_grp_items - grp_item_count;
+					for (var k = 0; k < this.items_to_add; k++) {
+						this.items[item_id] = {};
+						this.items[item_id].type = -1;
+						this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
+						item_id++;
+					};
+				}
+
+				for (var k = 0; k < this.extra_grp_items; k++) {
 					this.items[item_id] = {};
-					this.items[item_id].type = -1;
-					this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
+					this.items[item_id].type = -2;
 					item_id++;
 				};
-			}
 
-			for (var k = 0; k < this.extra_grp_items; k++) {
-				this.items[item_id] = {};
-				this.items[item_id].type = -2;
-				item_id++;
+				grp_list_item_id = 0;
+
 			};
-
-			grp_list_item_id = 0;
 
 		};
 
@@ -248,6 +310,8 @@ Playlist = function() {
 				item = this.items[item_id];
 				if (item.type > -1)
 					metadb = item.metadb;
+
+				gr.GdiDrawText(item_id, g_fonts.item, 0xff000000, rx - 15, ry, 15, rh, dt_cc);
 
 				// draw group header
 				if (item.type > 0) {
@@ -549,6 +613,14 @@ Playlist = function() {
 					var item_type = this.items[this.hover_item_id].type;
 					switch (true) {
 						case (item_type > 0):
+							var grp_id = this.items[this.hover_item_id].grp_id;
+							this.groups[grp_id].collapsed ? this.expand_group(grp_id) : this.collapse_group(grp_id);
+							/*
+							console(grp_id);
+							console(this.groups[grp_id].collapsed);
+							if (this.groups[grp_id].collapsed) this.expand_group(grp_id);
+							*/
+
 							break;
 						case (item_type == 0):
 							var list_id = this.items[this.hover_item_id].list_id;
