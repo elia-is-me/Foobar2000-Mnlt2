@@ -103,13 +103,22 @@ Playlist = function() {
 		};
 		this.groups[grp_id].collapsed = true;
 		this.total = this.items.length;
-		this.set_size(false);
+		this.set_size(resize = false);
 	};
 
 	this.expand_group = function (grp_id) {
-		if (!this.groups[grp_id]) return;
+		if (!this.groups[grp_id]) {
+			console("expand group: invalid group index " + grp_id);
+		   	return;
+		}
+		if (!this.groups[grp_id].collapsed){
+			console("expand group: group expanded " + grp_id);
+		   	return;
+		};
 		for (var i = 0; i < this.total; i++) {
 			if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
+				console("expanding...");
+				console("group id is: " + grp_id);
 				var after = this.items.slice(i+prop.grp_header_rows, this.items.length);
 				this.items = this.items.splice(0, i+prop.grp_header_rows);
 				var is_odd = true;
@@ -118,6 +127,7 @@ Playlist = function() {
 					this.items[item_id] = {};
 					this.items[item_id].type = 0;
 					this.items[item_id].list_id = j;
+					this.items[item_id].grp_id = grp_id;
 					this.items[item_id].metadb = this.handles.Item(j);
 					this.items[item_id].is_odd = is_odd;
 					is_odd = !is_odd;
@@ -130,8 +140,7 @@ Playlist = function() {
 		};
 		this.groups[grp_id].collapsed = false;
 		this.total = this.items.length;
-
-		this.set_size(false);
+		this.set_size(resize = false);
 	};
 
 
@@ -215,6 +224,7 @@ Playlist = function() {
 				this.items[item_id] = {};
 				this.items[item_id].metadb = metadb;
 				this.items[item_id].list_id = i;
+				this.items[item_id].grp_id = grp_id;
 				this.items[item_id].type = 0;
 				this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
 				item_id++;
@@ -258,6 +268,7 @@ Playlist = function() {
 		this.get_start_id();
 		this.scrb.update_cursor();
 		this.repaint();
+		console("total length: " + this.total);
 
 	};
 	this.update_list();
@@ -286,7 +297,7 @@ Playlist = function() {
 			odd_color = RGBA(255, 255, 255, 5);
 		};
 
-		console("paint starting >>>");
+		//console("paint starting >>>");
 
 		if (this.total > 0) { // draw list items
 
@@ -300,7 +311,7 @@ Playlist = function() {
 
 				item_id = this.start_id + i;
 				item = this.items[item_id];
-				console("item id: " + item_id);
+				//console("item id: " + item_id);
 				//if (!item) return;
 				if (item.type > -1)
 					metadb = item.metadb;
@@ -704,36 +715,67 @@ Playlist = function() {
 		return true;
 	};
 
+	this.show_now_playing_called = false;
 	this.show_now_playing = function () {
 		if (!fb.IsPlaying) return;
+
 		this.playing_item = plman.GetPlayingItemLocation();
-		if (this.playing_item.IsValid) {
-			if (this.playing_item.PlaylistIndex != g_active_playlist) {
-				plman.ActivePlaylist = plman.PlayingPlaylist;
-			};
+		if (!this.playing_item.IsValid) {
+			console("item invalid...");
+		   	return;
+		};
 
-			var playing_item_list_id = this.playing_item.PlaylistItemIndex;
-			plman.ClearPlaylistSelection(g_active_playlist);
-			plman.SetPlaylistSelectionSingle(g_active_playlist, playing_item_list_id, true);
-			plman.SetPlaylistFocusItem(g_active_playlist, playing_item_list_id);
+		if (g_active_playlist != fb.PlayingPlaylist) {
+		   fb.ActivePlaylist = fb.PlayingPlaylist;
+		   g_active_playlist = fb.ActivePlaylist;
+		   //this.update_list();
+		};
 
-			var delta;
-			for (var j = 0; j < this.total; j++) {
-				if (this.items[j].type == 0) {
-					if (this.items[j].list_id == playing_item_list_id) {
-						delta = j - Math.floor(this.total_rows / 2);
-						break;
-					} else {
-						// todo
-					}
+
+		var playing_item_list_id = this.playing_item.PlaylistItemIndex;
+		plman.ClearPlaylistSelection(g_active_playlist);
+		plman.SetPlaylistSelectionSingle(g_active_playlist, playing_item_list_id, true);
+		plman.SetPlaylistFocusItem(g_active_playlist, playing_item_list_id);
+
+		var playing_grp_id = 0;
+		console("playing list id: " + playing_item_list_id);
+		for (var j = 0; j < this.total; j++) {
+			if (this.items[j].type > 0) {
+				var grp_id = this.items[j].grp_id;
+				//console(grp_id);
+				if (this.groups[grp_id].first <= playing_item_list_id && this.groups[grp_id].last >= playing_item_list_id) {
+					playing_grp_id = grp_id;
+					console("playing group id: " + grp_id);
+					this.expand_group(grp_id);
+					break;
 				}
 			};
-
-			this.scrb.on_mouse("wheel", 0, 0, this.start_id - delta);
-			this.save_start_id();
-			this.repaint();
-
 		};
+
+		// expand playing group
+
+		var delta;
+		for (var j = 0; j < this.total; j++) {
+			if (this.items[j].type == 0) {
+				if (this.items[j].list_id == playing_item_list_id) {
+					delta = j - Math.floor(this.total_rows / 2);
+					break;
+				} else {
+					// todo
+				}
+			}
+		};
+
+		this.scrb.on_mouse("wheel", 0, 0, this.start_id - delta);
+		this.save_start_id();
+		this.repaint();
+
+		if (fb.ActivePlaylist != plman.PlayingPlaylist){ 
+			this.show_now_playing_called = true;
+			console("show now playing...");
+		};
+
+	//	};
 	};
 
 	this.context_menu = function(x, y, type) {
@@ -1064,6 +1106,8 @@ function on_playlists_changed() {
 function on_playlist_switch() {
 	g_active_playlist = fb.ActivePlaylist;
 	plst.update_list();
+	if (fb.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
+	plst.show_now_playing_called = false;
 };
 
 function on_playlist_items_reordered(playlist) {
