@@ -820,9 +820,10 @@ function on_size() {
 	ww = window.Width;
 	wh = window.Height;
 	
+	var th = 24;
 	var p2 = 2;
 	var ax = 0;
-	var ay = 0;
+	var ay = 0 + th;
 	var aw = ww;
 	var ah = Math.min(wh-ay, 300, aw);
 	aart.set_size(ax, ay, aw, ah);
@@ -831,6 +832,7 @@ function on_size() {
 
 function on_paint(gr) {
 	gr.FillSolidRect(0, 0, ww, wh, blendColors(g_colors.bg_normal, 0xff000000, 0.02));
+	gr.FillSolidRect(0, 0, ww, 24, RGB(25, 25, 25));
 
 	if (repaint_main || !repaint_forced) {
 		repaint_main = false;
