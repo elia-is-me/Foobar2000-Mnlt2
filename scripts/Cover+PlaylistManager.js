@@ -123,7 +123,7 @@ PlaylistManager = function() {
 	this.start_id = 0;
 	this.hover_id = -1;
 	this.drag_id = -1;
-	this.active_id = fb.ActivePlaylist;
+	this.active_id = plman.ActivePlaylist;
 
 	this.dragdrop = {
 		target_id: -1,
@@ -172,12 +172,12 @@ PlaylistManager = function() {
 
 	this.update_list = function(repaint) {
 		this.playlist = [];
-		this.total = fb.PlaylistCount;
+		this.total = plman.PlaylistCount;
 		for (var i = 0; i < this.total; i++) {
 			this.playlist[i] = {};
 			this.playlist[i].name = plman.GetPlaylistName(i);
 			this.playlist[i].is_auto = fb.IsAutoPlaylist(i);
-			this.playlist[i].total_tracks = fb.PlaylistItemCount(i);
+			this.playlist[i].total_tracks = plman.PlaylistItemCount(i);
 		};
 		this.scrb.update_cursor();
 		repaint && this.repaint();
@@ -246,7 +246,7 @@ PlaylistManager = function() {
 
 			text_color = g_colors.txt_normal;
 			icon_id = 0;
-			if (idx == fb.PlayingPlaylist && fb.IsPlaying) {
+			if (idx == plman.PlayingPlaylist && fb.IsPlaying) {
 				text_color = g_colors.highlight;
 				icon_id = 1;
 			};
@@ -347,7 +347,7 @@ PlaylistManager = function() {
 				if (dragdrop.handles_in != null) {
 					if (this.hover_id > -1 && this.hover_id != this.active_id) {
 						this.dragdrop.target_id = this.hover_id;
-						var offset = fb.PlaylistItemCount(this.hover_id);
+						var offset = plman.PlaylistItemCount(this.hover_id);
 						plman.InsertPlaylistItems(this.hover_id, offset, dragdrop.handles_in, false);
 
 						window.ClearTimeout(this.dragdrop.timer);
@@ -380,7 +380,7 @@ PlaylistManager = function() {
 						if (this.hover_id != this.active_id) {
 							this.active_id = this.hover_id;
 							this.repaint();
-							fb.ActivePlaylist = this.active_id;
+							plman.ActivePlaylist = this.active_id;
 						} else {
 							this.drag_id = this.hover_id;
 						}
@@ -392,7 +392,7 @@ PlaylistManager = function() {
 					this.scrb.on_mouse("down", x, y);
 				} else {
 					if (this.hover_id > -1) {
-						fb.PlayingPlaylist = this.hover_id;
+						plman.PlayingPlaylist = this.hover_id;
 						fb.Play();
 						fb.RunMainMenuCommand("View/Show now playing");
 					}
@@ -404,7 +404,7 @@ PlaylistManager = function() {
 					if (this.drag_hover_id > -1) {
 						var target_id = Math.min(this.total-1, this.drag_hover_id);
 						if (this.drag_id != target_id) {
-							fb.MovePlaylist(this.drag_id, target_id);
+							plman.MovePlaylist(this.drag_id, target_id);
 						};
 					};
 					this.drag_id = -1;
@@ -532,7 +532,7 @@ PlaylistManager = function() {
 			_menu.AppendMenuSeparator();
 			_np.AppendTo(_menu, MF_STRING, "Insert...");
 		} else {
-			plid = fb.PlaylistCount;
+			plid = plman.PlaylistCount;
 			_np.AppendTo(_menu, MF_STRING, "Add...");
 		};
 
@@ -556,8 +556,8 @@ PlaylistManager = function() {
 				break;
 			case 101:
 				plman.RemovePlaylist(plid);
-				if (plid < fb.PlaylistCount) {
-					fb.ActivePlaylist = plid;
+				if (plid < plman.PlaylistCount) {
+					plman.ActivePlaylist = plid;
 				};
 				break;
 			case 102:
@@ -901,12 +901,12 @@ function on_playback_stop(reason) {
 ///// playlist callbacks
 
 function on_playlist_switch() {
-	plm.active_id = fb.ActivePlaylist;
+	plm.active_id = plman.ActivePlaylist;
 	plm.repaint();
 };
 
 function on_playlists_changed() {
-	plm.active_id = fb.ActivePlaylist;
+	plm.active_id = plman.ActivePlaylist;
 	plm.update_list(true);
 };
 

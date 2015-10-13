@@ -38,7 +38,7 @@ Playlist = function() {
 			start_id[0] = Math.max(0, s);
 		};
 
-		for (var i = 0; i < fb.PlaylistCount; i++) {
+		for (var i = 0; i < plman.PlaylistCount; i++) {
 			this.start_arr[i] = (start_id[i] == undefined ? 0 : (isNaN(start_id[i]) ? 0 : Math.max(0, start_id[i])));
 		};
 
@@ -331,10 +331,9 @@ Playlist = function() {
 						// bg
 						gr.FillSolidRect(rx, grp_y, rw, grp_h - 1, 0x15000000);
 
-						//if (this.groups[grp_id].is_selected) {
-						if (this.is_group_selected(grp_id))
+						if (this.is_group_selected(grp_id)) {
 							gr.FillSolidRect(rx, grp_y, rw, grp_h - 1, 0x55ffffff & g_colors.bg_selected);
-						//};
+						};
 
 						if (grp_h > 59) {
 							var delta = grp_h - 88;
@@ -410,7 +409,7 @@ Playlist = function() {
 					//=================
 				
 					is_selected = plman.IsPlaylistItemSelected(g_active_playlist, item.list_id);
-					is_playing = (fb.PlayingPlaylist == g_active_playlist && plman.GetPlayingItemLocation().PlaylistItemIndex == item.list_id);
+					is_playing = (plman.PlayingPlaylist == g_active_playlist && plman.GetPlayingItemLocation().PlaylistItemIndex == item.list_id);
 					is_focused = plman.GetPlaylistFocusItemIndex(g_active_playlist) == item.list_id;
 					if (is_playing) this.playing_item_visible = true;
 
@@ -420,7 +419,7 @@ Playlist = function() {
 					};
 
 					if (is_focused) {
-						gr.DrawRect(rx, ry-1, rw - 1, rh - 1, 1, g_colors.bg_selected);
+						gr.DrawRect(rx, ry-1, rw - 1, rh - 1, 1, /*g_colors.bg_selected & 0x55ffffff*/RGB(127, 127, 127));
 					};
 
 					var font_color = g_colors.txt_normal;
@@ -725,9 +724,9 @@ Playlist = function() {
 		   	return;
 		};
 
-		if (g_active_playlist != fb.PlayingPlaylist) {
-		   fb.ActivePlaylist = fb.PlayingPlaylist;
-		   g_active_playlist = fb.ActivePlaylist;
+		if (g_active_playlist != plman.PlayingPlaylist) {
+		   plman.ActivePlaylist = plman.PlayingPlaylist;
+		   g_active_playlist = plman.ActivePlaylist;
 		   //this.update_list();
 		};
 
@@ -770,7 +769,7 @@ Playlist = function() {
 		this.save_start_id();
 		this.repaint();
 
-		if (fb.ActivePlaylist != plman.PlayingPlaylist){ 
+		if (plman.ActivePlaylist != plman.PlayingPlaylist){ 
 			this.show_now_playing_called = true;
 			console("show now playing...");
 		};
@@ -847,7 +846,7 @@ Playlist = function() {
 				plman.ClearPlaylistSelection(g_active_playlist);
 				plman.InsertPlaylistItems(g_active_playlist, g_focus_id, this.handles_in_clipboard, true);
 			} else {
-				plman.InsertPlaylistItems(g_active_playlist, fb.PlaylistCount, this.handles_in_clipboard, true);
+				plman.InsertPlaylistItems(g_active_playlist, plman.PlaylistCount, this.handles_in_clipboard, true);
 			}
 			this.handles_in_clipboard_count = 0;
 			this.handles_in_clipboard = null;
@@ -1032,7 +1031,7 @@ var repaint_forced = false;
 var repaint_counter = 0;
 
 var g_focus_id = -1;
-var g_active_playlist = fb.ActivePlaylist;
+var g_active_playlist = plman.ActivePlaylist;
 
 var plst = new Playlist();
 get_fonts();
@@ -1090,23 +1089,23 @@ function on_mouse_wheel(delta) {
 //// playlist callbacsk
 
 function on_playlists_changed() {
-	if (g_active_playlist > fb.PlaylistCount - 1) {
-		g_active_playlist = fb.PlaylistCount - 1;
+	if (g_active_playlist > plman.PlaylistCount - 1) {
+		g_active_playlist = plman.PlaylistCount - 1;
 	};
 	if (g_active_playlist < 0) {
 		g_active_playlist = 0;
 	};
-	if (g_active_playlist != fb.ActivePlaylist) {
-		g_active_playlist = fb.ActivePlaylist;
+	if (g_active_playlist != plman.ActivePlaylist) {
+		g_active_playlist = plman.ActivePlaylist;
 		plst.update_list();
 	};
 };
 
 
 function on_playlist_switch() {
-	g_active_playlist = fb.ActivePlaylist;
+	g_active_playlist = plman.ActivePlaylist;
 	plst.update_list();
-	if (fb.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
+	if (plman.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
 	plst.show_now_playing_called = false;
 };
 
