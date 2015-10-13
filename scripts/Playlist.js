@@ -43,6 +43,7 @@ Playlist = function() {
 		};
 
 		this.start_id = this.start_arr[g_active_playlist];
+		this.check_start_id();
 		window.SetProperty("sys.List start id", this.start_arr.toString());
 	};
 
@@ -85,6 +86,7 @@ Playlist = function() {
 			this.list_w = this.list_w - this.scrb_width - this.scrb_right;
 			this.scrb.set_size(this.list_x + this.list_w + this.scrb_right, this.list_y, this.scrb_width, this.list_h);
 		};
+		//
 	};
 
 	this.collapse_group = function(grp_id) {
@@ -101,43 +103,35 @@ Playlist = function() {
 		};
 		this.groups[grp_id].collapsed = true;
 		this.total = this.items.length;
-		this.visible_rows = Math.max(0, Math.min(this.total_rows, this.total));
-		//console(this.items.length);
+		this.set_size(false);
 	};
 
 	this.expand_group = function (grp_id) {
-		//console(grp_id);
-		//if (!this.groups[grp_id]) return;
-		if (this.groups[grp_id].collapsed) {
-			for (var i = 0; i < this.total; i++) {
-				if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
-					var after = this.items.slice(i+prop.grp_header_rows, this.items.length);
-					//console(after.length);
-					this.items = this.items.splice(0, i+prop.grp_header_rows);
-					//console("items 1: " + this.items.length);
-					var is_odd = true;
-					var item_id = i + prop.grp_header_rows;
-					for (var j = this.groups[grp_id].first; j <= this.groups[grp_id].last; j++) {
-						this.items[item_id] = {};
-						this.items[item_id].type = 0;
-						this.items[item_id].list_id = j;
-						this.items[item_id].metadb = this.handles.Item(j);
-						this.items[item_id].is_odd = is_odd;
-						is_odd = !is_odd;
-						item_id++;
-					};
-					console("console: expanded: " + this.items.length);
-					this.items = this.items.concat(after);
-					after = null;
-					break;
+		if (!this.groups[grp_id]) return;
+		for (var i = 0; i < this.total; i++) {
+			if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
+				var after = this.items.slice(i+prop.grp_header_rows, this.items.length);
+				this.items = this.items.splice(0, i+prop.grp_header_rows);
+				var is_odd = true;
+				var item_id = i + prop.grp_header_rows;
+				for (var j = this.groups[grp_id].first; j <= this.groups[grp_id].last; j++) {
+					this.items[item_id] = {};
+					this.items[item_id].type = 0;
+					this.items[item_id].list_id = j;
+					this.items[item_id].metadb = this.handles.Item(j);
+					this.items[item_id].is_odd = is_odd;
+					is_odd = !is_odd;
+					item_id++;
 				};
+				this.items = this.items.concat(after);
+				after = null;
+				break;
 			};
-			this.groups[grp_id].collapsed = false;
-			this.total = this.items.length;
-			console(this.total);
-			this.visible_rows = Math.max(0, Math.min(this.total_rows, this.total));
-			this.repaint();
 		};
+		this.groups[grp_id].collapsed = false;
+		this.total = this.items.length;
+
+		this.set_size(false);
 	};
 
 
@@ -260,12 +254,9 @@ Playlist = function() {
 
 		// parse ended <<<
 		this.total = this.items.length;
-
 		this.set_size(resize = false);
-
 		this.get_start_id();
 		this.scrb.update_cursor();
-
 		this.repaint();
 
 	};
@@ -295,6 +286,7 @@ Playlist = function() {
 			odd_color = RGBA(255, 255, 255, 5);
 		};
 
+		console("paint starting >>>");
 
 		if (this.total > 0) { // draw list items
 
@@ -308,6 +300,8 @@ Playlist = function() {
 
 				item_id = this.start_id + i;
 				item = this.items[item_id];
+				console("item id: " + item_id);
+				//if (!item) return;
 				if (item.type > -1)
 					metadb = item.metadb;
 
@@ -325,6 +319,11 @@ Playlist = function() {
 
 						// bg
 						gr.FillSolidRect(rx, grp_y, rw, grp_h - 1, 0x15000000);
+
+						//if (this.groups[grp_id].is_selected) {
+						if (this.is_group_selected(grp_id))
+							gr.FillSolidRect(rx, grp_y, rw, grp_h - 1, 0x55ffffff & g_colors.bg_selected);
+						//};
 
 						if (grp_h > 59) {
 							var delta = grp_h - 88;
@@ -410,13 +409,13 @@ Playlist = function() {
 					};
 
 					if (is_focused) {
-						gr.DrawRect(rx, ry, rw - 1, rh - 1, 1, g_colors.bg_selected);
+						gr.DrawRect(rx, ry-1, rw - 1, rh - 1, 1, g_colors.bg_selected);
 					};
 
 					var font_color = g_colors.txt_normal;
 					if (is_selected) {
 						font_color = g_colors.txt_selected;
-						gr.FillSolidRect(rx, ry, rw, rh, g_colors.bg_selected & 0x55ffffff);
+						gr.FillSolidRect(rx, ry-1, rw, rh, g_colors.bg_selected & 0x55ffffff);
 					};
 					if (is_playing) {
 						font_color = g_colors.highlight;
@@ -1086,8 +1085,18 @@ function on_playlist_items_selection_change() {
 	plst.repaint();
 };
 
+function on_item_selection_change() {
+	plst.repaint();
+};
+
 function on_item_focus_change(playlist, from, to) {
 	g_focus_id = to;
+	var total_grps = plst.groups.length;
+	for (var i = 0; i < total_grps; i++) {
+		if (g_focus_id >= plst.groups[i].first && g_focus_id <= plst.groups[i].last) {
+			plst.groups[i].is_focused = true;
+		}
+	};
 	plst.repaint();
 };
 
