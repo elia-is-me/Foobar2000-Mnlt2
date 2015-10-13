@@ -111,7 +111,7 @@ Scroll = function(vertical, parent) {
 PlaylistManager = function() {
 	this.playlist = [];
 	this.margin = prop.margin;
-	this.row_height = 22;
+	this.row_height = 21;
 	this.show_count = true;
 
 	this.scrb = new Scroll(true, this);
@@ -233,8 +233,8 @@ PlaylistManager = function() {
 
 			// list item bg
 			if (idx == this.active_id) {
-				gr.FillSolidRect(this.list_x, ry, this.list_w, rh, g_colors.bg_selected & 0x39ffffff);
-				gr.DrawRect(this.list_x, ry, this.list_w - 1, rh - 0, 1, g_colors.bg_selected);
+				gr.FillSolidRect(this.list_x, ry, this.list_w, rh, g_colors.bg_selected & 0x55ffffff);
+				gr.DrawRect(this.list_x, ry, this.list_w - 1, rh - 0, 1, /*g_colors.bg_selected*/RGB(127, 127, 127));
 			};
 			if (idx == this.hover_id && this.drag_id < 0 && !this.dragdrop.active) {
 				gr.FillSolidRect(this.list_x, ry, this.list_w, rh, g_colors.bg_selected & 0x20ffffff);
