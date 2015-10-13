@@ -273,6 +273,9 @@ Playlist = function() {
 	};
 	this.update_list();
 
+	//this.get_group_by_
+	
+
 
 	this.draw = function(gr) {
 		var grp_id, grp_id_saved = -1;
@@ -300,6 +303,21 @@ Playlist = function() {
 		//console("paint starting >>>");
 
 		if (this.total > 0) { // draw list items
+
+
+			var total_grps = plst.groups.length;
+			for (var i = 0; i < total_grps; i++) {
+				plst.groups[i].is_focused = false;
+				if (g_focus_id >= plst.groups[i].first && g_focus_id <= plst.groups[i].last) {
+					plst.groups[i].is_focused = true;
+				};
+				var __playing_id = plman.GetPlayingItemLocation().PlaylistItemIndex;
+				if (__playing_id >= plst.groups[i].first && __playing_id <= plst.groups[i].last) {
+					plst.groups[i].is_playing = true;
+				};
+			};
+
+
 
 			rx = this.list_x;
 			rw = this.list_w;
@@ -329,11 +347,16 @@ Playlist = function() {
 						grp_h = grp_header_rows * rh;
 
 						// bg
-						gr.FillSolidRect(rx, grp_y, rw, grp_h - 1, 0x15000000);
+						gr.FillSolidRect(rx, grp_y, rw, grp_h, 0x15000000);
 
 						if (this.is_group_selected(grp_id)) {
-							gr.FillSolidRect(rx, grp_y, rw, grp_h - 1, 0x55ffffff & g_colors.bg_selected);
+							gr.FillSolidRect(rx, grp_y, rw, grp_h, 0x55ffffff & g_colors.bg_selected);
 						};
+
+						// focused rect
+						if (this.groups[grp_id].is_focused && this.groups[grp_id].collapsed) {
+							gr.DrawRect(rx, grp_y, rw - 1, grp_h - 1, 1, RGB(127, 127, 127));
+						}
 
 						if (grp_h > 59) {
 							var delta = grp_h - 88;
@@ -347,6 +370,7 @@ Playlist = function() {
 							var cw = grp_h - cover_margin * 2;
 							gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x15ffffff);
 
+
 							var p = 10;
 							var color_l1 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.3);
 							// date
@@ -355,8 +379,6 @@ Playlist = function() {
 							var date_x = rx + rw - date_w - p;
 							var date_y = grp_y + (grp_h - delta2) / 2;
 							gr.GdiDrawText(date, g_fonts.header1, color_l1, date_x, date_y, date_w, grp_h, dt_lt);
-							//var date_y = grp_y + 15;
-							//gr.GdiDrawText(date, g_fonts.header1, color_l1, date_x, date_y, date_w, grp_h, dt_lt);
 							// artist
 							var artist = $("%album artist%", metadb);
 							var artist_x = cx + cw + p;
@@ -369,11 +391,23 @@ Playlist = function() {
 							var genre_x = rx + rw - genre_w - p;
 							var genre_y = date_y + 30 + delta;
 							gr.GdiDrawText(genre, g_fonts.header2, g_colors.txt_normal, genre_x, genre_y, genre_w, grp_h, dt_lt);
+							// playing icon
+							var ico_w = 0;
+							var ico = ">";
+							if (this.groups[grp_id].is_playing) {
+								var ico_w = GetTextWidth(ico, g_fonts.header2);
+							};
+							var ico_x = artist_x;
+							var ico_y = genre_y;
+							(ico_w > 0 ) && gr.GdiDrawText(ico, g_fonts.header2, g_colors.txt_normal, ico_x, ico_y, ico_w, grp_h, dt_lt);
 							// album
 							var album = $("%album%", metadb);
-							var album_x = artist_x + 20;
+							var album_x = ico_x + ico_w + p;
 							var album_w = genre_x - album_x - p;
 							gr.GdiDrawText(album, g_fonts.header2, g_colors.txt_normal, album_x, genre_y, album_w, grp_h, dt_lt);
+							// split line
+							gr.FillSolidRect(artist_x, grp_y + grp_h - 10, rx + rw - artist_x - p, 1, g_colors.txt_normal & 0x15000000);
+
 						} else { 
 							if (grp_h > 35){
 								font = g_fonts.header1;
@@ -418,14 +452,14 @@ Playlist = function() {
 						else gr.FillSolidRect(rx, ry+1, rw, rh-1, even_color);
 					};
 
-					if (is_focused) {
-						gr.DrawRect(rx, ry-1, rw - 1, rh - 1, 1, /*g_colors.bg_selected & 0x55ffffff*/RGB(127, 127, 127));
+					if (is_focused && prop.show_focus_item) {
+						gr.DrawRect(rx, ry, rw - 1, rh - 1, 1, /*g_colors.bg_selected & 0x55ffffff*/RGB(127, 127, 127));
 					};
 
 					var font_color = g_colors.txt_normal;
 					if (is_selected) {
 						font_color = g_colors.txt_selected;
-						gr.FillSolidRect(rx, ry-1, rw, rh, g_colors.bg_selected & 0x55ffffff);
+						gr.FillSolidRect(rx, ry, rw, rh, g_colors.bg_selected & 0x55ffffff);
 					};
 					if (is_playing) {
 						font_color = g_colors.highlight;
@@ -714,6 +748,31 @@ Playlist = function() {
 		return true;
 	};
 
+
+	this.get_playing_item = function() {
+		if (!fb.IsPlaying) {
+			this.playing_item = null;
+			return null;
+		};
+		/*
+		this.playing_item = plman.GetPlayingItemLocation();
+		if (this.playing_item.IsValid) {
+			// get list id
+			this.playing_item_id = this.playing_item.PlaylistItemIndex;
+			// get group id
+			for (var i = 0; this.total; i++) {
+				if (this.items[i].type > 0) {
+					var grp_id = this.items[i].grp_id;
+					if (this.playing_item_id >= this.groups[grp_id].first && this.playing_item_id <= this.groups[grp_id].last) {
+						this.playing_item_group_id = grp_id;
+					};
+				};
+			};
+		};
+		return this.playing_item;
+		*/
+	};
+
 	this.show_now_playing_called = false;
 	this.show_now_playing = function () {
 		if (!fb.IsPlaying) return;
@@ -985,7 +1044,7 @@ prop = new function() {
 	this.enable_odd_even = window.GetProperty("_prop: Enable odd/even row hightlight", true);
 	this.scroll_step = window.GetProperty("_prop: Default scroll step", 3);
 	this.auto_collaspe = window.GetProperty("_prop: Auto collapse", false);
-
+	this.show_focus_item = window.GetProperty("_prop: Show focused item", false);
 }();
 
 
@@ -1134,12 +1193,6 @@ function on_item_selection_change() {
 
 function on_item_focus_change(playlist, from, to) {
 	g_focus_id = to;
-	var total_grps = plst.groups.length;
-	for (var i = 0; i < total_grps; i++) {
-		if (g_focus_id >= plst.groups[i].first && g_focus_id <= plst.groups[i].last) {
-			plst.groups[i].is_focused = true;
-		}
-	};
 	plst.repaint();
 };
 
@@ -1151,6 +1204,7 @@ function on_playback_pause(state) {
 };
 
 function on_playback_starting(cmd, is_paused) {
+	plst.get_playing_item();
 	if (plst.playing_item_visible)  plst.repaint();
 };
 
@@ -1159,11 +1213,13 @@ function on_playback_edited(metadb) {
 };
 
 function on_playback_new_track(metadb) {
+	plst.get_playing_item();
 	plst.repaint();
 };
 
 function on_playback_stop(reason) {
 	if (reason != 2) {
+		plst.get_playing_item();
 		plst.repaint();
 	};
 }
