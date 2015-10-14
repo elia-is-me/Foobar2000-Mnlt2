@@ -8,6 +8,7 @@
 Playlist = function() {
 	this.margin = prop.margin;
 	this.handles = null;
+    this.handles_selection = plman.GetPlaylistSelectedItems(g_active_playlist);
 	this.row_height = prop.row_height;
 	this.total;
 	this.groups = [];
@@ -331,11 +332,9 @@ Playlist = function() {
 				if (g_focus_id >= plst.groups[i].first && g_focus_id <= plst.groups[i].last) {
 					plst.groups[i].is_focused = true;
 				};
-				var __playing_id = plman.GetPlayingItemLocation().PlaylistItemIndex;
-				if (__playing_id >= plst.groups[i].first && __playing_id <= plst.groups[i].last) {
-					plst.groups[i].is_playing = true;
-				};
 			};
+
+            this.get_playing_item();
 
 			rx = this.list_x;
 			rw = this.list_w;
@@ -781,9 +780,8 @@ Playlist = function() {
                             var item_id = this.hover_item_id;
 							var grp_id = this.items[this.hover_item_id].grp_id;
                             //
-							//this.groups[grp_id].collapsed ? this.expand_group(grp_id) : this.collapse_group(grp_id);
-                            //
                             if (this.groups[grp_id].collapsed) {
+                                // 
                                 this.expand_group(grp_id);
                                 // 检查展开后是否能看的到
                                 var grp_total_rows = Math.max(this.groups[grp_id].last - this.groups[grp_id].first + 1, prop.group_minimum_rows) + prop.group_extra_rows + prop.group_header_rows;
@@ -900,27 +898,18 @@ Playlist = function() {
 
 	this.get_playing_item = function() {
 		if (!fb.IsPlaying) {
-			this.playing_item = null;
 			return null;
 		};
-		/*
-		this.playing_item = plman.GetPlayingItemLocation();
-		if (this.playing_item.IsValid) {
-			// get list id
-			this.playing_item_id = this.playing_item.PlaylistItemIndex;
-			// get group id
-			for (var i = 0; this.total; i++) {
-				if (this.items[i].type > 0) {
-					var grp_id = this.items[i].grp_id;
-					if (this.playing_item_id >= this.groups[grp_id].first && this.playing_item_id <= this.groups[grp_id].last) {
-						this.playing_item_group_id = grp_id;
-					};
-				};
-			};
-		};
-		return this.playing_item;
-		*/
-	};
+
+        var total_grps = this.groups.length;
+        for (var i = 0; i < total_grps; i++) {
+            this.groups[i].is_playing = false;
+            var __playing_id = plman.GetPlayingItemLocation().PlaylistItemIndex;
+            if (__playing_id >= plst.groups[i].first && __playing_id <= plst.groups[i].last) {
+                plst.groups[i].is_playing = true;
+            };
+        };
+    };
 
 	this.show_now_playing_called = false;
 	this.show_now_playing = function () {
@@ -1174,8 +1163,6 @@ Scroll = function(vertical, parent) {
 		return false;
 	};
 };
-
-
 
 
 prop = new function() {
