@@ -293,6 +293,9 @@ Playlist = function() {
 		this.get_start_id();
 		this.scrb.update_cursor();
 		this.repaint();
+
+        plman.SetActivePlaylistContext(); // to enable main-menu "Edit"
+
 		console("total length: " + this.total);
 
 	};
@@ -833,6 +836,7 @@ Playlist = function() {
 
 				this.repaint();
 				window.SetCursor(32512);
+                plman.SetActivePlaylistContext();
 				break;
 			case "right":
 				// up
