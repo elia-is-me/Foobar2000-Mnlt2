@@ -387,6 +387,7 @@ Playlist = function() {
 							var cy = grp_y + cover_margin;
 							var cw = grp_h - cover_margin * 2;
 							gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x15ffffff);
+                            gr.GdiDrawText(grp_id, g_fonts.header1, blendColors(g_colors.highlight, g_colors.bg_normal, 0.5), cx, cy, cw, cw, dt_cc);
 
 							var p = 10;
 							var color_l1 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.3);
@@ -655,7 +656,7 @@ Playlist = function() {
 								this.SHIFT_start_id = this.groups[grp_id].first;
 								this.items_clicked = true;
 							};
-							this.items_selecting = false;
+							this.selecting = false;
 							plman.SetPlaylistFocusItem(g_active_playlist, this.groups[grp_id].first);
 							break;
 						case (item_type == 0): // >>>>>>> clicked on track items
