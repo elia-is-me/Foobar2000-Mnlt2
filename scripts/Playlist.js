@@ -99,7 +99,8 @@ Playlist = function() {
 		for (var i = 0; i < this.total; i++) {
 			if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
 				var prev = this.items.slice(0, i + prop.group_header_rows);
-				this.items = this.items.slice(i + prop.group_header_rows + this.groups[grp_id].last - this.groups[grp_id].first + 1, this.items.length);
+                var grp_items_count = Math.max(this.groups[grp_id].last - this.groups[grp_id].first + 1, prop.group_minimum_rows) + prop.group_extra_rows;
+				this.items = this.items.slice(i + prop.group_header_rows + grp_items_count, this.items.length);
 				this.items = prev.concat(this.items);
 				prev = null;
 				break;
@@ -127,13 +128,28 @@ Playlist = function() {
 				this.items = this.items.splice(0, i+prop.group_header_rows);
 				var is_odd = true;
 				var item_id = i + prop.group_header_rows;
-				for (var j = this.groups[grp_id].first; j <= this.groups[grp_id].last; j++) {
+                var end = this.groups[grp_id].first + Math.max(this.groups[grp_id].last - this.groups[grp_id].first + 1, prop.group_minimum_rows) + prop.group_extra_rows;
+				for (var j = this.groups[grp_id].first; j < end; j++) {
 					this.items[item_id] = {};
-					this.items[item_id].type = 0;
-					this.items[item_id].list_id = j;
-					this.items[item_id].grp_id = grp_id;
-					this.items[item_id].metadb = this.handles.Item(j);
-					this.items[item_id].is_odd = is_odd;
+                    switch (true) {
+                        case (j <= this.groups[grp_id].last): 
+                            // track items
+                            this.items[item_id].type = 0;
+                            this.items[item_id].list_id = j;
+                            this.items[item_id].grp_id = grp_id;
+                            this.items[item_id].metadb = this.handles.Item(j);
+                            this.items[item_id].is_odd = is_odd;
+                            break;
+                        case (j > this.groups[grp_id].last && j < this.groups[grp_id].first + prop.group_minimum_rows):
+                            // 填充物
+                            this.items[item_id].type = -1;
+                            this.items[item_id].is_odd = is_odd;
+                            break;
+                        default:
+                            // 隔离物
+                            this.items[item_id].type = -2;
+                            break;
+                    };
 					is_odd = !is_odd;
 					item_id++;
 				};
@@ -490,7 +506,9 @@ Playlist = function() {
 						if (item.is_odd) gr.FillSolidRect(rx, ry+1, rw, rh-1, odd_color)
 						else gr.FillSolidRect(rx, ry+1, rw, rh-1, even_color);
 					};
-				};
+				} else {
+                    //gr.FillSolidRect(rx, ry, rw, rh, 0xa0ffffff);
+                };;
 
 			} // eol;
 		} else { 
