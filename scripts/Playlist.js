@@ -559,14 +559,15 @@ Playlist = function() {
 	this.start_auto_scroll = function(delta, on_scroll) {
 		if (!this.auto_scrolling) {
 			plst.scroll_timeout_timer = window.SetTimeout(function() {
-				plst.scroll_interval_timer = window.SetTimeout(function() {
-				var s = plst.scrb.scroll(delta);
-				if (s) {
-					on_scroll && on_scroll();
-					plst.repaint()
-				} else {
-					plst.stop_auto_scroll();
-				};
+				plst.scroll_interval_timer = window.SetInterval(function() {
+					var s = plst.scrb.scroll(delta);
+					if (s) {
+						on_scroll && on_scroll();
+						plst.repaint()
+					} else {
+						plst.stop_auto_scroll();
+						plst.save_start_id();
+					};
 				}, 50);
 			}, 350);
 			this.auto_scrolling = true;
@@ -574,8 +575,10 @@ Playlist = function() {
 	};
 
 	this.stop_auto_scroll = function() {
-		window.ClearInterval(this.scroll_interval_timer);
-		window.ClearInterval(this.scroll_timeout_timer);
+		if (this.scroll_interval_timer) 
+			window.ClearInterval(this.scroll_interval_timer);
+		if (this.scroll_timeout_timer) 
+			window.ClearTimeout(this.scroll_timeout_timer);
 		this.auto_scrolling = false;
 		this.scroll_timeout_timer = null;
 		this.scroll_interval_timer = null;
@@ -695,13 +698,18 @@ Playlist = function() {
 				this.drag_split_line_y = -10;
 				// items handler
 				// dragging file
+
+				// --------------------------------------------------->  when dragging selection
 				if (this.items_dragged) {
+					// ---if mouse over track items, show split-line
 					if (this.hover_item) {
 						this.drag_hover_item = this.hover_item;
 						this.drag_hover_item_id = this.hover_item_id;
 						this.drag_split_line_y = this.hover_item.y;
 						//console("Y: " + this.drag_split_line_y);
+
 					}else {
+					// --- else if mouse over empty list area, show split line at bottom
 						if (this.total_rows > this.total) { 
 							if (y > this.items[this.total - 1].y + this.row_height && y < this.list_y + this.list_h ) {
 								this.drag_split_line_y = this.items[this.total - 1].y + this.row_height;
@@ -709,8 +717,22 @@ Playlist = function() {
 						}
 					};
 
+					// --- if mouse over header items, expand the group if collapsed
 					if (this.hover_item && this.hover_item.type > 0) {
-						this.expand_group(this.hover_item.grp_id);
+						if (this.groups[this.hover_item.grp_id].collapsed) {
+							this.expand_group(this.hover_item.grp_id);
+						};
+					};
+
+					// --- auto-scroll
+					if (this.total_rows < this.total) {
+						if (y < this.list_y) {
+							this.start_auto_scroll(1, function() {/* ... */});
+						} else if (y > this.list_y + this.list_h) {
+							this.start_auto_scroll(-1, function() {/* ... */});
+						} else {
+							this.stop_auto_scroll();
+						};;
 					};
 
 					if (this.drag_split_line_y != this.drag_split_line_y_saved) {
@@ -718,56 +740,12 @@ Playlist = function() {
 						this.repaint();
 					};
 
-					/*
-					if (this.drag_split_line_y < this.items[this.start_id].y) {
-						this.drag_split_line_y = this.items[this.start_id].y;
-					} else if (this.drag_split_line_y > this.visible_rows * this.row_height) {
-						this.drag_split_line_y = this.visible_rows * this.row_height;
-					};
-					*/
-
-					if (this.total_rows < this.total) {
-						//this.repaint();
-					} else {
-						/*
-						if (y < this.list_y) this.drag_hover_item_id = 0;
-						if (y > this.list_y + this.total * this.row_height) {
-							this.drag_hover_item_id = this.total;
-						};
-						*/
-						if (this.drag_hover_item_id != this.drag_hover_item_id_saved) {
-							this.drag_hover_item_id_saved = this.drag_hover_item_id;
-						//	this.repaint();
-						};
-					};
 				};
 				if (this.items_dragged) {
 					window.SetCursor(32651);
 				} else {
 					window.SetCursor(32512);
 				};
-				/*
-				if (this.handles_selection.Count && !this.double_clicked && mask == 1 && (this.hover_item_id_saved > -1 && this.hover_item_id != this.hover_item_id_saved)) {
-					if (fb.IsAutoPlaylist(g_active_playlist) && !this.action_not_allowed) {
-						window.SetCursor(32648);
-						this.action_not_allowed = true;
-					};
-					this.items_dropped = false;
-					if (!this.action_not_allowed && this.clicked_on_selection) this.items_dragged = true;
-					if (!this.clicked_on_selection) this.selecting = true;
-				};
-				*/
-
-				/*
-				if (this.items_dragged) {
-					window.SetCursor(32651);
-					if (fb.IsAutoPlaylist(g_active_playlist)) {
-						window.SetCursor(32648);
-					}
-				} else {
-					window.SetCursor(32512);
-				};
-				*/
 
 				break;
 			case "dblclk":
@@ -784,9 +762,7 @@ Playlist = function() {
 							/*
 							console(grp_id);
 							console(this.groups[grp_id].collapsed);
-							if (this.groups[grp_id].collapsed) this.expand_group(grp_id);
 							*/
-
 							break;
 						case (item_type == 0):
 							var list_id = this.items[this.hover_item_id].list_id;
@@ -803,16 +779,14 @@ Playlist = function() {
 				if (this.double_clicked) {
 					this.double_clicked = false;
 				};
+				this.stop_auto_scroll();
 				if (this.items_dragged) {
 					this.items_dragged = false;
-				};
-				/*
-				if (this.items_dragged) {
+					/*
 					plman.ClearPlaylistSelection(g_active_playlist);
-					plman.SetPlaylistSelectionSingle(g_active_playlist, g_focus_id, true);
-					this.items_dragged = false;
-				};
-				*/
+					plman.SetPlaylistSelectionSingle(g_active_playlist, g_focus_id, false);
+					*/
+				}
 				//window.SetCursor(32512);
 				break;
 			case "right":
