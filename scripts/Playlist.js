@@ -510,7 +510,7 @@ Playlist = function() {
 		gr.FillSolidRect(this.list_x, this.list_y + this.list_h, this.list_w, wh - this.list_y - this.list_h, g_colors.bg_normal);
 
 		// draw split line
-		if (this.items_dragged && this.drag_split_line_y >= 0 && (this.hover_item && this.hover_item.type == 0 || !this.hover_item)) {
+		if (this.items_dragging && this.drag_split_line_y >= 0 && (this.hover_item && this.hover_item.type == 0 || !this.hover_item)) {
 			gr.FillSolidRect(this.list_x, this.drag_split_line_y -1, this.list_w, 2, g_colors.highlight);
 		};
 
@@ -596,7 +596,7 @@ Playlist = function() {
 		this.hover_item_id = -1;
 		if (this.is_hover_area) {
 			this.hover_item_id = Math.floor((y - this.list_y) / this.row_height) + this.start_id;
-			if (this.hover_item_id < 0 || this.hover_item_id >= this.total) {
+			if (this.hover_item_id < 0 || this.hover_item_id > this.total - 1) {
 				this.hover_item_id = -1;
 			};
 		};
@@ -624,18 +624,21 @@ Playlist = function() {
 					//
 					var item_type = this.hover_item.type;
 					//
+					this.items_clicked_id = -1;
 					switch(true) {
 						case (item_type > 0): // >>>>>>>> group item 
 							var grp_id = this.hover_item.grp_id;
 							if (ctrl_pressed) {
 								this.select_group_tracks(grp_id);
 								this.SHIFT_start_id = this.groups[grp_id].first;
-								this.items_dragged = false;
+								this.items_clicked = false;
 							} else {
 								plman.ClearPlaylistSelection(g_active_playlist);
 								this.select_group_tracks(grp_id);
 								this.SHIFT_start_id = this.groups[grp_id].first;
-								this.items_dragged = true;
+								this.items_clicked = true;
+								this.items_clicked_id = this.hover_item_id;
+								this.item
 							};
 							this.items_selecting = false;
 							plman.SetPlaylistFocusItem(g_active_playlist, this.groups[grp_id].first);
@@ -655,7 +658,7 @@ Playlist = function() {
 									this.SHIFT_start_id = list_id;
 								};
 								plman.SetPlaylistFocusItem(g_active_playlist, list_id);
-								this.items_dragged = false;
+								this.items_clicked = false;
 								this.selecting = false;
 							} else if (ctrl_pressed) {
 								if (plman.IsPlaylistItemSelected(g_active_playlist, list_id)) {
@@ -665,15 +668,17 @@ Playlist = function() {
 									plman.SetPlaylistFocusItem(g_active_playlist, list_id);
 								}
 								this.SHIFT_start_id = list_id;
-								this.items_dragged = false;
+								this.items_clicked = false;
 								this.selecting = false;
 							} else {
 								if (plman.IsPlaylistItemSelected(g_active_playlist, list_id)) {
-									this.items_dragged = true;
+									this.items_clicked = true;
+									this.items_clicked_id = this.hover_item_id;
 									this.selecting = false;
 								} else {
 								//if (!plman.IsPlaylistItemSelected(g_active_playlist, list_id)) {
 									this.selecting = true;
+									this.items_clicked = false;
 									//this.selecting_y = y;
 									plman.ClearPlaylistSelection(g_active_playlist);
 									plman.SetPlaylistSelectionSingle(g_active_playlist, list_id, true);
@@ -700,21 +705,24 @@ Playlist = function() {
 				// dragging file
 
 				// --------------------------------------------------->  when dragging selection
-				if (this.items_dragged) {
-					// ---if mouse over track items, show split-line
-					if (this.hover_item) {
-						this.drag_hover_item = this.hover_item;
-						this.drag_hover_item_id = this.hover_item_id;
-						this.drag_split_line_y = this.hover_item.y;
-						//console("Y: " + this.drag_split_line_y);
+				if (this.items_clicked) {
+					// --- 
+					if (!this.hover_item || this.hover_item_id != this.items_clicked_id) {
+						this.items_dragging = true;
+					};
 
-					}else {
-					// --- else if mouse over empty list area, show split line at bottom
-						if (this.total_rows > this.total) { 
-							if (y > this.items[this.total - 1].y + this.row_height && y < this.list_y + this.list_h ) {
-								this.drag_split_line_y = this.items[this.total - 1].y + this.row_height;
+					if (this.items_dragging) {
+						// ---if mouse over track items, show split-line
+						if (this.hover_item) {
+							this.drag_split_line_y = this.hover_item.y;
+						}else {
+							// --- else if mouse over empty list area, show split line at bottom
+							if (this.total_rows > this.total) { 
+								if (y > this.items[this.total - 1].y + this.row_height && y < this.list_y + this.list_h ) {
+									this.drag_split_line_y = this.items[this.total - 1].y + this.row_height;
+								}
 							}
-						}
+						};
 					};
 
 					// --- if mouse over header items, expand the group if collapsed
@@ -725,7 +733,7 @@ Playlist = function() {
 					};
 
 					// --- auto-scroll
-					if (this.total_rows < this.total) {
+					if (this.items_dragging && this.total_rows < this.total) {
 						if (y < this.list_y) {
 							this.start_auto_scroll(1, function() {/* ... */});
 						} else if (y > this.list_y + this.list_h) {
@@ -741,7 +749,7 @@ Playlist = function() {
 					};
 
 				};
-				if (this.items_dragged) {
+				if (this.items_dragging) {
 					window.SetCursor(32651);
 				} else {
 					window.SetCursor(32512);
@@ -780,14 +788,26 @@ Playlist = function() {
 					this.double_clicked = false;
 				};
 				this.stop_auto_scroll();
-				if (this.items_dragged) {
-					this.items_dragged = false;
-					/*
-					plman.ClearPlaylistSelection(g_active_playlist);
-					plman.SetPlaylistSelectionSingle(g_active_playlist, g_focus_id, false);
-					*/
-				}
-				//window.SetCursor(32512);
+
+				if (this.items_clicked) {
+					if (this.items_dragging) {
+						// do dragdrop action
+						// ...
+						this.items_dragging = false;
+					} else {
+						// --- if this.hover_item && this.hover_item_id == this.items_clicked_id:
+						if (this.hover_item.type == 0) {
+							plman.ClearPlaylistSelection(g_active_playlist);
+							plman.SetPlaylistSelectionSingle(g_active_playlist, this.hover_item.list_id, true);
+							plman.SetPlaylistFocusItem(g_active_playlist, this.hover_item.list_id);
+						};
+					};
+					this.items_clicked = false;
+					this.items_clicked_id = -1;
+				};
+
+				this.repaint();
+				window.SetCursor(32512);
 				break;
 			case "right":
 				// up
