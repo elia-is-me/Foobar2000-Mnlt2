@@ -624,7 +624,6 @@ Playlist = function() {
 
 		switch (event) {
 			case "down":
-
 				if (this.is_hover_scrb) {  // scrollbar event handler
 					this.scrb.on_mouse("down", x, y, mask);
 				} else {
@@ -771,7 +770,7 @@ Playlist = function() {
 					this.scrb.on_mouse("down", x, y);
 				};
 				if (this.hover_item) {
-					this.double_clicked = true;
+                    this.double_clicked = true;
 					var item_type = this.items[this.hover_item_id].type;
 					switch (true) {
 						case (item_type > 0):
@@ -796,6 +795,7 @@ Playlist = function() {
 				this.scrb.on_mouse("up", x, y);
 				if (this.double_clicked) {
 					this.double_clicked = false;
+                    return;
 				};
 				this.stop_auto_scroll();
 
