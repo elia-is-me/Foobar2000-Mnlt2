@@ -1,5 +1,9 @@
-﻿// simple playlist
-// update:2015-10-13
+﻿// vim:set ft=javascript et:
+// ============================================ //
+// @name "Playlist"
+// @intro "a simple wsh playlist"
+// @update 2015-10-13
+// ============================================ //
 
 Playlist = function() {
 	this.margin = prop.margin;
