@@ -273,9 +273,6 @@ Playlist = function() {
 	};
 	this.update_list();
 
-	//this.get_group_by_
-	
-
 
 	this.draw = function(gr) {
 		var grp_id, grp_id_saved = -1;
@@ -502,18 +499,18 @@ Playlist = function() {
 			gr.GdiDrawText("空列表", font, color, this.list_x, this.list_y - 20, this.list_w, this.list_h, dt_cc);
 		};
 
+		if (this.need_scrb && this.show_scrb){
+		   this.scrb.draw(gr);
+		};
 
-
-		if (this.need_scrb && this.show_scrb) this.scrb.draw(gr);
-
+		// ----------------------------------  覆盖住超出范围的部分
 		gr.FillSolidRect(this.list_x, 0, this.list_w, this.y + this.margin, g_colors.bg_normal);
 		gr.FillSolidRect(this.list_x, this.list_y + this.list_h, this.list_w, wh - this.list_y - this.list_h, g_colors.bg_normal);
 
-		// draw split line
+		// ----------------------------------  draw split line
 		if (this.items_dragging && this.drag_split_line_y >= 0 && (this.hover_item && this.hover_item.type == 0 || !this.hover_item)) {
-			gr.FillSolidRect(this.list_x, this.drag_split_line_y -1, this.list_w, 2, g_colors.highlight);
+			gr.FillSolidRect(this.list_x, this.drag_split_line_y -1, this.list_w, 2, g_colors.txt_normal & 0x88ffffff);
 		};
-
 
 	};
 
@@ -637,8 +634,6 @@ Playlist = function() {
 								this.select_group_tracks(grp_id);
 								this.SHIFT_start_id = this.groups[grp_id].first;
 								this.items_clicked = true;
-								this.items_clicked_id = this.hover_item_id;
-								this.item
 							};
 							this.items_selecting = false;
 							plman.SetPlaylistFocusItem(g_active_playlist, this.groups[grp_id].first);
