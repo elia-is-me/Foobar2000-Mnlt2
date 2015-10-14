@@ -144,6 +144,7 @@ Playlist = function() {
 	};
 
 
+	// item_types >>> group-header: > 0, track: == 0, inner-group empty: -1, extra: -2
 	this.update_list = function(coll) {
 		var current, previous;
 		var metadb;
@@ -301,7 +302,6 @@ Playlist = function() {
 
 		if (this.total > 0) { // draw list items
 
-
 			var total_grps = plst.groups.length;
 			for (var i = 0; i < total_grps; i++) {
 				plst.groups[i].is_focused = false;
@@ -324,16 +324,14 @@ Playlist = function() {
 
 				item_id = this.start_id + i;
 				this.items[item_id].y = ry;
-				//this.items[item_id].x = rx;
 				item = this.items[item_id];
 				//console("item id: " + item_id);
-				//if (!item) return;
 				if (item.type > -1)
 					metadb = item.metadb;
 
 				gr.GdiDrawText(item_id, g_fonts.item, blendColors(g_colors.bg_normal, g_colors.txt_normal, 0.5), rx - 15, ry, 15, rh, dt_cc);
 
-				// draw group header
+				// ---------------------------------------------------------draw group header
 				if (item.type > 0) {
 					grp_id = item.grp_id;
 					if (grp_id !== grp_id_saved) {
@@ -361,12 +359,11 @@ Playlist = function() {
 							if (delta < -10) delta = -10;
 							var delta2 = 58 + delta;
 							// cover art
-							var cover_margin = 8;
+							var cover_margin = 4;
 							var cx = rx + cover_margin;
 							var cy = grp_y + cover_margin;
 							var cw = grp_h - cover_margin * 2;
 							gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x15ffffff);
-
 
 							var p = 10;
 							var color_l1 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.3);
@@ -434,11 +431,10 @@ Playlist = function() {
 						//
 						grp_id_saved = grp_id;
 					};
-				} else if (item.type == 0){
+				} else if (item.type == 0){ // --------------------------------- draw track items
 					//=================
 					// draw track items
 					//=================
-				
 					is_selected = plman.IsPlaylistItemSelected(g_active_playlist, item.list_id);
 					is_playing = (plman.PlayingPlaylist == g_active_playlist && plman.GetPlayingItemLocation().PlaylistItemIndex == item.list_id);
 					is_focused = plman.GetPlaylistFocusItemIndex(g_active_playlist) == item.list_id;
@@ -493,7 +489,8 @@ Playlist = function() {
 				};
 
 			} // eol;
-		} else {
+		} else { 
+			// ---- draw text info if playlist is empty
 			var font = gdi.Font(g_fonts.name, 32, 1);
 			var color = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.4);
 			gr.GdiDrawText("空列表", font, color, this.list_x, this.list_y - 20, this.list_w, this.list_h, dt_cc);
@@ -519,7 +516,6 @@ Playlist = function() {
 				x < this.list_x + this.list_w &&
 				y > this.list_y && y <this.list_y + this.list_h);
 	};
-
 
 	this.collapse_all = function(bool) {
 	};
@@ -582,6 +578,7 @@ Playlist = function() {
 	};
 		
 
+	// ---------------------------- playlist mouse event handler
 	this.on_mouse = function(event, x, y, mask) {
 
 		var shift_pressed = utils.IsKeyPressed(VK_SHIFT);
@@ -605,13 +602,12 @@ Playlist = function() {
 
 		switch (event) {
 			case "down":
-				//if (!this.items.length) return;
 
 				if (this.is_hover_scrb) {  // scrollbar event handler
 					this.scrb.on_mouse("down", x, y, mask);
 				} else {
 					if (this.double_clicked) return;
-					if (this.hover_item == null) {
+					if (this.hover_item == null || this.hover_item.type == -2) {
 						if (!shift_pressed && !ctrl_pressed) {
 							plman.ClearPlaylistSelection(g_active_playlist);
 							this.SHIFT_start_id = -1
@@ -671,10 +667,8 @@ Playlist = function() {
 									this.items_clicked_id = this.hover_item_id;
 									this.selecting = false;
 								} else {
-								//if (!plman.IsPlaylistItemSelected(g_active_playlist, list_id)) {
 									this.selecting = true;
 									this.items_clicked = false;
-									//this.selecting_y = y;
 									plman.ClearPlaylistSelection(g_active_playlist);
 									plman.SetPlaylistSelectionSingle(g_active_playlist, list_id, true);
 								};
@@ -698,7 +692,6 @@ Playlist = function() {
 				this.drag_split_line_y = -10;
 				// items handler
 				// dragging file
-
 				// --------------------------------------------------->  when dragging selection
 				if (this.items_clicked) {
 					// --- 
