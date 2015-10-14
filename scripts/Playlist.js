@@ -161,10 +161,13 @@ Playlist = function() {
 		this.groups[grp_id].collapsed = false;
 		this.total = this.items.length;
 		this.set_size(resize = false);
+
+        // 检查 展开 后的分组是否能看得到 的功能，
+        // 从 dblclk 移动到这里
+
 	};
 
-
-	// item_types >>> group-header: > 0, track: == 0, inner-group empty: -1, extra: -2
+	// item_types >>> group-header: > 0, track: == 0, 填充物: == -1, 隔离物: == -2;
 	this.update_list = function(coll) {
 		var current, previous;
 		var metadb;
@@ -360,6 +363,7 @@ Playlist = function() {
 						//================
 						grp_y = (i == 0) && item.type > 1 ? ry - (item.type - 1) * rh : ry;
 						grp_h = grp_header_rows * rh;
+                        this.groups[grp_id].y = grp_y;
 
 						// bg
 						gr.FillSolidRect(rx, grp_y, rw, grp_h, 0x15000000);
@@ -774,12 +778,24 @@ Playlist = function() {
 					var item_type = this.items[this.hover_item_id].type;
 					switch (true) {
 						case (item_type > 0):
+                            var item_id = this.hover_item_id;
 							var grp_id = this.items[this.hover_item_id].grp_id;
-							this.groups[grp_id].collapsed ? this.expand_group(grp_id) : this.collapse_group(grp_id);
-							/*
-							console(grp_id);
-							console(this.groups[grp_id].collapsed);
-							*/
+                            //
+							//this.groups[grp_id].collapsed ? this.expand_group(grp_id) : this.collapse_group(grp_id);
+                            //
+                            if (this.groups[grp_id].collapsed) {
+                                this.expand_group(grp_id);
+                                // 检查展开后是否能看的到
+                                var grp_total_rows = Math.max(this.groups[grp_id].last - this.groups[grp_id].first + 1, prop.group_minimum_rows) + prop.group_extra_rows + prop.group_header_rows;
+                                if (grp_total_rows * this.row_height + this.groups[grp_id].y > this.list_y + this.list_h) {
+                                    var delta = Math.ceil((grp_total_rows * this.row_height + this.groups[grp_id].y - this.list_y - this.list_h) / this.row_height);
+                                    delta = Math.min(delta, this.total_rows);
+                                    this.scrb.on_mouse("wheel", 0, 0, -delta);
+                                    this.save_start_id();
+                                };
+                            } else {
+                                this.collapse_group(grp_id);
+                            };
 							break;
 						case (item_type == 0):
 							var list_id = this.items[this.hover_item_id].list_id;
