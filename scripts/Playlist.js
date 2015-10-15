@@ -787,7 +787,7 @@ Playlist = function() {
                             if (this.groups[grp_id].collapsed) {
                                 // 
                                 this.expand_group(grp_id);
-                                // 检查展开后是否能看的到
+                                // --- 检查展开后是否能看的到
                                 var grp_total_rows = Math.max(this.groups[grp_id].last - this.groups[grp_id].first + 1, prop.group_minimum_rows) + prop.group_extra_rows + prop.group_header_rows;
                                 if (grp_total_rows * this.row_height + this.groups[grp_id].y > this.list_y + this.list_h) {
                                     var delta = Math.ceil((grp_total_rows * this.row_height + this.groups[grp_id].y - this.list_y - this.list_h) / this.row_height);
@@ -815,12 +815,18 @@ Playlist = function() {
 					this.double_clicked = false;
                     return;
 				};
-				this.stop_auto_scroll();
+				this.auto_scrolling && this.stop_auto_scroll();
 
 				if (this.items_clicked) {
 					if (this.items_dragging) {
 						// do dragdrop action
-						// ...
+                        if (this.hover_item && this.hover_item.type == 0) {
+                            var list_id = this.hover_item.list_id;
+                            g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
+                            console(g_focus_id);
+                            console(list_id);
+                            plman.MovePlaylistSelection(g_active_playlist, (list_id - g_focus_id));
+                        };
 						this.items_dragging = false;
 					} else {
 						// --- if this.hover_item && this.hover_item_id == this.items_clicked_id:
@@ -1230,8 +1236,8 @@ var window_visible = false;
 var repaint_forced = false;
 var repaint_counter = 0;
 
-var g_focus_id = -1;
 var g_active_playlist = plman.ActivePlaylist;
+var g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 
 var plst = new Playlist();
 get_fonts();
@@ -1306,6 +1312,7 @@ function on_playlists_changed() {
 
 function on_playlist_switch() {
 	g_active_playlist = plman.ActivePlaylist;
+    g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 	plst.update_list();
 	if (plman.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
 	plst.show_now_playing_called = false;
@@ -1314,16 +1321,19 @@ function on_playlist_switch() {
 function on_playlist_items_reordered(playlist) {
 	if (playlist !== g_active_playlist) return;
 	plst.update_list();
+    g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 };
 
 function on_playlist_items_removed(playlist) {
 	if (playlist !== g_active_playlist) return;
 	plst.update_list();
+    g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 };
 
 function on_playlist_items_added(playlist) {
 	if (playlist !== g_active_playlist) return;
 	plst.update_list();
+    g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 };
 
 function on_playlist_items_selection_change() {
