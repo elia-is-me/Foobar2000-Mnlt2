@@ -740,20 +740,18 @@ Playlist = function() {
 						// ---if mouse over track items, show split-line
 						if (this.hover_item) {
 							this.drag_split_line_y = this.hover_item.y;
-						}else {
+						} else {
 							// --- else if mouse over empty list area
 							if (this.total_rows > this.total) { 
 								if (y > this.items[this.total - 1].y + this.row_height) {
 									this.drag_split_line_y = this.items[this.total - 1].y + this.row_height;
 								}
 							}
-                            if (this.start_id == 0) {
-                                if (y < this.items[0].y) {
-                                    for (var i = 0; i < this.visible_rows; i++) {
-                                        if (this.items[i].type == 0) {
-                                            this.drag_split_line_y = this.items[i].y;
-                                            break;
-                                        };
+                            else if (this.start_id == 0 && y < this.items[0].y) {
+                                for (var i = 0; i < this.visible_rows; i++) {
+                                    if (this.items[i].type == 0) {
+                                        this.drag_split_line_y = this.items[i].y;
+                                        break;
                                     };
                                 };
                             };
@@ -857,39 +855,37 @@ Playlist = function() {
 
 					// --- auto-scroll
 					if (this.selecting && this.total_rows < this.total) {
+                        //
 						if (y < this.list_y) {
 							this.start_auto_scroll(1, function() {
-                                var to_id;
                                 var item_type = plst.items[plst.start_id].type;
                                 var grp_id = plst.items[plst.start_id].grp_id;
                                 if (item_type > 0) {
-                                    to_id = plst.groups[grp_id].first;
+                                    end_ = plst.groups[grp_id].first;
                                 } else if (item_type < 0) {
-                                    to_id = plst.groups[grp_id + 1].first;
+                                    end_ = plst.groups[grp_id + 1].first;
                                 } else {
-                                    to_id = plst.items[plst.start_id].list_id;
+                                    end_ = plst.items[plst.start_id].list_id;
                                 };
-                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, to_id);
+                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, end_);
                             });
 						} else if (y > this.list_y + this.list_h) {
 							this.start_auto_scroll(-1, function() {
-                                var to_id;
                                 var item_type = plst.items[plst.start_id + plst.visible_rows - 1].type;
                                 var grp_id = plst.items[plst.start_id + plst.visible_rows - 1].grp_id;
                                 if (item_type > 0) {
-                                    to_id = plst.groups[grp_id - 1].last;
+                                    end_ = plst.groups[grp_id - 1].last;
                                 } else if (item_type < 0) {
-                                    to_id = plst.groups[grp_id].last;
+                                    end_ = plst.groups[grp_id].last;
                                 } else {
-                                    to_id = plst.items[plst.start_id + plst.visible_rows - 1].list_id;
+                                    end_ = plst.items[plst.start_id + plst.visible_rows - 1].list_id;
                                 };
-                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, to_id);
+                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, end_);
                             });
 						} else {
 							this.stop_auto_scroll();
-						};;
+						};
 					};
-
 
                 };
 
