@@ -244,9 +244,12 @@ var DT_SINGLELINE = 0x00000020;
 var MF_GRAYED = 0x00000001;
 var MF_STRING = 0x00000000;
 var MF_POPUP = 0x00000010;
+var MF_DISABLED = 0x00000002;
 
 var IDC_ARROW = 32512;
 var IDC_HAND = 32649;
+var IDC_HELP = 32651;
+var IDC_NO = 32648
 
 var DLGC_WANTALLKEYS = 0x0004; /* Control wants all keys           */
 
