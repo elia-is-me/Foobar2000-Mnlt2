@@ -732,12 +732,22 @@ Playlist = function() {
 						if (this.hover_item) {
 							this.drag_split_line_y = this.hover_item.y;
 						}else {
-							// --- else if mouse over empty list area, show split line at bottom
+							// --- else if mouse over empty list area
 							if (this.total_rows > this.total) { 
-								if (y > this.items[this.total - 1].y + this.row_height && y < this.list_y + this.list_h ) {
+								if (y > this.items[this.total - 1].y + this.row_height) {
 									this.drag_split_line_y = this.items[this.total - 1].y + this.row_height;
 								}
 							}
+                            if (this.start_id == 0) {
+                                if (y < this.items[0].y) {
+                                    for (var i = 0; i < this.visible_rows; i++) {
+                                        if (this.items[i].type == 0) {
+                                            this.drag_split_line_y = this.items[i].y;
+                                            break;
+                                        };
+                                    };
+                                };
+                            };
 						};
 					};
 
@@ -817,16 +827,74 @@ Playlist = function() {
 				};
 				this.auto_scrolling && this.stop_auto_scroll();
 
+                // -- here move selection code are from catrox by extremehunter1972 --
 				if (this.items_clicked) {
 					if (this.items_dragging) {
 						// do dragdrop action
+                        var handles_sel = plman.GetPlaylistSelectedItems(g_active_playlist);
+                        var sel_total = handles_sel.Count;
+                        var list_total = this.handles.Count;
                         if (this.hover_item && this.hover_item.type == 0) {
                             var list_id = this.hover_item.list_id;
-                            g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
-                            console(g_focus_id);
-                            console(list_id);
-                            plman.MovePlaylistSelection(g_active_playlist, (list_id - g_focus_id));
+                            var delta_;
+                            if (sel_total > 1) {
+                                var temp;
+                                var odd, add;
+                                var sel_ = [];
+                                for (var i = 0; i < list_total; i++) {
+                                    if (plman.IsPlaylistItemSelected(g_active_playlist, i)) {
+                                        sel_.push(i);
+                                    };
+                                };
+
+                                for (var i = 0; i < list_total; i++) {
+                                    if (plman.IsPlaylistItemSelected(g_active_playlist, i)) {
+                                        if (temp && ((i - 1) != temp)) {
+                                            odd = true;
+                                            break;
+                                        };
+                                        temp = i;
+                                    };
+                                };
+                                if (odd) {
+                                    for (var i = 0; i < sel_.length; i++) {
+                                        if (sel_[i] < list_id) {
+                                            add = i + 1;
+                                        }
+                                    };
+                                    plman.MovePlaylistSelection(g_active_playlist, -list_total);
+                                } else {
+                                    for (var i = 0; i < sel_.length; i++) {
+                                        if (sel_[i] == g_focus_id) {
+                                            add = i;
+                                            break;
+                                        };
+                                    };
+                                };
+                            };
+                            if (g_focus_id > list_id) {
+                                (sel_total > 1) ? (odd ? delta_ = list_id - add : delta_ = - (g_focus_id - list_id - add)) : delta_ = -(g_focus_id - list_id);
+                            } else {
+                                (sel_total > 1) ? (odd ? delta_ = list_id - add : delta_ = (list_id - g_focus_id - (sel_total - add))) : delta_ = (list_id - 1 - g_focus_id);
+                            };
+
+                            if (!odd && plman.IsPlaylistItemSelected(g_active_playlist, list_id)) delta_ = 0;
+                            plman.MovePlaylistSelection(g_active_playlist, delta_);
                         };
+
+                        // move after the last list item
+                        if (this.total < this.total_rows) {
+                            if (y > this.items[this.visible_rows - 1].y + this.row_height) {
+                                plman.MovePlaylistSelection(g_active_playlist, list_total - sel_total);
+                            };
+                        };
+
+                        if (this.start_id == 0) {
+                            if (y < this.items[0].y) {
+                                plman.MovePlaylistSelection(g_active_playlist, sel_total - list_total);
+                            } 
+                        };
+
 						this.items_dragging = false;
 					} else {
 						// --- if this.hover_item && this.hover_item_id == this.items_clicked_id:
