@@ -2,20 +2,20 @@
 // ============================================ //
 // @name "Playlist"
 // @intro "a simple wsh playlist"
-// @update 2015-10-13
+// @update "2015-10-16"
 // ============================================ //
 
 Playlist = function() {
 	this.margin = prop.margin;
 	this.handles = null;
-    this.handles_selection = plman.GetPlaylistSelectedItems(g_active_playlist);
+    //this.handles_selection = plman.GetPlaylistSelectedItems(g_active_playlist);
 	this.row_height = prop.row_height;
 	this.total;
 	this.groups = [];
 	this.items = []; 
 	this.scrb_right = this.margin;
 	this.scrb_width = prop.scrollbar_width;
-	this.show_scrb = true;
+	this.show_scrb = prop.show_scrollbar;
 	this.need_scrb;
 	this.scrb = new Scroll(true, this);
 
@@ -472,7 +472,7 @@ Playlist = function() {
 					is_focused = plman.GetPlaylistFocusItemIndex(g_active_playlist) == item.list_id;
 					if (is_playing) this.playing_item_visible = true;
 
-					if (prop.enable_odd_even) {
+					if (prop.odd_even_rows) {
 						if (item.is_odd) gr.FillSolidRect(rx, ry+1, rw, rh-1, odd_color);
 						else gr.FillSolidRect(rx, ry+1, rw, rh-1, even_color);
 					};
@@ -514,7 +514,7 @@ Playlist = function() {
 					gr.GdiDrawText(title, g_fonts.item, font_color, title_x, ry, title_w, rh, dt_lc);
 			
 				} else if (item.type == -1) {
-					if (prop.enable_odd_even) {
+					if (prop.odd_even_rows) {
 						if (item.is_odd) gr.FillSolidRect(rx, ry+1, rw, rh-1, odd_color)
 						else gr.FillSolidRect(rx, ry+1, rw, rh-1, even_color);
 					};
@@ -740,20 +740,18 @@ Playlist = function() {
 						// ---if mouse over track items, show split-line
 						if (this.hover_item) {
 							this.drag_split_line_y = this.hover_item.y;
-						}else {
+						} else {
 							// --- else if mouse over empty list area
 							if (this.total_rows > this.total) { 
 								if (y > this.items[this.total - 1].y + this.row_height) {
 									this.drag_split_line_y = this.items[this.total - 1].y + this.row_height;
 								}
 							}
-                            if (this.start_id == 0) {
-                                if (y < this.items[0].y) {
-                                    for (var i = 0; i < this.visible_rows; i++) {
-                                        if (this.items[i].type == 0) {
-                                            this.drag_split_line_y = this.items[i].y;
-                                            break;
-                                        };
+                            else if (this.start_id == 0 && y < this.items[0].y) {
+                                for (var i = 0; i < this.visible_rows; i++) {
+                                    if (this.items[i].type == 0) {
+                                        this.drag_split_line_y = this.items[i].y;
+                                        break;
                                     };
                                 };
                             };
@@ -789,6 +787,7 @@ Playlist = function() {
                 if (this.selecting) {
 
                     var end_, start_;
+                    //
                     if (this.items_clicked_id > -1) {
                         start_ = this.items[this.items_clicked_id].list_id;
                     };
@@ -856,39 +855,37 @@ Playlist = function() {
 
 					// --- auto-scroll
 					if (this.selecting && this.total_rows < this.total) {
+                        //
 						if (y < this.list_y) {
 							this.start_auto_scroll(1, function() {
-                                var to_id;
                                 var item_type = plst.items[plst.start_id].type;
                                 var grp_id = plst.items[plst.start_id].grp_id;
                                 if (item_type > 0) {
-                                    to_id = plst.groups[grp_id].first;
+                                    end_ = plst.groups[grp_id].first;
                                 } else if (item_type < 0) {
-                                    to_id = plst.groups[grp_id + 1].first;
+                                    end_ = plst.groups[grp_id + 1].first;
                                 } else {
-                                    to_id = plst.items[plst.start_id].list_id;
+                                    end_ = plst.items[plst.start_id].list_id;
                                 };
-                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, to_id);
+                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, end_);
                             });
 						} else if (y > this.list_y + this.list_h) {
 							this.start_auto_scroll(-1, function() {
-                                var to_id;
                                 var item_type = plst.items[plst.start_id + plst.visible_rows - 1].type;
                                 var grp_id = plst.items[plst.start_id + plst.visible_rows - 1].grp_id;
                                 if (item_type > 0) {
-                                    to_id = plst.groups[grp_id - 1].last;
+                                    end_ = plst.groups[grp_id - 1].last;
                                 } else if (item_type < 0) {
-                                    to_id = plst.groups[grp_id].last;
+                                    end_ = plst.groups[grp_id].last;
                                 } else {
-                                    to_id = plst.items[plst.start_id + plst.visible_rows - 1].list_id;
+                                    end_ = plst.items[plst.start_id + plst.visible_rows - 1].list_id;
                                 };
-                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, to_id);
+                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, end_);
                             });
 						} else {
 							this.stop_auto_scroll();
-						};;
+						};
 					};
-
 
                 };
 
@@ -1037,50 +1034,12 @@ Playlist = function() {
                 plman.SetActivePlaylistContext();
 				break;
 			case "right":
-				// up
-				//if (this.right_clicked) {
-				//	this.right_clicked = false;
-
                 this.selecting = false;
                 this.items_clicked = false;
                 this.items_dragging = false;
                 this.context_menu(x, y, g_focus_id);
                 this.right_clicked = false;
-				//	return true;
-				//};
-                /*
-				// down
-				if (!this.hover_item) {
-					plman.ClearPlaylistSelection(g_active_playlist);
-					//this.context_type = -1;
-				};
-				if (this.hover_item) {
-					var item_type = this.items[this.hover_item_id].type;
-					switch (true) {
-						case (item_type > 0):
-							var grp_id = this.items[this.hover_item_id].grp_id;
-							if (!this.is_group_selected(grp_id)) {
-								plman.ClearPlaylistSelection(g_active_playlist);
-								this.select_group_tracks(grp_id);
-								plman.SetPlaylistFocusItem(g_active_playlist, this.groups[grp_id].first);
-							};
-							//this.context_type = 1;
-							break;
-						case (item_type == 0):
-							var list_id = this.items[this.hover_item_id].list_id;
-							if (!plman.IsPlaylistItemSelected(g_active_playlist, list_id)) {
-								plman.ClearPlaylistSelection(g_active_playlist);
-								plman.SetPlaylistSelectionSingle(g_active_playlist, list_id, true);
-								plman.SetPlaylistFocusItem(g_active_playlist, list_id);
-							};
-							//this.context_type = 1;
-							break;
-						default:
-							//this.context_type = 0;
-							break;
-					};
-				};
-                */
+
 				break;
 			case "leave":
                 this.selecting = false;
@@ -1122,7 +1081,7 @@ Playlist = function() {
         };
     };
 
-	this.show_now_playing_called = false;
+	//this.show_now_playing_called = false;
 	this.show_now_playing = function () {
 		if (!fb.IsPlaying) return;
 
@@ -1178,7 +1137,7 @@ Playlist = function() {
 		this.repaint();
 
 		if (plman.ActivePlaylist != plman.PlayingPlaylist){ 
-			this.show_now_playing_called = true;
+			g_show_now_playing_called = true;
 			//console("show now playing...");
 		};
 
@@ -1186,20 +1145,29 @@ Playlist = function() {
 	};
 
 	this.context_menu = function(x, y, type) {
-		var _menu = window.CreatePopupMenu();
+		var _menu = window.CreatePopupMenu(); // main
+        var _ce = window.CreatePopupMenu(); // collapse/expand
 		var Context = fb.CreateContextMenuManager();
 		var context_base_id;
 
 		var handles_selection = plman.GetPlaylistSelectedItems(g_active_playlist);
-		var has_selection = handles_selection.Count;
-		if (has_selection) Context.InitContext(handles_selection);
+		var has_sel = handles_selection.Count;
+		if (has_sel) Context.InitContext(handles_selection);
 
-		if (fb.IsPlaying) {
-			_menu.AppendMenuItem(MF_STRING, 1, "Show now playing");
-			if (has_selection) _menu.AppendMenuSeparator();
-		} 
+        fb.IsPlaying && _menu.AppendMenuItem(MF_STRING, 1, "Show now playing");
+        (this.total > 0) &&_menu.AppendMenuItem(MF_STRING, 2, "Refresh");
+        if (has_sel && (fb.IsPlaying || this.total > 0)) {
+            _menu.AppendMenuSeparator();
+        };
 
-		if (has_selection) {
+        if (prop.show_group_header) {
+            _ce.AppendTo(_menu, MF_STRING | MF_POPUP, "Collapse/Expand");
+            _menu.AppendMenuSeparator();
+            _ce.AppendMenuItem(MF_STRING, 50, "Collapse all");
+            _ce.AppendMenuItem(MF_STRING, 50, "Expand all");
+        };
+
+		if (has_sel) {
 			_menu.AppendMenuItem(MF_STRING, 10, "Cut\tCtrl+X");
 			_menu.AppendMenuItem(MF_STRING, 11, "Copy\tCtrl+C");
 		};
@@ -1207,20 +1175,24 @@ Playlist = function() {
 			_menu.AppendMenuItem(MF_STRING, 12, "Paste\tCtrl+V");
 		};
 
-
 		context_base_id = 1000;
-		if (has_selection){ 
+		if (has_sel){ 
 			_menu.AppendMenuSeparator();
 			Context.BuildMenu(_menu, context_base_id, -1);
 		};
 
 		var ret = _menu.TrackPopupMenu(x, y);
 
-		if (has_selection) Context.ExecuteByID(ret - context_base_id);
+		if (has_sel) Context.ExecuteByID(ret - context_base_id);
 		switch(ret) {
 			case 1:
 				this.show_now_playing();
 				break;
+            case 2:
+                this.update_list();
+                this.handles_in_clipboard = null;
+                this.handles_in_clipboard_count = 0;
+                break;
 			case 10:
 				this.cut();
 				break;
@@ -1233,6 +1205,7 @@ Playlist = function() {
 		};
 
 		_menu.Dispose();
+        _ce.Dispose();
 		Context.Dispose();
 		return true;
 	};
@@ -1329,7 +1302,7 @@ Scroll = function(vertical, parent) {
 					if (this.cursor_y + this.cursor_h > this.y + this.h) {
 						this.cursor_y = this.y + this.h - this.cursor_h;
 					}
-					this.parent.start_id = Math.floor((this.cursor_y - this.y) * this.parent.total / this.parent.h);
+					this.parent.start_id = Math.ceil((this.cursor_y - this.y) * this.parent.total / this.parent.h);
 					this.parent.check_start_id();
 					this.parent.repaint();
 				};
@@ -1375,20 +1348,20 @@ Scroll = function(vertical, parent) {
 	};
 };
 
-
 prop = new function() {
 	this.use_system_color = window.GetProperty("_prop_color: Use system color", true);
 	this.colorscheme = window.GetProperty("_prop_color: Colorscheme(light, dark, user)", "dark");
 	this.font_name = window.GetProperty("_prop_font: Default font name", "Segoe UI");
 	this.group_format = window.GetProperty("_prop_grp: Group format", "%album artist% | %album%");
 	this.group_header_rows = window.GetProperty("_prop_grp: Group header rows", 4);
-	this.group_minimum_rows = window.GetProperty("_prop_grp: Min group rows", 0);
+	this.group_minimum_rows = window.GetProperty("_prop_grp: Minimum group rows", 0);
 	this.group_extra_rows = window.GetProperty("_prop_grp: Extra group rows", 0);
 	this.show_group_header = window.GetProperty("_prop_grp: Show group header", true);
 	this.row_height = window.GetProperty("_prop: Row height", 22);
-	this.margin = window.GetProperty("_prop: margin", 15);
+	this.margin = window.GetProperty("_prop: Margin", 15);
+    this.show_scrollbar = window.GetProperty("_prop: Show scrollbar", true);
 	this.scrollbar_width = 12;
-	this.enable_odd_even = window.GetProperty("_prop: Enable odd/even row hightlight", true);
+	this.odd_even_rows = window.GetProperty("_prop: Enable odd/even rows hightlight", true);
 	this.scroll_step = window.GetProperty("_prop: Default scroll step", 3);
 	this.auto_collaspe = window.GetProperty("_prop: Auto collapse", false);
 	this.show_focus_item = window.GetProperty("_prop: Show focused item", false);
@@ -1403,7 +1376,7 @@ colorscheme = {
 	light: {
 		txt_normal: RGB(70, 70, 70),
 		txt_selected: RGB(0, 0, 0), 
-		bg_normal: RGB(245, 245, 245),
+		bg_normal: RGB(255, 255, 255),
 		bg_selected: RGB(120, 120, 120),
 		highlight: RGB(215, 65, 100)
 	},
@@ -1424,6 +1397,8 @@ colorscheme = {
 };
 
 
+
+
 ///////////////
 var dt_cc = DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
 var dt_lc = DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
@@ -1438,6 +1413,7 @@ var repaint_counter = 0;
 
 var g_active_playlist = plman.ActivePlaylist;
 var g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
+var g_show_now_playing_called = false;
 
 var plst = new Playlist();
 get_fonts();
@@ -1455,8 +1431,8 @@ function on_size() {
 function on_paint(gr) {
 	gr.FillSolidRect(0, 0, ww, wh, g_colors.bg_normal);
 	plst.draw(gr);
-	gr.FillSolidRect(0, 0, ww, 24, RGB(25, 25, 25));
     gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
+	gr.FillSolidRect(0, 0, ww, 24, RGB(35, 35, 35));
 };
 
 
@@ -1518,7 +1494,7 @@ function on_playlist_switch() {
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 	plst.update_list();
 	if (plman.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
-	plst.show_now_playing_called = false;
+	g_show_now_playing_called = false;
 };
 
 function on_playlist_items_reordered(playlist) {
