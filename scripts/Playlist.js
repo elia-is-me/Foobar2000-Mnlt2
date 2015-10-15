@@ -24,14 +24,11 @@ Playlist = function() {
 
 	this.extra_grp_items = prop.group_extra_rows;
 	this.items_to_add;
-
 	this.playing_item_visible = false;
 
 	this.repaint = function () {
 		window.Repaint();
 	};
-
-	this.start_item_indexes = [];
 
 	this.get_start_id = function() {
 		this.start_arr = [];
