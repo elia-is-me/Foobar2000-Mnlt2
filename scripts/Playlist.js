@@ -1037,50 +1037,12 @@ Playlist = function() {
                 plman.SetActivePlaylistContext();
 				break;
 			case "right":
-				// up
-				//if (this.right_clicked) {
-				//	this.right_clicked = false;
-
                 this.selecting = false;
                 this.items_clicked = false;
                 this.items_dragging = false;
                 this.context_menu(x, y, g_focus_id);
                 this.right_clicked = false;
-				//	return true;
-				//};
-                /*
-				// down
-				if (!this.hover_item) {
-					plman.ClearPlaylistSelection(g_active_playlist);
-					//this.context_type = -1;
-				};
-				if (this.hover_item) {
-					var item_type = this.items[this.hover_item_id].type;
-					switch (true) {
-						case (item_type > 0):
-							var grp_id = this.items[this.hover_item_id].grp_id;
-							if (!this.is_group_selected(grp_id)) {
-								plman.ClearPlaylistSelection(g_active_playlist);
-								this.select_group_tracks(grp_id);
-								plman.SetPlaylistFocusItem(g_active_playlist, this.groups[grp_id].first);
-							};
-							//this.context_type = 1;
-							break;
-						case (item_type == 0):
-							var list_id = this.items[this.hover_item_id].list_id;
-							if (!plman.IsPlaylistItemSelected(g_active_playlist, list_id)) {
-								plman.ClearPlaylistSelection(g_active_playlist);
-								plman.SetPlaylistSelectionSingle(g_active_playlist, list_id, true);
-								plman.SetPlaylistFocusItem(g_active_playlist, list_id);
-							};
-							//this.context_type = 1;
-							break;
-						default:
-							//this.context_type = 0;
-							break;
-					};
-				};
-                */
+
 				break;
 			case "leave":
                 this.selecting = false;
@@ -1122,7 +1084,7 @@ Playlist = function() {
         };
     };
 
-	this.show_now_playing_called = false;
+	//this.show_now_playing_called = false;
 	this.show_now_playing = function () {
 		if (!fb.IsPlaying) return;
 
@@ -1178,7 +1140,7 @@ Playlist = function() {
 		this.repaint();
 
 		if (plman.ActivePlaylist != plman.PlayingPlaylist){ 
-			this.show_now_playing_called = true;
+			g_show_now_playing_called = true;
 			//console("show now playing...");
 		};
 
@@ -1438,6 +1400,7 @@ var repaint_counter = 0;
 
 var g_active_playlist = plman.ActivePlaylist;
 var g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
+var g_show_now_playing_called = false;
 
 var plst = new Playlist();
 get_fonts();
@@ -1518,7 +1481,7 @@ function on_playlist_switch() {
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 	plst.update_list();
 	if (plman.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
-	plst.show_now_playing_called = false;
+	g_show_now_playing_called = false;
 };
 
 function on_playlist_items_reordered(playlist) {
