@@ -638,6 +638,7 @@ Playlist = function() {
 		switch (event) {
 			case "down":
 				if (this.is_hover_scrb) {  // scrollbar event handler
+                    if (this.right_clicked) return;
 					this.scrb.on_mouse("down", x, y, mask);
 				} else {
 					if (this.double_clicked) return;
@@ -817,6 +818,10 @@ Playlist = function() {
                     if (this.hover_item_id == this.items_clicked_id) {
                         end_ = start_;
                     }
+
+                    if (this.total_rows > this.total && y > this.items[this.visible_rows - 1].y + this.row_height) {
+                        end_ = this.handles.Count - 1;
+                    };
 
                     if (y < this.list_y) {
                         var item_type = plst.items[plst.start_id].type;
@@ -1033,11 +1038,17 @@ Playlist = function() {
 				break;
 			case "right":
 				// up
-				if (this.right_clicked) {
-					this.right_clicked = false;
-					this.context_menu(x, y, g_focus_id);
-					return true;
-				};
+				//if (this.right_clicked) {
+				//	this.right_clicked = false;
+
+                this.selecting = false;
+                this.items_clicked = false;
+                this.items_dragging = false;
+                this.context_menu(x, y, g_focus_id);
+                this.right_clicked = false;
+				//	return true;
+				//};
+                /*
 				// down
 				if (!this.hover_item) {
 					plman.ClearPlaylistSelection(g_active_playlist);
@@ -1069,10 +1080,12 @@ Playlist = function() {
 							break;
 					};
 				};
-				this.repaint();
-				this.right_clicked = true;
+                */
 				break;
 			case "leave":
+                this.selecting = false;
+                this.items_clicked = false;
+                this.items_dragging = false;
 				break;
 			case "wheel":
 				var delta = prop.scroll_step;
@@ -1466,7 +1479,8 @@ function on_mouse_lbtn_up(x, y, mask) {
 };
 
 function on_mouse_rbtn_down(x, y, mask) {
-	plst.on_mouse("right", x, y, mask);
+    plst.right_clicked = true;
+	plst.on_mouse("down", x, y, mask);
 };
 
 function on_mouse_rbtn_up(x, y, mask) {
@@ -1474,7 +1488,8 @@ function on_mouse_rbtn_up(x, y, mask) {
 		return true;
 	};
 	if (mask == VK_SHIFT) return false;
-	return plst.on_mouse("right", x, y, mask);
+    plst.on_mouse("right", x, y, mask);
+	return true;
 };
 
 function on_mouse_wheel(delta) {
