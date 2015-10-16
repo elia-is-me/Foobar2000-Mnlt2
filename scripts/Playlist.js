@@ -563,7 +563,6 @@ Playlist = function() {
 			gr.FillSolidRect(this.list_x, this.drag_split_line_y -1, this.list_w, 2, g_colors.txt_normal & 0x88ffffff);
 		};
 
-
 	};
 
 	this.is_hover_list = function(x, y) {
@@ -1068,7 +1067,6 @@ Playlist = function() {
                 this.items_clicked = false;
                 this.items_dragging = false;
                 this.context_menu(x, y, g_focus_id);
-                this.right_clicked = false;
 
 				break;
 			case "leave":
@@ -1133,6 +1131,7 @@ Playlist = function() {
 		plman.SetPlaylistSelectionSingle(g_active_playlist, playing_item_list_id, true);
 		plman.SetPlaylistFocusItem(g_active_playlist, playing_item_list_id);
 
+		// --------- expand playing group
 		var playing_grp_id = 0;
 		//console("playing list id: " + playing_item_list_id);
 		for (var j = 0; j < this.total; j++) {
@@ -1148,8 +1147,7 @@ Playlist = function() {
 			};
 		};
 
-		// expand playing group
-
+        // ----- scroll to centre of the list
 		var delta;
 		for (var j = 0; j < this.total; j++) {
 			if (this.items[j].type == 0) {
@@ -1237,6 +1235,8 @@ Playlist = function() {
 		_menu.Dispose();
         _ce.Dispose();
 		Context.Dispose();
+
+        this.right_clicked = false;
 		return true;
 	};
 
@@ -1450,6 +1450,7 @@ var repaint_counter = 0;
 var g_active_playlist = plman.ActivePlaylist;
 var g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 var g_show_now_playing_called = false;
+var g_fast_scrolling = true;
 
 var plst = new Playlist();
 get_fonts();
@@ -1467,8 +1468,8 @@ function on_size() {
 function on_paint(gr) {
 	gr.FillSolidRect(0, 0, ww, wh, g_colors.bg_normal);
 	plst.draw(gr);
-    gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
 	gr.FillSolidRect(0, 0, ww, 24, RGB(35, 35, 35));
+    gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
 };
 
 
