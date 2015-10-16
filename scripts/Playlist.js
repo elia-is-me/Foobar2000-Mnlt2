@@ -19,11 +19,11 @@ ImageCache = function(art_id) {
             if (!group_art.load_timer) {
                 group_art.load_timer = window.SetTimeout(function() {
                     if (img_cache.art_id < 5) {
-                        utils.GetAlbumArtAsync(window.ID, metadb, true, false, false);
+                        utils.GetAlbumArtAsync(window.ID, metadb, prop.group_art_id, true, false, false);
                         group_art.load_timer && window.ClearTimeout(group_art.load_timer);
                         group_art.load_timer = false;
                     };
-                }, 25);
+                }, 45);
             }
         }
     };
@@ -245,7 +245,7 @@ Playlist = function() {
 	};
 
 	// item_types >>> group-header: > 0, track: == 0, 填充物: == -1, 隔离物: == -2;
-	this.update_list = function(coll) {
+	this.update_list = function(collapse_all_) {
 		var current, previous;
 		var metadb;
 		var grp_tf = prop.group_format;
@@ -273,8 +273,8 @@ Playlist = function() {
 				this.groups[grp_id] = {};
 				this.groups[grp_id].metadb = metadb;
 				this.groups[grp_id].first = i;
-				this.groups[grp_id].collapsed = prop.auto_collaspe;
                 this.groups[grp_id].key = current;
+                this.groups[grp_id].collapsed = (collapse_all_ ? true : false);
 
 				// prev-grp: add empty row items, type -1
 				if (grp_id > 0) {
@@ -380,12 +380,10 @@ Playlist = function() {
 		this.repaint();
 
         plman.SetActivePlaylistContext(); // to enable main-menu "Edit"
-
 		//console("total length: " + this.total);
 
 	};
-	this.update_list();
-
+	this.update_list(prop.auto_collaspe);
 
 	this.draw = function(gr) {
 		var grp_id, grp_id_saved = -1;
@@ -677,6 +675,7 @@ Playlist = function() {
 	};
 
 	this.collapse_all = function(bool) {
+        this.update_list(bool);
 	};
 
 	this.select_a_to_b = function(a, b) {
@@ -792,6 +791,16 @@ Playlist = function() {
 							};
 							this.selecting = false;
 							plman.SetPlaylistFocusItem(g_active_playlist, this.groups[grp_id].first);
+                            // handle auto collapse
+                            if (prop.auto_collaspe) {
+                                for (var i = 0; i < this.groups.length; i++) {
+                                    if (!this.groups[i].collapsed && i != grp_id) {
+                                        this.collapse_group(i);
+                                    };
+                                };
+                                this.expand_group(grp_id);
+                                //this.double_clicked = true;
+                            };
 							break;
 						case (item_type == 0): // >>>>>>> clicked on track items
 							var list_id = this.hover_item.list_id;
@@ -856,7 +865,7 @@ Playlist = function() {
 				// --------------------------------------------------->  when dragging selections
 				if (this.items_clicked) {
 					// --- 
-					if (!this.hover_item || this.hover_item_id != this.items_clicked_id) {
+					if (!this.right_clicked && (!this.hover_item || this.hover_item_id != this.items_clicked_id)) {
 						this.items_dragging = true;
 					};
 
@@ -883,11 +892,11 @@ Playlist = function() {
 					};
 
 					// --- if mouse over header items, expand the group if collapsed
-					if (this.hover_item && this.hover_item.type > 0) {
-						if (this.groups[this.hover_item.grp_id].collapsed) {
-							this.expand_group(this.hover_item.grp_id);
-						};
-					};
+                    if (!this.right_clicked && this.hover_item && this.hover_item.type > 0) {
+                        if (this.groups[this.hover_item.grp_id].collapsed) {
+                            this.expand_group(this.hover_item.grp_id);
+                        };
+                    };
 
 					// --- auto-scroll
 					if (this.items_dragging && this.total_rows < this.total) {
@@ -1012,6 +1021,7 @@ Playlist = function() {
 					};
 
                 };
+
 
 				if (this.items_dragging) {
 					window.SetCursor(32651);
@@ -1283,9 +1293,9 @@ Playlist = function() {
 		var Context = fb.CreateContextMenuManager();
 		var context_base_id;
 
-		var handles_selection = plman.GetPlaylistSelectedItems(g_active_playlist);
-		var has_sel = handles_selection.Count;
-		if (has_sel) Context.InitContext(handles_selection);
+		var handles_sel = plman.GetPlaylistSelectedItems(g_active_playlist);
+		var has_sel = handles_sel.Count;
+		if (has_sel) Context.InitContext(handles_sel);
 
         fb.IsPlaying && _menu.AppendMenuItem(MF_STRING, 1, "Show now playing");
         (this.total > 0) &&_menu.AppendMenuItem(MF_STRING, 2, "Refresh");
@@ -1297,7 +1307,8 @@ Playlist = function() {
             _ce.AppendTo(_menu, MF_STRING | MF_POPUP, "Collapse/Expand");
             _menu.AppendMenuSeparator();
             _ce.AppendMenuItem(MF_STRING, 50, "Collapse all");
-            _ce.AppendMenuItem(MF_STRING, 50, "Expand all");
+            _ce.AppendMenuItem(MF_STRING, 51, "Collapse all but now playing");
+            _ce.AppendMenuItem(MF_STRING, 52, "Expand all");
         };
 
 		if (has_sel) {
@@ -1322,9 +1333,12 @@ Playlist = function() {
 				this.show_now_playing();
 				break;
             case 2:
-                this.update_list();
+                ///this.update_list();
                 this.handles_in_clipboard = null;
                 this.handles_in_clipboard_count = 0;
+                img_cache = new ImageCache(prop.group_art_id);
+                this.repaint();
+                CollectGarbage()
                 break;
 			case 10:
 				this.cut();
@@ -1335,6 +1349,18 @@ Playlist = function() {
 			case 12:
 				this.paste();
 				break;
+            case 50:
+                this.collapse_all(true);
+                break;
+            case 51:
+                this.collapse_all(true);
+                if (g_active_playlist == fb.PlayingPlaylist) {
+                    this.show_now_playing();
+                }
+                break;
+            case 52:
+                this.collapse_all(false);
+                break;
 		};
 
 		_menu.Dispose();
@@ -1503,7 +1529,7 @@ prop = new function() {
     this.show_rating = window.GetProperty("_prop: Show rating", true);
     this.show_play_count = window.GetProperty("_prop: Show play count", true);
     this.show_group_art = window.GetProperty("_prop: Show group art", true);
-    this.group_art_id = window.GetProperty("_prop: Group art id", 0);
+    this.group_art_id = window.GetProperty("_prop: Group art id(font:0, disc:2, artist:4, genre:5", 0);
     this.keep_aspect_ratio = window.GetProperty("_prop: Keep art aspect ratio", true);
 }();
 
@@ -1577,7 +1603,7 @@ var g_show_now_playing_called = false;
 var g_fast_scrolling = true;
 
 var plst = new Playlist();
-var img_cache = new ImageCache(AlbumArtId.front);
+var img_cache = new ImageCache(prop.group_art_id);
 
 get_metrics();
 get_fonts();
@@ -1754,7 +1780,7 @@ function on_metadb_changed(handles, fromhook) {
 function on_colors_changed() {
 	get_colors();
     get_images();
-    img_cache = new ImageCache(AlbumArtId.front);
+    img_cache = new ImageCache(prop.group_art_id);
 	window.Repaint();
 };
 
@@ -1800,7 +1826,7 @@ function get_colors() {
 
 function get_metrics() {
     group_art.max_w = prop.group_header_rows * prop.row_height - 12;
-    img_cache = new ImageCache(AlbumArtId.front);
+    img_cache = new ImageCache(prop.group_art_id);
 };
 
 function get_images() {
