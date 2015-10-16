@@ -734,6 +734,37 @@ Playlist = function() {
 		this.scroll_timeout_timer = null;
 		this.scroll_interval_timer = null;
 	};
+
+    this.ensure_group_visible = function(grp_id) {
+        var grp_last_item_id;
+        var grp_first_item_id;
+        var delta;
+        for (var i = 0; i < this.total; i++) {
+            if (this.items[i].grp_id == grp_id && (!this.items[i+1] || this.items[i+1].grp_id != grp_id)) {
+                grp_last_item_id = i;
+                break;
+            };
+        };
+        if (grp_last_item_id > this.start_id + this.total_rows) {
+            delta = grp_last_item_id - (this.start_id + this.total_rows);
+            this.scrb.on_mouse("wheel", 0, 0, -delta);
+        };
+
+        for (var i = 0; i < this.total; i++) {
+            if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
+                grp_first_item_id = i;
+                break;
+            };
+        };
+        if (grp_first_item_id < this.start_id) {
+            delta = grp_first_item_id - this.start_id;
+            this.scrb.on_mouse("wheel", 0, 0, -delta);
+        };
+
+        this.save_start_id();
+        return;
+
+    };
 		
 
 	// ---------------------------- playlist mouse event handler
@@ -792,13 +823,15 @@ Playlist = function() {
 							this.selecting = false;
 							plman.SetPlaylistFocusItem(g_active_playlist, this.groups[grp_id].first);
                             // handle auto collapse
-                            if (prop.auto_collaspe) {
+                            if (!this.right_clicked && prop.auto_collaspe) {
                                 for (var i = 0; i < this.groups.length; i++) {
                                     if (!this.groups[i].collapsed && i != grp_id) {
                                         this.collapse_group(i);
                                     };
                                 };
                                 this.expand_group(grp_id);
+                                this.ensure_group_visible(grp_id);
+                                g_avoid_to_clear_selection_on_mouse_up = true;
                                 //this.double_clicked = true;
                             };
 							break;
@@ -1046,7 +1079,9 @@ Playlist = function() {
                             if (this.groups[grp_id].collapsed) {
                                 // 
                                 this.expand_group(grp_id);
+                                this.ensure_group_visible(grp_id);
                                 // --- 检查展开后是否能看的到
+                                /*
                                 var grp_total_rows = Math.max(this.groups[grp_id].last - this.groups[grp_id].first + 1, prop.group_minimum_rows) + prop.group_extra_rows + prop.group_header_rows;
                                 if (grp_total_rows * this.row_height + this.groups[grp_id].y > this.list_y + this.list_h) {
                                     var delta = Math.ceil((grp_total_rows * this.row_height + this.groups[grp_id].y - this.list_y - this.list_h) / this.row_height);
@@ -1054,6 +1089,7 @@ Playlist = function() {
                                     this.scrb.on_mouse("wheel", 0, 0, -delta);
                                     this.save_start_id();
                                 };
+                                */
                             } else {
                                 this.collapse_group(grp_id);
                             };
@@ -1162,10 +1198,14 @@ Playlist = function() {
 						this.items_dragging = false;
 					} else {
 						// --- if this.hover_item && this.hover_item_id == this.items_clicked_id:
-						if (this.hover_item.type == 0) {
+                        if (g_avoid_to_clear_selection_on_mouse_up) {
+                            g_avoid_to_clear_selection_on_mouse_up = false;
+                        } else 
+						if (this.hover_item.type == 0 && !g_avoid_to_clear_selection_on_mouse_up) {
 							plman.ClearPlaylistSelection(g_active_playlist);
 							plman.SetPlaylistSelectionSingle(g_active_playlist, this.hover_item.list_id, true);
 							plman.SetPlaylistFocusItem(g_active_playlist, this.hover_item.list_id);
+                            //g_avoid_to_clear_selection_on_mouse_up = false;
 						};
 					};
 					this.items_clicked = false;
@@ -1601,6 +1641,7 @@ var g_active_playlist = plman.ActivePlaylist;
 var g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 var g_show_now_playing_called = false;
 var g_fast_scrolling = true;
+var g_avoid_to_clear_selection_on_mouse_up = false;
 
 var plst = new Playlist();
 var img_cache = new ImageCache(prop.group_art_id);
