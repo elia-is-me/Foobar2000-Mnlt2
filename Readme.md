@@ -21,7 +21,7 @@
 * 等等
 
 #### 待完成：
-* Show cover art
+* ~~Show cover art~~
 * Show playback queue items
 * Collapse/Expand features
 * Dragdrop from outside

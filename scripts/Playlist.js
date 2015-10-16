@@ -488,7 +488,7 @@ Playlist = function() {
                                     gr.DrawImage(img, img_x, img_y, img_w, img_h, 0, 0, img.Width, img.Height, 0, 255);
                                 } else {
                                     gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x55ffffff);
-                                    gr.GdiDrawText("Loading", g_fonts.item, g_colors.txt_normal, cx, cy, cw, cw, dt_cc);
+                                    gr.GdiDrawText("Loading", gdi.Font("Segoe UI", 14, 1), g_colors.txt_normal, cx, cy, cw, cw, dt_cc);
                                 };
                             };
 
