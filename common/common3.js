@@ -29,6 +29,16 @@ Array.prototype.unique = function() {
 	return arr;
 };
 
+Object.prototype.getPropertyCount = function() {
+	var c = 0;
+	for (var i in this) {
+		if (this.hasOwnProperty(i)) {
+			c++;
+		};
+	}
+	return c;
+};
+
 
 ///////////////////////////////////////////////////// constructors
 
