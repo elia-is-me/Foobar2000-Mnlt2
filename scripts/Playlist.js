@@ -19,9 +19,7 @@ ImageCache = function(art_id) {
             if (!group_art.load_timer) {
                 group_art.load_timer = window.SetTimeout(function() {
                     if (img_cache.art_id < 5) {
-                    //    if (!plst.auto_scrolling) {
-                            utils.GetAlbumArtAsync(window.ID, metadb, true, false, false);
-                     //   };
+                        utils.GetAlbumArtAsync(window.ID, metadb, true, false, false);
                         group_art.load_timer && window.ClearTimeout(group_art.load_timer);
                         group_art.load_timer = false;
                     };
@@ -472,14 +470,13 @@ Playlist = function() {
 							if (delta < -10) delta = -10;
 							var delta2 = 58 + delta;
 							// cover art
-                            //if (!this.groups[grp_id].grp_img)
                             var cx = rx;
                             var cw = 0;
                             if (prop.show_group_art) {
                                 this.groups[grp_id].grp_img = img_cache.hit(metadb, grp_id);
                                 var img = this.groups[grp_id].grp_img;
                                 var cp = 4;
-                                var cx = rx + cp;
+                                var cx = rx + cp * 2;
                                 var cy = grp_y + cp;
                                 var cw = grp_h - cp * 2;
                                 if (img) {
