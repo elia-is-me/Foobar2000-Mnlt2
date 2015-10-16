@@ -359,7 +359,7 @@ Playlist = function() {
 				if (item.type > -1)
 					metadb = item.metadb;
 
-				gr.GdiDrawText(item_id, g_fonts.item, blendColors(g_colors.bg_normal, g_colors.txt_normal, 0.5), rx - 15, ry, 15, rh, dt_cc);
+				//gr.GdiDrawText(item_id, g_fonts.item, blendColors(g_colors.bg_normal, g_colors.txt_normal, 0.5), rx - 15, ry, 15, rh, dt_cc);
 
 				// ---------------------------------------------------------draw group header
 				if (item.type > 0) {
@@ -495,22 +495,42 @@ Playlist = function() {
 					var tn = $("[%discnumber%.]%tracknumber%", metadb);
 					var tn_x = rx + p * 4;
 					var tn_w = 30;
-					gr.GdiDrawText(tn, g_fonts.item, g_colors.txt_normal, tn_x, ry, tn_w, rh, dt_rc);
+					gr.GdiDrawText(tn, g_fonts.item, font_color, tn_x, ry, tn_w, rh, dt_rc);
+
+					// rating
+                    var p = 8;
+                    Rating.x = rx + rw;
+                    if (prop.show_rating) {
+                        var rating = $("%rating%", metadb);
+                        var star_w  = 14;
+                        var color = blendColors(font_color, g_colors.bg_normal, 0.2);
+                        Rating.w = star_w * 5;
+                        Rating.x = Rating.x - p - Rating.w;
+
+                        for (var r = 0; r < 5; r++) {
+                            var star_x = Rating.x + r * star_w;
+                            var font = (r < rating ? g_fonts.rating1 : g_fonts.rating2);
+                            gr.GdiDrawText(r < rating ? "\u2605" : "\u2219", font, color, star_x, ry, star_w, rh, dt_cc);
+                        };
+                    };
 
 					// length
+                    var p = 10;
 					var trk_length = $("%length%", metadb);
-					var trk_length_x = rx + rw - 50 - p;
-					var trk_length_w = 50;
+					var trk_length_w = 40;
+					var trk_length_x = Rating.x - trk_length_w - p;
 					gr.GdiDrawText(trk_length, g_fonts.item, font_color, trk_length_x, ry, trk_length_w, rh, dt_rc);
-					// list_index
-					var list_index = item.list_id;
-					var list_index_w = 30;
-					var list_index_x = trk_length_x - list_index_w - p;
-					gr.GdiDrawText(list_index, g_fonts.item, blendColors(g_colors.txt_normal, g_colors.highlight, 0.5), list_index_x, ry, list_index_w, rh, dt_lc);
+                    // count
+                    var p = 5;
+                    var count = $("%play_count%", metadb);
+                    var count_w = 30;
+                    var count_x = trk_length_x - count_w - p;
+                    gr.GdiDrawText(count, g_fonts.item, blendColors(font_color, g_colors.bg_normal, 0.5), count_x, ry, count_w, rh, dt_cc);
 					// title
+                    var p = 5;
 					var title = $("%title%", metadb);
 					var title_x = tn_x + tn_w + p * 2;
-					var title_w = list_index_x - title_x - p;
+					var title_w = count_x - title_x - p;
 					gr.GdiDrawText(title, g_fonts.item, font_color, title_x, ry, title_w, rh, dt_lc);
 			
 				} else if (item.type == -1) {
@@ -520,7 +540,7 @@ Playlist = function() {
 					};
 				} else {
                     //gr.FillSolidRect(rx, ry, rw, rh, 0xa0ffffff);
-                };;
+                };
 
 			} // eol;
 		} else { 
@@ -903,6 +923,7 @@ Playlist = function() {
 				if (this.hover_item) {
                     this.double_clicked = true;
 					var item_type = this.items[this.hover_item_id].type;
+                    // rating
 					switch (true) {
 						case (item_type > 0):
                             var item_id = this.hover_item_id;
@@ -924,6 +945,15 @@ Playlist = function() {
                             };
 							break;
 						case (item_type == 0):
+                            // rating
+                            if (prop.show_rating && this.hover_item && this.hover_item.type == 0 && x > Rating.x && x < Rating.x + Rating.w) {
+                                var star_w = Rating.w / 5;
+                                var metadb = this.hover_item.metadb;
+                                var rating_curr = $("%rating%", metadb);
+                                var rating_to = Math.ceil((x - Rating.x) / star_w);
+                                (rating_curr == rating_to) ? fb.RunContextCommandWithMetadb("<not set>", metadb) : fb.RunContextCommandWithMetadb("Rating/" + rating_to, metadb);
+                                break;
+                            };
 							var list_id = this.items[this.hover_item_id].list_id;
 							plman.ExecutePlaylistDefaultAction(g_active_playlist, list_id);
 							break;
@@ -1365,6 +1395,8 @@ prop = new function() {
 	this.scroll_step = window.GetProperty("_prop: Default scroll step", 3);
 	this.auto_collaspe = window.GetProperty("_prop: Auto collapse", false);
 	this.show_focus_item = window.GetProperty("_prop: Show focused item", false);
+    this.show_rating = window.GetProperty("_prop: Show rating", true);
+    this.show_play_count = window.GetProperty("_prop: Show play count", true);
 }();
 
 
@@ -1396,6 +1428,10 @@ colorscheme = {
 	}
 };
 
+Rating = {
+    x: 0,
+    w: 0,
+};
 
 
 
@@ -1577,6 +1613,8 @@ function get_fonts() {
 	g_fonts.header1 = gdi.Font(g_fonts.name, 18, 1);
 	g_fonts.header2 = gdi.Font(g_fonts.name, 16, 0);
 	g_fonts.header3 = gdi.Font(g_fonts.name, 14, 0);
+    g_fonts.rating1 = gdi.Font("Segoe UI Symbol", 16, 0);
+    g_fonts.rating2 = gdi.Font("Segoe UI Symbol", 14, 0);
 };
 
 function get_colors() {
