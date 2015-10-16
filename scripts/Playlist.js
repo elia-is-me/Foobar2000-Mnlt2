@@ -16,14 +16,14 @@ ImageCache = function(art_id) {
         if (img) return img;
         if (typeof(img) == "undefined" || img == null) {
             // if image not in cache list, load
-            if (!group_image.load_timer) {
-                group_image.load_timer = window.SetTimeout(function() {
+            if (!group_art.load_timer) {
+                group_art.load_timer = window.SetTimeout(function() {
                     if (img_cache.art_id < 5) {
                     //    if (!plst.auto_scrolling) {
                             utils.GetAlbumArtAsync(window.ID, metadb, true, false, false);
                      //   };
-                        group_image.load_timer && window.ClearTimeout(group_image.load_timer);
-                        group_image.load_timer = false;
+                        group_art.load_timer && window.ClearTimeout(group_art.load_timer);
+                        group_art.load_timer = false;
                     };
                 }, 25);
             }
@@ -31,12 +31,12 @@ ImageCache = function(art_id) {
     };
 
     this.get_it = function(metadb, grp_id, image) {
-        var cw = group_image.max_w;
+        var cw = group_art.max_w;
         var ch = cw;
         var img;
 
         // calc scale
-        if (group_image.kar) { // keep aspectratio
+        if (group_art.kar) { // keep aspectratio
             if (!image) {
                 var pw = cw;
                 var ph = ch;
@@ -473,18 +473,26 @@ Playlist = function() {
 							var delta2 = 58 + delta;
 							// cover art
                             //if (!this.groups[grp_id].grp_img)
+                            var cx = rx;
+                            var cw = 0;
+                            if (prop.show_group_art) {
                                 this.groups[grp_id].grp_img = img_cache.hit(metadb, grp_id);
-							var cover_margin = 4;
-							var cx = rx + cover_margin;
-							var cy = grp_y + cover_margin;
-							var cw = grp_h - cover_margin * 2;
-                            var img;
-                            var img = this.groups[grp_id].grp_img;
-							gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x55ffffff);
-                            if (img) {
-                                gr.DrawImage(img, cx + 2, cy + 2, cw - 4, cw - 4, 0, 0, img.Width, img.Height, 0, 255);
-                            } else {
-                                gr.GdiDrawText("Loading", g_fonts.item, g_colors.txt_normal, cx, cy, cw, cw, dt_cc);
+                                var img = this.groups[grp_id].grp_img;
+                                var cp = 4;
+                                var cx = rx + cp;
+                                var cy = grp_y + cp;
+                                var cw = grp_h - cp * 2;
+                                if (img) {
+                                    var img_w = img.Width;
+                                    var img_h = img.Height;
+                                    var img_x = cx + (cw - img_w) / 2;
+                                    var img_y = cy + (cw - img_h) / 2;
+                                    gr.FillSolidRect(img_x - 2, img_y - 2, img_w + 4, img_h + 4, g_colors.txt_normal & 0x55ffffff);
+                                    gr.DrawImage(img, img_x, img_y, img_w, img_h, 0, 0, img.Width, img.Height, 0, 255);
+                                } else {
+                                    gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x55ffffff);
+                                    gr.GdiDrawText("Loading", g_fonts.item, g_colors.txt_normal, cx, cy, cw, cw, dt_cc);
+                                };
                             };
 
 							var p = 10;
@@ -1487,6 +1495,9 @@ prop = new function() {
 	this.show_focus_item = window.GetProperty("_prop: Show focused item", false);
     this.show_rating = window.GetProperty("_prop: Show rating", true);
     this.show_play_count = window.GetProperty("_prop: Show play count", true);
+    this.show_group_art = window.GetProperty("_prop: Show group art", true);
+    this.group_art_id = window.GetProperty("_prop: Group art id", 0);
+    this.keep_aspect_ratio = window.GetProperty("_prop: Keep art aspect ratio", true);
 }();
 
 
@@ -1526,7 +1537,7 @@ Rating = {
 };
 
 
-group_image = {
+group_art = {
     kar: prop.keep_aspect_ratio,
 //    visible: true,
     w: 0,
@@ -1731,6 +1742,8 @@ function on_metadb_changed(handles, fromhook) {
 
 function on_colors_changed() {
 	get_colors();
+    get_images();
+    img_cache = new ImageCache(AlbumArtId.front);
 	window.Repaint();
 };
 
@@ -1770,21 +1783,21 @@ function get_colors() {
 };
 
 function get_metrics() {
-    group_image.max_w = prop.group_header_rows * prop.row_height;
+    group_art.max_w = prop.group_header_rows * prop.row_height - 12;
     img_cache = new ImageCache(AlbumArtId.front);
 };
 
 function get_images() {
-    var cw = group_image.max_w;
+    var cw = group_art.max_w;
     var img, g;
     img = gdi.CreateImage(cw, cw);
     g = img.GetGraphics();
-    var color = combineColors(g_colors.bg_normal, 0x15000000);
+    var color = blendColors(g_colors.bg_normal, 0xff000000, 0.2);
     g.FillSolidRect(0, 0, cw, cw, color);
-    g.SetSmoothingMode(5);
-    var color = g_colors.txt_normal & 0x85ffffff;
-    g.DrawString("No Cover", gdi.Font("Tahoma", 14, 1), color, 0, 0, cw, cw, StringFormat(1, 1));
-    g.SetSmoothingMode(0);
+    g.SetTextRenderingHint(4);
+    var color = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.5);
+    g.DrawString("No Cover", gdi.Font("Segoe UI", 14, 1), color, 0, 0, cw, cw, StringFormat(1, 1));
+    g.SetTextRenderingHint(0);
     img.ReleaseGraphics(g);
     images.no_cover = img;
 };
