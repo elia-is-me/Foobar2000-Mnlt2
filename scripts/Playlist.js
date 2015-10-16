@@ -1467,8 +1467,8 @@ function on_size() {
 function on_paint(gr) {
 	gr.FillSolidRect(0, 0, ww, wh, g_colors.bg_normal);
 	plst.draw(gr);
-    gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
 	gr.FillSolidRect(0, 0, ww, 24, RGB(35, 35, 35));
+    gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
 };
 
 
