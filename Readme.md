@@ -22,7 +22,7 @@
 
 #### 待完成：
 * ~~Show cover art~~
-* Show playback queue items
+* ~~Show playback queue items~~
 * Collapse/Expand features
 * Dragdrop from outside
 * Keymap settings
