@@ -394,7 +394,7 @@ Playlist = function() {
 		var rx, ry, rw, rh;
 		var item, item_id = 0;
 		var playing_id, selected_id, focus_id;
-		var is_playing, is_selected, is_focused;
+		var is_playing, is_selected, is_focused, is_queued;
 		var metadb;
 		var light_bg = Luminance(g_colors.bg_normal) > 0.6;
 		var odd_color, even_color;
@@ -566,6 +566,7 @@ Playlist = function() {
 					is_playing = (plman.PlayingPlaylist == g_active_playlist && plman.GetPlayingItemLocation().PlaylistItemIndex == item.list_id);
 					is_focused = plman.GetPlaylistFocusItemIndex(g_active_playlist) == item.list_id;
 					if (is_playing) this.playing_item_visible = true;
+                    //is_queued = isTrackQueued(metadb) > -1;
 
 					if (prop.odd_even_rows) {
 						if (item.is_odd) gr.FillSolidRect(rx, ry+1, rw, rh-1, odd_color);
@@ -585,12 +586,21 @@ Playlist = function() {
 						font_color = g_colors.highlight;
 					};
 
+                    var queue_id = plman.FindPlaybackQueueItemIndex(metadb, g_active_playlist, item.list_id) ;
+
 					var p = 5;
 					// track number
-					var tn = $("[%discnumber%.]%tracknumber%", metadb);
 					var tn_x = rx + p * 4;
 					var tn_w = 30;
-					gr.GdiDrawText(tn, g_fonts.item, font_color, tn_x, ry, tn_w, rh, dt_rc);
+                    //if (is_queued) {
+                    if (queue_id > -1) {
+                        var tn = "*" + num(queue_id + 1, 2);
+                        gr.DrawRect(tn_x + 5, ry+3, tn_w, rh-7, 1, g_colors.highlight & 0x55ffffff);
+                        gr.GdiDrawText(tn, g_fonts.item_bold, g_colors.highlight, tn_x, ry, tn_w, rh, dt_rc);
+                    } else {
+                        var tn = $("$ifgreater(%totaldiscs%,1,[%discnumber%.],)%tracknumber%", metadb);
+                        gr.GdiDrawText(tn, g_fonts.item, font_color, tn_x, ry, tn_w, rh, dt_rc);
+                    };
 
 					// rating
                     var p = 8;
@@ -710,7 +720,7 @@ Playlist = function() {
 						plst.stop_auto_scroll();
 						plst.save_start_id();
 					};
-				}, 50);
+				}, utils.IsKeyPressed(VK_CONTROL) ? 150: 50);
 			}, 350);
 			this.auto_scrolling = true;
 		};
@@ -1718,6 +1728,10 @@ function on_playback_stop(reason) {
 	};
 }
 
+function on_playback_queue_changed() {
+    plst.repaint();
+};
+
 //// misc
 
 function on_get_album_art_done(metadb, art_id, image, image_path) {
@@ -1751,8 +1765,13 @@ function on_font_changed() {
 
 function get_fonts() {
 	g_fonts.name = prop.font_name;
+    g_fonts.name_bold = g_fonts.name;
+    if (g_fonts.name.toLowerCase() == "segoe ui semibold") {
+        g_fonts.name_bold = "segoe ui";
+    };
 	g_fonts.item = gdi.Font(g_fonts.name, 12);
-	g_fonts.header1 = gdi.Font(g_fonts.name, 18, 1);
+    g_fonts.item_bold = gdi.Font(g_fonts.name, 12, 1);
+	g_fonts.header1 = gdi.Font(g_fonts.name_bold, 18, 1);
 	g_fonts.header2 = gdi.Font(g_fonts.name, 16, 0);
 	g_fonts.header3 = gdi.Font(g_fonts.name, 14, 0);
     g_fonts.rating1 = gdi.Font("Segoe UI Symbol", 16, 0);
@@ -1797,4 +1816,32 @@ function get_images() {
     g.SetTextRenderingHint(0);
     img.ReleaseGraphics(g);
     images.no_cover = img;
+};
+
+function isTrackQueued(handle) {
+    var queue_total = plman.GetPlaybackQueueCount();
+    if(queue_total > 0) {
+        var vbarr = plman.GetPlaybackQueueContents();
+        var arr = vbarr.toArray();
+        for(var j = 0; j < queue_total; j++) {
+            if(handle.Compare(arr[j].Handle)) {
+                return j+1;
+            }
+        };
+        return -1;
+    }; else {
+        return -1;
+    };
+};
+
+function num(strg, nb) {
+    var i;
+    var str = strg.toString();
+    var k = nb - str.length;
+    if (k > 0) {
+        for (i=0;i<k;i++) {
+            str = "0" + str;
+        };
+    };
+    return str.toString();
 };
