@@ -20,7 +20,8 @@ ImageCache = function(art_id) {
             if (!group_art.load_timer) {
                 group_art.load_timer = window.SetTimeout(function() {
                     if (img_cache.art_id < 5) {
-                        utils.GetAlbumArtAsync(window.ID, metadb, prop.group_art_id, true, false, false);
+                        if (!plst.auto_scrolling)
+                            utils.GetAlbumArtAsync(window.ID, metadb, prop.group_art_id, true, false, false);
                         group_art.load_timer && window.ClearTimeout(group_art.load_timer);
                         group_art.load_timer = false;
                     };
@@ -1668,7 +1669,8 @@ function on_paint(gr) {
     var from = new Date();
 	gr.FillSolidRect(0, 0, ww, wh, g_colors.bg_normal);
 	plst.draw(gr);
-	gr.FillSolidRect(0, 0, ww, 24, RGB(35, 35, 35));
+	gr.FillSolidRect(0, 1, ww, 24, g_colors.txt_normal & 0x15ffffff);
+    gr.FillSolidRect(0, 24, ww, 1, RGB(172, 172, 172));
     gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
     var to = new Date();
     //console("paint: " + (to - from) + " ms");
