@@ -394,12 +394,12 @@ Playlist = function() {
         // 实验性功能
         var factor = 2.5; // according to my music library, you can change it yourselves.
         if (this.total > 0 && prop.auto_group) {
-            if (this.handles.Count / this.groups.length < 2.5 && prop.show_group_header) {
+            if (this.handles.Count / this.groups.length < factor && prop.show_group_header) {
                 prop.show_group_header = false;
                 get_metrics();
                 this.update_list();
             } 
-            if (this.handles.Count / this.groups.length > 2.5 && !prop.show_group_header) {
+            if (this.handles.Count / this.groups.length > factor && !prop.show_group_header) {
                 prop.show_group_header = true;
                 get_metrics();
                 this.update_list();
@@ -1605,6 +1605,7 @@ prop = new function() {
     this.show_group_art = window.GetProperty("_prop: Show group art", true);
     this.group_art_id = window.GetProperty("_prop: Group art id(font:0, disc:2, artist:4, genre:5", 0);
     this.keep_aspect_ratio = window.GetProperty("_prop: Keep art aspect ratio", true);
+    this.auto_show_now_playing = window.GetProperty("_prop: Auto show now playing", true);
 }();
 
 
@@ -1825,8 +1826,10 @@ function on_playback_pause(state) {
 };
 
 function on_playback_starting(cmd, is_paused) {
+    /*
 	plst.get_playing_item();
 	if (plst.playing_item_visible)  plst.repaint();
+    */
 };
 
 function on_playback_edited(metadb) {
@@ -1834,6 +1837,10 @@ function on_playback_edited(metadb) {
 };
 
 function on_playback_new_track(metadb) {
+    if (prop.auto_show_now_playing && g_active_playlist == fb.PlayingPlaylist) {
+        plst.show_now_playing();
+        g_show_now_playing_called = false;
+    };
 	plst.get_playing_item();
 	plst.repaint();
 };
