@@ -1706,9 +1706,6 @@ function on_paint(gr) {
     var txt_w = GetTextWidth(txt, g_fonts.info_header);
     var txt_x = txt_x - txt_w;
     gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
-    //var txt_x = ww - p - txt_w;
-    //gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
-    //gr.GdiDrawText("Playlist >> " + plst.name, g_fonts.info_header, RGB(213, 213, 213), p, 0, txt_x - p * 2, 24, dt_lc);
     var txt = "Playlist > ";
     var txt_w = GetTextWidth(txt, g_fonts.info_header);
     gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), p, 0, txt_w, 24, dt_cc);
@@ -1903,7 +1900,12 @@ function get_colors() {
 			g_colors.bg_selected = window.GetColorDUI(ColorTypeDUI.selection);
 			g_colors.highlight = window.GetColorDUI(ColorTypeDUI.highlight);
 			var c = combineColors(g_colors.bg_normal, g_colors.bg_selected & 0x39ffffff);
-			g_colors.txt_selected = (Luminance(c) > 0.6 ? 0xff000000 : 0xffffffff);
+			g_colors.txt_selected = (Luminance(c) > 0.6 ? 0xff000000 : 0xfff5f5f5);
+            if (Luminance(c) > 0.6) {
+                g_colors.txt_selected = blendColors(g_colors.txt_normal, 0xff000000, 0.6);
+            } else {
+                g_colors.txt_selected = blendColors(g_colors.txt_normal, 0xffffffff, 0.6);
+            };
 		} else { try {
 			g_colors.txt_normal = window.GetColorCUI(ColorTypeCUI.text);
 			g_colors.txt_selected = window.GetColorCUI(ColorTypeCUI.selection_text);
