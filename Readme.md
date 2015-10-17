@@ -24,13 +24,14 @@
 * ~~Show cover art~~
 * ~~Show playback queue items~~
 * ~~Collapse/Expand features~~
-* Playlist info viewer
+* ~~Playlist info viewer~~
 * Dragdrop from outside
 * Settings menu(or settings panel)
 * Keymap settings
 * Quick search Media library
 * Jump to websites
 * Send/recieve messages from other panels
+* Add property editing mode(???)
 
 ## 侧边栏: Cover + Playlist Manager.js
 * 各种待完成
