@@ -1620,19 +1620,19 @@ images = {
 };
 
 colorscheme = {
-	light: {
-		txt_normal: RGB(70, 70, 70),
+	light: { // modoki
+		txt_normal: RGB(25, 25, 25),
 		txt_selected: RGB(0, 0, 0), 
 		bg_normal: RGB(255, 255, 255),
-		bg_selected: RGB(120, 120, 120),
+		bg_selected: RGB(185, 187, 189),
 		highlight: RGB(215, 65, 100)
 	},
-	dark: {
-		txt_normal: RGB(190, 190, 190),
-		txt_selected: RGB(255, 255, 255), 
-		bg_normal: RGB(76, 76, 76),
-		bg_selected: RGB(140, 140, 140),
-		highlight: RGB(255, 142, 196)
+	dark: { // catrox
+		txt_normal: RGB(125, 127, 129),
+		txt_selected: RGB(160, 162, 164),
+		bg_normal: RGB(30, 30, 30),
+		bg_selected: RGB(65, 65, 65),
+		highlight: RGB(255, 165, 0)
 	},
 	user: {
 		txt_normal: eval(window.GetProperty("colorscheme: text normal", "RGB(70, 70, 70)")),
