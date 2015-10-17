@@ -619,16 +619,16 @@ Playlist = function() {
 
 					// rating
                     var p = 8;
-                    Rating.x = rx + rw;
+                    track_rating.x = rx + rw;
                     if (prop.show_rating) {
                         var rating = $("%rating%", metadb);
                         var star_w  = 14;
                         var color = blendColors(font_color, g_colors.bg_normal, 0.2);
-                        Rating.w = star_w * 5;
-                        Rating.x = Rating.x - p - Rating.w;
+                        track_rating.w = star_w * 5;
+                        track_rating.x = track_rating.x - p - track_rating.w;
 
                         for (var r = 0; r < 5; r++) {
-                            var star_x = Rating.x + r * star_w;
+                            var star_x = track_rating.x + r * star_w;
                             var font = (r < rating ? g_fonts.rating1 : g_fonts.rating2);
                             gr.GdiDrawText(r < rating ? "\u2605" : "\u2219", font, color, star_x, ry, star_w, rh, dt_cc);
                         };
@@ -638,7 +638,7 @@ Playlist = function() {
                     var p = 10;
 					var trk_length = $("%length%", metadb);
 					var trk_length_w = 40;
-					var trk_length_x = Rating.x - trk_length_w - p;
+					var trk_length_x = track_rating.x - trk_length_w - p;
 					gr.GdiDrawText(trk_length, g_fonts.item, font_color, trk_length_x, ry, trk_length_w, rh, dt_rc);
                     // count
                     var p = 5;
@@ -1102,11 +1102,11 @@ Playlist = function() {
 							break;
 						case (item_type == 0):
                             // rating
-                            if (prop.show_rating && this.hover_item && this.hover_item.type == 0 && x > Rating.x && x < Rating.x + Rating.w) {
-                                var star_w = Rating.w / 5;
+                            if (prop.show_rating && this.hover_item && this.hover_item.type == 0 && x > track_rating.x && x < track_rating.x + track_rating.w) {
+                                var star_w = track_rating.w / 5;
                                 var metadb = this.hover_item.metadb;
                                 var rating_curr = $("%rating%", metadb);
-                                var rating_to = Math.ceil((x - Rating.x) / star_w);
+                                var rating_to = Math.ceil((x - track_rating.x) / star_w);
                                 (rating_curr == rating_to) ? fb.RunContextCommandWithMetadb("<not set>", metadb) : fb.RunContextCommandWithMetadb("Rating/" + rating_to, metadb);
                                 break;
                             };
@@ -1612,7 +1612,7 @@ colorscheme = {
 	}
 };
 
-Rating = {
+track_rating = {
     x: 0,
     w: 0,
 };
@@ -1620,15 +1620,16 @@ Rating = {
 
 group_art = {
     kar: prop.keep_aspect_ratio,
-//    visible: true,
     w: 0,
     h: 0,
     max_w: 0,
     max_h: 0,
     load_timer: null
-
 };
 
+
+timers = {
+};
 
 
 
