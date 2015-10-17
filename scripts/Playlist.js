@@ -232,7 +232,9 @@ Playlist = function() {
 	};
 
 	// item_types >>> group-header: > 0, track: == 0, 填充物: == -1, 隔离物: == -2;
-	this.update_list = function(collapse_all_) {
+    // auto, collapse, expand
+    
+	this.update_list = function(col) {
 		var current, previous;
 		var metadb;
 		var grp_tf = prop.group_format;
@@ -261,7 +263,22 @@ Playlist = function() {
 				this.groups[grp_id].metadb = metadb;
 				this.groups[grp_id].first = i;
                 this.groups[grp_id].key = current;
-                this.groups[grp_id].collapsed = (collapse_all_ ? true : false);
+                switch (col) {
+                    case "collapse":
+                        this.groups[grp_id].collapsed = true;
+                        break;
+                    case "expand":
+                        this.groups[grp_id].collapsed = false;
+                        break;
+                    case "auto":
+                        this.groups[grp_id].collapsed = prop.auto_collaspe;
+                        break;
+                    default:
+                        //if (this.groups[grp_id].collapsed == undefined) {
+                        //    this.groups[grp_id].collapsed = prop.auto_collaspe;
+                        //};
+                        break;
+                };
 
 				// prev-grp: add empty row items, type -1
 				if (grp_id > 0) {
@@ -370,7 +387,7 @@ Playlist = function() {
 		//console("total length: " + this.total);
 
 	};
-	this.update_list(prop.auto_collaspe);
+	this.update_list("auto");
 
 	this.draw = function(gr) {
 		var grp_id, grp_id_saved = -1;
@@ -670,7 +687,7 @@ Playlist = function() {
 	};
 
 	this.collapse_all = function(bool) {
-        this.update_list(bool);
+        this.update_list("collapse");
 	};
 
 	this.select_a_to_b = function(a, b) {
@@ -1328,10 +1345,12 @@ Playlist = function() {
         };
 
         if (prop.show_group_header) {
+            if (fb.IsPlaying) {
+                _menu.AppendMenuItem(MF_STRING, 51, "Collapse all but now playing");
+            };
             _ce.AppendTo(_menu, MF_STRING | MF_POPUP, "Collapse/Expand");
             _menu.AppendMenuSeparator();
             _ce.AppendMenuItem(MF_STRING, 50, "Collapse all");
-            _ce.AppendMenuItem(MF_STRING, 51, "Collapse all but now playing");
             _ce.AppendMenuItem(MF_STRING, 52, "Expand all");
         };
 
@@ -1706,7 +1725,7 @@ function on_playlists_changed() {
 	};
 	if (g_active_playlist != plman.ActivePlaylist) {
 		g_active_playlist = plman.ActivePlaylist;
-		plst.update_list(prop.auto_collaspe);
+		plst.update_list();
 	};
 };
 
@@ -1714,7 +1733,7 @@ function on_playlists_changed() {
 function on_playlist_switch() {
 	g_active_playlist = plman.ActivePlaylist;
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
-	plst.update_list(prop.auto_collaspe);
+	plst.update_list("auto");
 	if (plman.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
 	g_show_now_playing_called = false;
 };
@@ -1861,7 +1880,6 @@ function get_metrics() {
             prop.group_minimum_rows = 5;
             window.SetProperty("_prop_grp: Minimum group rows", prop.group_minimum_rows);
             group_art.max_w = 5 * prop.row_height - 20;
-            //plst.update_list();
         };
     };
     img_cache = new ImageCache(prop.group_art_id);
