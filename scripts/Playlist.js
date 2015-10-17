@@ -479,8 +479,9 @@ Playlist = function() {
                                         gr.FillSolidRect(img_x - 2, img_y - 2, img_w + 4, img_h + 4, g_colors.txt_normal & 0x55ffffff);
                                         gr.DrawImage(img, img_x, img_y, img_w, img_h, 0, 0, img.Width, img.Height, 0, 255);
                                     } else {
-                                        gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x55ffffff);
-                                        gr.GdiDrawText("Loading", gdi.Font("Segoe UI", 14, 1), g_colors.txt_normal, cx, cy, cw, cw, dt_cc);
+                                        gr.FillSolidRect(cx - 2, cy - 2, cw + 4, cw + 4, g_colors.txt_normal & 0x55ffffff);
+                                        gr.FillSolidRect(cx, cy, cw, cw, blendColors(g_colors.bg_normal, 0xff000000, 0.2));
+                                        gr.GdiDrawText("Loading", g_fonts.item_14b, g_colors.txt_bg_05, cx, cy, cw, cw, dt_cc);
                                     };
                                 }
                             };
@@ -583,7 +584,7 @@ Playlist = function() {
 
 					var p = 5;
 					// track number
-					var tn_x = group_art.max_w + rx + p * 4;
+					var tn_x = rx + p * 4;
 					var tn_w = 30;
                     
                     if (queue_id > -1) { //if (is_queued) {
@@ -644,8 +645,7 @@ Playlist = function() {
 		} else { 
 			// ---- draw text info if playlist is empty
 			var font = gdi.Font(g_fonts.name, 32, 1);
-			var color = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.4);
-			gr.GdiDrawText("空列表", font, color, this.list_x, this.list_y - 20, this.list_w, this.list_h, dt_cc);
+			gr.GdiDrawText("空列表", font, g_colors.txt_bg_05, this.list_x, this.list_y - 20, this.list_w, this.list_h, dt_cc);
 		};
 
 		if (this.need_scrb && this.show_scrb){
@@ -1663,7 +1663,7 @@ function on_paint(gr) {
 	gr.FillSolidRect(0, 0, ww, 24, RGB(35, 35, 35));
     gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
     var to = new Date();
-    console("paint: " + (to - from) + " ms");
+    //console("paint: " + (to - from) + " ms");
     repaint_counter++;
     if (repaint_counter > 100) {
         repaint_counter = 0;
@@ -1839,6 +1839,7 @@ function get_fonts() {
 	g_fonts.header3 = gdi.Font(g_fonts.name, 14, 0);
     g_fonts.rating1 = gdi.Font("Segoe UI Symbol", 16, 0);
     g_fonts.rating2 = gdi.Font("Segoe UI Symbol", 14, 0);
+    g_fonts.item_14b = gdi.Font(g_fonts.name_bold, 14, 1);
 };
 
 function get_colors() {
@@ -1859,6 +1860,8 @@ function get_colors() {
 			g_colors.highlight = window.GetColorCUI(ColorTypeCUI.active_item_frame);
 		} catch (e) {} };
 	}
+
+    g_colors.txt_bg_05 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.5);
 };
 
 function get_metrics() {
@@ -1885,8 +1888,8 @@ function get_images() {
     var color = blendColors(g_colors.bg_normal, 0xff000000, 0.2);
     g.FillSolidRect(0, 0, cw, cw, color);
     g.SetTextRenderingHint(4);
-    var color = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.5);
-    g.DrawString("No Cover", gdi.Font("Segoe UI", 14, 1), color, 0, 0, cw, cw, StringFormat(1, 1));
+    //var color = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.5);
+    g.DrawString("No Cover", g_fonts.item_14b, g_colors.txt_bg_05, 0, 0, cw, cw, StringFormat(1, 1));
     g.SetTextRenderingHint(0);
     img.ReleaseGraphics(g);
     images.no_cover = img;
