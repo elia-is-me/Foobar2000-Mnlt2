@@ -384,6 +384,9 @@ Playlist = function() {
 		this.scrb.update_cursor();
 		this.repaint();
 
+        this.name = plman.GetPlaylistName(g_active_playlist);
+        this.total_tracks = plman.PlaylistItemCount(g_active_playlist);;
+
         plman.SetActivePlaylistContext(); // to enable main-menu "Edit"
 		//console("total length: " + this.total);
 
@@ -1667,11 +1670,18 @@ function on_size() {
 
 function on_paint(gr) {
     var from = new Date();
+    // bg
 	gr.FillSolidRect(0, 0, ww, wh, g_colors.bg_normal);
+    // playlist view
 	plst.draw(gr);
-	gr.FillSolidRect(0, 1, ww, 24, g_colors.txt_normal & 0x15ffffff);
-    gr.FillSolidRect(0, 24, ww, 1, RGB(172, 172, 172));
-    gr.DrawRect(0, 0, ww -1, wh - 1, 1, RGB(172, 172, 172));
+    // info header
+	gr.FillSolidRect(0, 0, ww, 24, RGB(84, 86, 82));
+    var txt = plst.total_tracks + " tracks";
+    var txt_w = GetTextWidth(txt, g_fonts.info_header);
+    var p = 10;
+    var txt_x = ww - p - txt_w;
+    gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
+    gr.GdiDrawText("Playlist >> " + plst.name, g_fonts.info_header, RGB(213, 213, 213), p, 0, txt_x - p * 2, 24, dt_lc);
     var to = new Date();
     //console("paint: " + (to - from) + " ms");
     repaint_counter++;
@@ -1850,6 +1860,7 @@ function get_fonts() {
     g_fonts.rating1 = gdi.Font("Segoe UI Symbol", 16, 0);
     g_fonts.rating2 = gdi.Font("Segoe UI Symbol", 14, 0);
     g_fonts.item_14b = gdi.Font(g_fonts.name_bold, 14, 1);
+    g_fonts.info_header = gdi.Font("Segoe UI Semibold", 12, 0);
 };
 
 function get_colors() {
