@@ -633,7 +633,11 @@ Playlist = function() {
                         gr.DrawRect(tn_x + 5, ry+3, tn_w, rh-7, 1, g_colors.highlight & 0x55ffffff);
                         gr.GdiDrawText(tn, g_fonts.item_bold, g_colors.highlight, tn_x, ry, tn_w, rh, dt_rc);
                     } else { //  track number
-                        var tn = $("$ifgreater(%totaldiscs%,1,[%discnumber%.],)%tracknumber%", metadb);
+                        if (prop.group_format.indexOf("%discnumber%") > -1) {
+                            var tn = $("%tracknumber%", metadb);
+                        } else {
+                            var tn = $("$ifgreater(%totaldiscs%,1,[%discnumber%.],)%tracknumber%", metadb);
+                        };
                         gr.GdiDrawText(tn, g_fonts.item, font_color, tn_x, ry, tn_w, rh, dt_rc);
                     };
 
@@ -1585,7 +1589,7 @@ prop = new function() {
 	this.use_system_color = window.GetProperty("_prop_color: Use system color", true);
 	this.colorscheme = window.GetProperty("_prop_color: Colorscheme(light, dark, user)", "dark");
 	this.font_name = window.GetProperty("_prop_font: Default font name", "Segoe UI");
-	this.group_format = window.GetProperty("_prop_grp: Group format", "%album artist% | %album%");
+	this.group_format = window.GetProperty("_prop_grp: Group format", "%album artist% | %date% | %album% | %discnumber%");
 	this.group_header_rows = window.GetProperty("_prop_grp: Group header rows", 4);
     // should not set by users
 	this.group_minimum_rows = window.GetProperty("_prop_grp: Minimum group rows", 0);
