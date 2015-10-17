@@ -832,7 +832,7 @@ function on_size() {
 
 function on_paint(gr) {
 	gr.FillSolidRect(0, 0, ww, wh, blendColors(g_colors.bg_normal, 0xff000000, 0.02));
-	gr.FillSolidRect(0, 0, ww, 24, RGB(25, 25, 25));
+	gr.FillSolidRect(0, 0, ww, 24, RGB(84, 86, 82));
 
 	if (repaint_main || !repaint_forced) {
 		repaint_main = false;

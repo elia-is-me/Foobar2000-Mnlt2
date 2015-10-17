@@ -389,6 +389,24 @@ Playlist = function() {
 
         plman.SetActivePlaylistContext(); // to enable main-menu "Edit"
 		//console("total length: " + this.total);
+       
+        // --------- temp --------------------------------------------------------------------
+        // 判断是否显示 group - header
+        // 实验性功能
+        if (this.total > 0) {
+            if (this.handles.Count / this.groups.length < 2.5 && prop.show_group_header) {
+                prop.show_group_header = false;
+                this.update_list();
+            } 
+            if (this.handles.Count / this.groups.length > 2.5 && !prop.show_group_header) {
+                prop.show_group_header = true;
+                this.update_list();
+            };
+        };
+        // ------------------------------------------------------------------------------------
+
+        //console(this.groups.length);
+        //console(this.handles.Count);
 
 	};
 	this.update_list("auto");
@@ -1351,13 +1369,15 @@ Playlist = function() {
         };
 
         if (prop.show_group_header) {
-            if (fb.IsPlaying) {
+            if (this.total > 1) {
+                _ce.AppendTo(_menu, MF_STRING | MF_POPUP, "Collapse/Expand");
+                _menu.AppendMenuSeparator();
+                _ce.AppendMenuItem(MF_STRING, 50, "Collapse all");
+                _ce.AppendMenuItem(MF_STRING, 52, "Expand all");
+            }
+            if (fb.IsPlaying && g_active_playlist == fb.PlayingPlaylist) {
                 _menu.AppendMenuItem(MF_STRING, 51, "Collapse all but now playing");
             };
-            _ce.AppendTo(_menu, MF_STRING | MF_POPUP, "Collapse/Expand");
-            _menu.AppendMenuSeparator();
-            _ce.AppendMenuItem(MF_STRING, 50, "Collapse all");
-            _ce.AppendMenuItem(MF_STRING, 52, "Expand all");
         };
 
 		if (has_sel) {
@@ -1892,28 +1912,32 @@ function get_metrics() {
             group_art.max_w = prop.group_header_rows * prop.row_height - 12;
             prop.group_minimum_rows = 0;
             window.SetProperty("_prop_grp: Minimum group rows", prop.group_minimum_rows);
-        } else {
+        } /*
+             else {
             prop.group_minimum_rows = 5;
             window.SetProperty("_prop_grp: Minimum group rows", prop.group_minimum_rows);
             group_art.max_w = 5 * prop.row_height - 20;
         };
+        */
     };
     img_cache = new ImageCache(prop.group_art_id);
 };
 
 function get_images() {
-    var cw = group_art.max_w;
-    var img, g;
-    img = gdi.CreateImage(cw, cw);
-    g = img.GetGraphics();
-    var color = blendColors(g_colors.bg_normal, 0xff000000, 0.2);
-    g.FillSolidRect(0, 0, cw, cw, color);
-    g.SetTextRenderingHint(4);
-    //var color = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.5);
-    g.DrawString("No Cover", g_fonts.item_14b, g_colors.txt_bg_05, 0, 0, cw, cw, StringFormat(1, 1));
-    g.SetTextRenderingHint(0);
-    img.ReleaseGraphics(g);
-    images.no_cover = img;
+    if (prop.show_group_header) {
+        var cw = group_art.max_w;
+        var img, g;
+        img = gdi.CreateImage(cw, cw);
+        g = img.GetGraphics();
+        var color = blendColors(g_colors.bg_normal, 0xff000000, 0.2);
+        g.FillSolidRect(0, 0, cw, cw, color);
+        g.SetTextRenderingHint(4);
+        //var color = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.5);
+        g.DrawString("No Cover", g_fonts.item_14b, g_colors.txt_bg_05, 0, 0, cw, cw, StringFormat(1, 1));
+        g.SetTextRenderingHint(0);
+        img.ReleaseGraphics(g);
+        images.no_cover = img;
+    };
 };
 
 function isTrackQueued(handle) {
