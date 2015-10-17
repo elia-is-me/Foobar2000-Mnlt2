@@ -405,8 +405,8 @@ Playlist = function() {
         };
         // ------------------------------------------------------------------------------------
 
-        //console(this.groups.length);
-        //console(this.handles.Count);
+        //console("grps: " + this.groups.length);
+        //console("trks: " + this.handles.Count);
 
 	};
 	this.update_list("auto");
