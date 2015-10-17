@@ -687,7 +687,9 @@ Playlist = function() {
 	};
 
 	this.collapse_all = function(bool) {
-        this.update_list("collapse");
+        if (bool) bool = "collapse";
+        else bool = "expand";
+        this.update_list(bool);
 	};
 
 	this.select_a_to_b = function(a, b) {
