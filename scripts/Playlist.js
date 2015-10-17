@@ -1697,12 +1697,22 @@ function on_paint(gr) {
 	plst.draw(gr);
     // info header
 	gr.FillSolidRect(0, 0, ww, 24, RGB(84, 86, 82));
-    var txt = plst.total_tracks + " tracks";
-    var txt_w = GetTextWidth(txt, g_fonts.info_header);
     var p = 10;
+    var txt = " tracks";
+    var txt_w = GetTextWidth(txt, g_fonts.info_header);
     var txt_x = ww - p - txt_w;
+    gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), txt_x, 0, txt_w, 24, dt_cc);
+    var txt = plst.total_tracks;
+    var txt_w = GetTextWidth(txt, g_fonts.info_header);
+    var txt_x = txt_x - txt_w;
     gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
-    gr.GdiDrawText("Playlist >> " + plst.name, g_fonts.info_header, RGB(213, 213, 213), p, 0, txt_x - p * 2, 24, dt_lc);
+    //var txt_x = ww - p - txt_w;
+    //gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
+    //gr.GdiDrawText("Playlist >> " + plst.name, g_fonts.info_header, RGB(213, 213, 213), p, 0, txt_x - p * 2, 24, dt_lc);
+    var txt = "Playlist > ";
+    var txt_w = GetTextWidth(txt, g_fonts.info_header);
+    gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), p, 0, txt_w, 24, dt_cc);
+    gr.GdiDrawText(plst.name, g_fonts.info_header, RGB(213, 213, 213), p + txt_w + p, 0, txt_x - txt_w - p * 2, 24, dt_cc);
     var to = new Date();
     //console("paint: " + (to - from) + " ms");
     repaint_counter++;
