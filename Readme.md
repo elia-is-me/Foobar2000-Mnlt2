@@ -31,6 +31,7 @@
 * Keymap settings
 * Auto group/ungroup based on track\_number/group\_number
 * Scroll bugfix
+
 ##### 远景
 * Save playlist scroll position according to track position rather than item position
 * Quick search Media library
