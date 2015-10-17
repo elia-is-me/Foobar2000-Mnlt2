@@ -12,7 +12,6 @@ ImageCache = function(art_id) {
     this.art_id = art_id;
     // art_id: 0: front, 1: back, 2: disc, 3: icon, 4: artist, 5: genre, others...;
     this.hit = function(metadb, grp_id) {
-
         var img = this._cache_list[plst.groups[grp_id].key];
         if (img) return img;
         if (typeof(img) == "undefined" || img == null) {
@@ -26,8 +25,8 @@ ImageCache = function(art_id) {
                         group_art.load_timer = false;
                     };
                 }, 45);
-            }
-        }
+            };
+        };
     };
 
     this.get_it = function(metadb, grp_id, image) {
@@ -391,15 +390,18 @@ Playlist = function() {
 		//console("total length: " + this.total);
        
         // --------- temp --------------------------------------------------------------------
-        // 判断是否显示 group - header
+        // 判断是否显示 group-header
         // 实验性功能
-        if (this.total > 0) {
+        var factor = 2.5; // according to my music library, you can change it yourselves.
+        if (this.total > 0 && prop.auto_group) {
             if (this.handles.Count / this.groups.length < 2.5 && prop.show_group_header) {
                 prop.show_group_header = false;
+                get_metrics();
                 this.update_list();
             } 
             if (this.handles.Count / this.groups.length > 2.5 && !prop.show_group_header) {
                 prop.show_group_header = true;
+                get_metrics();
                 this.update_list();
             };
         };
@@ -516,7 +518,7 @@ Playlist = function() {
                                         var img_x = cx + (cw - img_w) / 2;
                                         var img_y = cy + (cw - img_h) / 2;
                                         gr.FillSolidRect(img_x - 2, img_y - 2, img_w + 4, img_h + 4, g_colors.txt_normal & 0x55ffffff);
-                                        gr.DrawImage(img, img_x, img_y, img_w, img_h, 0, 0, img.Width, img.Height, 0, 255);
+                                        gr.DrawImage(img, img_x, img_y, img_w, img_h, 0, 0, img.Width, img.Height, 0, 205);
                                     } else {
                                         gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x55ffffff);
                                         gr.FillSolidRect(cx+2, cy+2, cw-4, cw-4, blendColors(g_colors.bg_normal, 0xff000000, 0.2));
@@ -1369,15 +1371,17 @@ Playlist = function() {
         };
 
         if (prop.show_group_header) {
-            if (this.total > 1) {
-                _ce.AppendTo(_menu, MF_STRING | MF_POPUP, "Collapse/Expand");
-                _menu.AppendMenuSeparator();
-                _ce.AppendMenuItem(MF_STRING, 50, "Collapse all");
-                _ce.AppendMenuItem(MF_STRING, 52, "Expand all");
-            }
             if (fb.IsPlaying && g_active_playlist == fb.PlayingPlaylist) {
                 _menu.AppendMenuItem(MF_STRING, 51, "Collapse all but now playing");
             };
+            if (this.total > 1) {
+                _ce.AppendTo(_menu, MF_STRING | MF_POPUP, "Collapse/Expand");
+                if (has_sel || this.handles_in_clipboard_count > 0) {
+                    _menu.AppendMenuSeparator();
+                };
+                _ce.AppendMenuItem(MF_STRING, 50, "Collapse all");
+                _ce.AppendMenuItem(MF_STRING, 52, "Expand all");
+            }
         };
 
 		if (has_sel) {
@@ -1583,9 +1587,11 @@ prop = new function() {
 	this.font_name = window.GetProperty("_prop_font: Default font name", "Segoe UI");
 	this.group_format = window.GetProperty("_prop_grp: Group format", "%album artist% | %album%");
 	this.group_header_rows = window.GetProperty("_prop_grp: Group header rows", 4);
+    // should not set by users
 	this.group_minimum_rows = window.GetProperty("_prop_grp: Minimum group rows", 0);
 	this.group_extra_rows = window.GetProperty("_prop_grp: Extra group rows", 0);
 	this.show_group_header = window.GetProperty("_prop_grp: Show group header", true);
+    this.auto_group = window.GetProperty("_prop_grp: Auto group tracks", true);
 	this.row_height = window.GetProperty("_prop: Row height", 22);
 	this.margin = window.GetProperty("_prop: Margin", 15);
     this.show_scrollbar = window.GetProperty("_prop: Show scrollbar", true);
@@ -1936,8 +1942,8 @@ function get_metrics() {
 };
 
 function get_images() {
-    if (prop.show_group_header) {
-        var cw = group_art.max_w;
+    var cw = group_art.max_w;
+    if (cw > 0) {
         var img, g;
         img = gdi.CreateImage(cw, cw);
         g = img.GetGraphics();

@@ -21,6 +21,7 @@
 * 等等
 
 #### 待完成：
+##### 近期
 * ~~Show cover art~~
 * ~~Show playback queue items~~
 * ~~Collapse/Expand features~~
@@ -28,6 +29,10 @@
 * Dragdrop from outside
 * Settings menu(or settings panel)
 * Keymap settings
+* Auto group/ungroup based on track\_number/group\_number
+* Scroll bugfix
+##### 远景
+* Save playlist scroll position according to track position rather than item position
 * Quick search Media library
 * Jump to websites
 * Send/recieve messages from other panels
