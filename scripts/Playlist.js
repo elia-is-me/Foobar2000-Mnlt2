@@ -950,12 +950,13 @@ Playlist = function() {
                     var end_, start_;
                     //
                     if (this.items_clicked_id > -1) {
-                        start_ = this.items[this.items_clicked_id].list_id;
+                        //start_ = this.items[this.items_clicked_id].list_id;
+                        start_ = g_focus_id;
                     };
 
-                    if (this.items_clicked_id > -1 && this.hover_item && this.hover_item_id != this.items_clicked_id) {
-                        end_ = -1;
-
+                    if (this.hover_item_id == this.items_clicked_id) {
+                        end_ = start_;
+                    } else  if (this.items_clicked_id > -1 && this.hover_item && this.hover_item_id != this.items_clicked_id) {
                         if (this.hover_item.type == 0) {
                             end_ = this.hover_item.list_id;
                         } else if (this.hover_item.type > 0) {
@@ -974,10 +975,6 @@ Playlist = function() {
                             };
                         }
                     };
-
-                    if (this.hover_item_id == this.items_clicked_id) {
-                        end_ = start_;
-                    }
 
                     if (this.total_rows > this.total && y > this.items[this.visible_rows - 1].y + this.row_height) {
                         end_ = this.handles.Count - 1;
@@ -1005,14 +1002,16 @@ Playlist = function() {
                         };
                     };
 
-                    this.select_a_to_b(start_, end_);
 
 					// --- if mouse over header items, expand the group if collapsed
 					if (this.hover_item && this.hover_item.type > 0) {
 						if (this.groups[this.hover_item.grp_id].collapsed) {
 							this.expand_group(this.hover_item.grp_id);
+                            start_ = g_focus_id;
 						};
 					};
+
+                    this.select_a_to_b(start_, end_);
 
 					// --- auto-scroll
 					if (this.selecting && this.total_rows < this.total) {
@@ -1028,7 +1027,7 @@ Playlist = function() {
                                 } else {
                                     end_ = plst.items[plst.start_id].list_id;
                                 };
-                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, end_);
+                                plst.select_a_to_b(g_focus_id, end_);
                             });
 						} else if (y > this.list_y + this.list_h) {
 							this.start_auto_scroll(-1, function() {
@@ -1041,7 +1040,7 @@ Playlist = function() {
                                 } else {
                                     end_ = plst.items[plst.start_id + plst.visible_rows - 1].list_id;
                                 };
-                                plst.select_a_to_b(plst.items[plst.items_clicked_id].list_id, end_);
+                                plst.select_a_to_b(g_focus_id, end_);
                             });
 						} else {
 							this.stop_auto_scroll();
@@ -1049,7 +1048,6 @@ Playlist = function() {
 					};
 
                 };
-
 
 				if (this.items_dragging) {
 					window.SetCursor(32651);
