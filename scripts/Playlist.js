@@ -479,8 +479,8 @@ Playlist = function() {
                                         gr.FillSolidRect(img_x - 2, img_y - 2, img_w + 4, img_h + 4, g_colors.txt_normal & 0x55ffffff);
                                         gr.DrawImage(img, img_x, img_y, img_w, img_h, 0, 0, img.Width, img.Height, 0, 255);
                                     } else {
-                                        gr.FillSolidRect(cx - 2, cy - 2, cw + 4, cw + 4, g_colors.txt_normal & 0x55ffffff);
-                                        gr.FillSolidRect(cx, cy, cw, cw, blendColors(g_colors.bg_normal, 0xff000000, 0.2));
+                                        gr.FillSolidRect(cx, cy, cw, cw, g_colors.txt_normal & 0x55ffffff);
+                                        gr.FillSolidRect(cx+2, cy+2, cw-4, cw-4, blendColors(g_colors.bg_normal, 0xff000000, 0.2));
                                         gr.GdiDrawText("Loading", g_fonts.item_14b, g_colors.txt_bg_05, cx, cy, cw, cw, dt_cc);
                                     };
                                 }
@@ -587,7 +587,7 @@ Playlist = function() {
 					var tn_x = rx + p * 4;
 					var tn_w = 30;
                     
-                    if (queue_id > -1) { //if (is_queued) {
+                    if (queue_id > -1) { //if (is_queued) 
                         var tn = "*" + num(queue_id + 1, 2);
                         gr.DrawRect(tn_x + 5, ry+3, tn_w, rh-7, 1, g_colors.highlight & 0x55ffffff);
                         gr.GdiDrawText(tn, g_fonts.item_bold, g_colors.highlight, tn_x, ry, tn_w, rh, dt_rc);
@@ -1075,16 +1075,6 @@ Playlist = function() {
                                 // 
                                 this.expand_group(grp_id);
                                 this.ensure_group_visible(grp_id);
-                                // --- 检查展开后是否能看的到
-                                /*
-                                var grp_total_rows = Math.max(this.groups[grp_id].last - this.groups[grp_id].first + 1, prop.group_minimum_rows) + prop.group_extra_rows + prop.group_header_rows;
-                                if (grp_total_rows * this.row_height + this.groups[grp_id].y > this.list_y + this.list_h) {
-                                    var delta = Math.ceil((grp_total_rows * this.row_height + this.groups[grp_id].y - this.list_y - this.list_h) / this.row_height);
-                                    delta = Math.min(delta, this.total_rows);
-                                    this.scrb.on_mouse("wheel", 0, 0, -delta);
-                                    this.save_start_id();
-                                };
-                                */
                             } else {
                                 this.collapse_group(grp_id);
                             };
@@ -1321,7 +1311,6 @@ Playlist = function() {
 			//console("show now playing...");
 		};
 
-	//	};
 	};
 
 	this.context_menu = function(x, y, type) {
