@@ -2001,11 +2001,51 @@ function on_key_down(vkey) {
         case VK_UP:
             // change focus item
             plst.auto_scrolling = true;
-            plst.scrb.on_mouse("wheel", 0, 0, 1);
+            if (g_focus_id == 0){
+                if (plst.start_id != 0) {
+                    plst.scrb.on_mouse("wheel", 0, 0, plst.start_id);
+                };
+                return;
+            };
+            if (!ctrl_pressed && !shift_pressed) {
+                plman.ClearPlaylistSelection(g_active_playlist);
+                plman.SetPlaylistSelectionSingle(g_active_playlist, g_focus_id - 1, true);
+            }
+            plman.SetPlaylistFocusItem(g_active_playlist, g_focus_id - 1);
+            for (var i = 0; i < plst.total; i++) {
+                // found focused id
+                if (plst.items[i].type == 0 && plst.items[i].list_id == g_focus_id) {
+                    if (i < plst.start_id + 1 + prop.group_header_rows) {
+                        plst.scrb.on_mouse("wheel",  0, 0, -i + plst.start_id + 1 + prop.group_header_rows);
+                    } else if (i >= plst.start_id + plst.total_rows) {
+                        plst.scrb.on_mouse("wheel", 0, 0, -i + (plst.start_id + plst.total_rows));
+                    };
+                    break;
+                };
+            };
             break;
         case VK_DOWN:
             plst.auto_scrolling = true;
-            plst.scrb.on_mouse("wheel", 0, 0, -1);
+            if (g_focus_id == plst.handles.Count - 1) {
+               plst.scrb.on_mouse("wheel", 0, 0, -plst.total); 
+               return;
+            };
+            if (!ctrl_pressed && !shift_pressed) {
+                plman.ClearPlaylistSelection(g_active_playlist);
+                plman.SetPlaylistSelectionSingle(g_active_playlist, g_focus_id + 1, true);
+            };
+            plman.SetPlaylistFocusItem(g_active_playlist, g_focus_id+1);
+            for (var i = 0; i < plst.total; i++) {
+                if (plst.items[i].type == 0 && plst.items[i].list_id == g_focus_id) {
+                    if (i <= plst.start_id) {
+                        plst.scrb.on_mouse("wheel", 0, 0, -i + plst.start_id);
+                    } else if (i > plst.start_id + plst.total_rows - 2 - prop.group_header_rows) {
+                        plst.scrb.on_mouse("wheel", 0, 0, -i + plst.start_id + plst.total_rows - 2 - prop.group_header_rows);
+                    };
+                    break;
+                };
+            };
+
             break;
         case VK_PRIOR: // page up
             plst.auto_scrolling = true;
@@ -2113,6 +2153,7 @@ function on_key_down(vkey) {
 function on_key_up(vkey) {
     if (plst.auto_scrolling) {
         plst.auto_scrolling = false;
+        plst.repaint();
     };
 };
 
