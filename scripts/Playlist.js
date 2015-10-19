@@ -2,7 +2,7 @@
 // ============================================ //
 // @name "Playlist"
 // @intro "a simple wsh playlist"
-// @update "2015-10-16"
+// @update "2015-10-19"
 // ============================================ //
 
 // from br3tt's wsh_playlist

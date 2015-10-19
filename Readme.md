@@ -26,11 +26,12 @@
 * ~~Show playback queue items~~
 * ~~Collapse/Expand features~~
 * ~~Playlist info viewer~~
-* Dragdrop from outside
+* Dragdrop files
 * Settings menu(or settings panel)
-* Keymap settings
-* Auto group/ungroup based on track\_number/group\_number
+* ~~Keymap settings~~
+* ~~Auto group/ungroup based on track\_number/group\_number~~
 * Scroll bugfix
+* ~~Vim-style key bindings~~
 
 ##### 远景
 * Save playlist scroll position according to track position rather than item position
@@ -38,6 +39,33 @@
 * Jump to websites
 * Send/recieve messages from other panels
 * Add property editing mode(???)
+
+
+#### 快捷键设定:
+* **Up**: 
+* **Down**:
+* **PgUp**: 列表上翻一页
+* **PgDn**: 列表下翻一页
+* **Home**: 滚动至列表开始
+* **End**: 滚动至列表结束
+* **Delete**: 从列表删除选中项
+* **Return**: 播放
+* **F5**: 刷新专辑图片
+* **Ctrl-A**: 全选中
+* **Ctrl-X**: 剪切
+* **Ctrl-C**: 复制
+* **Ctrl-V**: 粘贴
+
+##### Vim-style 快捷键设定
+* **j**: 同 Up
+* **j**: 同 Down
+* **h**: 切换到上一播放列表
+* **l**: 切换到下一播放列表
+* **Ctrl-f**: 同 PgDn
+* **Ctrl-b**: 同 PgUp
+* **Shift-G(大写G)**: 同 Home
+* **gg(连续两次g)**: 同 End
+
 
 ## 侧边栏: Cover + Playlist Manager.js
 * 各种待完成
