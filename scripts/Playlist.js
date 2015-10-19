@@ -1263,8 +1263,11 @@ Playlist = function() {
                 this.selecting = false;
                 this.items_clicked = false;
                 this.items_dragging = false;
-                this.context_menu(x, y, g_focus_id);
-
+                if (utils.IsKeyPressed(VK_SHIFT)) {
+                    this.settings_menu(x, y);
+                } else {
+                    this.context_menu(x, y, g_focus_id);
+                };
 				break;
 			case "leave":
                 this.selecting = false;
@@ -1571,6 +1574,50 @@ Playlist = function() {
 		};
 		//window.NotifyOthers()
 	};
+
+    this.settings_menu = function(x, y) {
+        var _menu = window.CreatePopupMenu();
+        var _grp = window.CreatePopupMenu();
+        var _col = window.CreatePopupMenu();
+        var _app = window.CreatePopupMenu();
+
+        _grp.AppendTo(_menu, MF_STRING | MF_POPUP, "Group");
+        _grp.AppendMenuItem(MF_STRING, 1, "Show group header");
+        _grp.AppendMenuItem(MF_STRING, 2, "Auto group");
+        //
+        _app.AppendTo(_menu, MF_STRING | MF_POPUP, "Appearences");
+        _app.AppendMenuItem(MF_STRING, 10, "Show rating");
+        _app.AppendMenuItem(MF_STRING, 11, "Show play count");
+        _app.AppendMenuSeparator();
+        _app.AppendMenuItem(MF_STRING, 12, "Show scrollbar");
+        _app.AppendMenuSeparator();
+        _app.AppendMenuItem(MF_STRING, 13, "Enable odd/even highlight");
+        _app.AppendMenuItem(MF_STRING, 14, "Show focusd item");
+        //
+        var _art = window.CreatePopupMenu();
+        _art.AppendTo(_menu, MF_STRING | MF_POPUP, "Cover");
+        _art.AppendMenuItem(MF_STRING, 20, "Show");
+        _art.AppendMenuItem(MF_STRING, 21, "Keep aspect ratio");
+        //
+        _col.AppendTo(_menu, MF_STRING |MF_POPUP, "Color scheme");
+        _col.AppendMenuItem(MF_STRING, 31, "UI default");
+        _col.AppendMenuItem(MF_STRING, 32, "Catrox(dark)");
+        _col.AppendMenuItem(MF_STRING, 33, "Modoki(light)");
+        _col.AppendMenuItem(MF_STRING, 34, "User");
+
+        _menu.AppendMenuSeparator();
+
+        _menu.AppendMenuItem(MF_STRING, 50, "Vim-style key bindings");
+
+        var ret = _menu.TrackPopupMenu(x, y);
+
+        _col.Dispose();
+        _art.Dispose();
+        _app.Dispose();
+        _menu.Dispose();
+        _grp.Dispose();
+    };
+
 };
 
 
@@ -2142,7 +2189,7 @@ function on_key_down(vkey) {
                             console("timer... ");
                             window.ClearTimeout(plst.gg_timer);
                             plst.gg_timer = false;
-                        }, 1000);
+                        }, 300);
                     };
                 };
                 break;
