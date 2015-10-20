@@ -83,10 +83,10 @@ Playlist = function() {
 	this.scrb = new Scroll(true, this);
 
 	this.start_id = 0;
-	this.min_grp_items = prop.group_minimum_rows;
+	//this.min_grp_items = prop.group_minimum_rows;
 
-	this.extra_grp_items = prop.group_extra_rows;
-	this.items_to_add;
+	//this.extra_grp_items = prop.group_extra_rows;
+	//this.items_to_add;
 	this.playing_item_visible = false;
 
 	this.repaint = function () {
@@ -233,89 +233,104 @@ Playlist = function() {
 	// item_types >>> group-header: > 0, track: == 0, 填充物: == -1, 隔离物: == -2;
     // auto, collapse, expand
     
-	this.update_list = function(col) {
-		var current, previous;
-		var metadb;
-		var grp_tf = prop.group_format;
+	this.init_list = function(col) {
+
+        // -- load properties setting outside --
+		var grp_fmt = prop.group_format;
 		var show_grp_header = prop.show_group_header;
 		var grp_header_rows = prop.group_header_rows;
-		var grp_item_count;
-		var item_id = 0, grp_id = 0;
-		var list_item_id = 0, grp_list_item_id = 0;
-		var end;
-
+        var grp_min_items = prop.group_minimum_rows;
+        var grp_extra_items = prop.group_extra_rows;
+        var auto_coll = prop.auto_collaspe;
+        var auto_grp = prop.auto_group;
+        //
 		this.handles = plman.GetPlaylistItems(g_active_playlist);
-		end = this.handles.Count;
+        this.list_total = this.handles.Count;
+
+        // -- var --
+		var curr, prev;
+		var metadb;
+		var grp_trk_total;
+		var item_id = 0, grp_id = 0;
+        var is_odd;
+		//var list_item_id = 0, grp_list_item_id = 0;
+
+        // -- init --
 		this.groups = [];
 		this.items = [];
         CollectGarbage();
+        is_odd = false;
 
-		// parse starting >>> 
+		// -- parse starting >>> --
 		// i: list_index
-		for (var i = 0; i < end; i++) {
+		for (var i = 0; i < this.list_total; i++) {
+            //
 			metadb = this.handles.Item(i);
-			current = $(grp_tf, metadb);
-			if (current !== previous) {
+			curr = $(grp_fmt, metadb);
+            //
+			if (curr != prev) {
+                //
 				grp_odd_count = 0;
+                var item_is_odd = true;
 				// add group
 				this.groups[grp_id] = {};
 				this.groups[grp_id].metadb = metadb;
+                this.groups[grp_id].pattern = curr;
+                this.groups[grp_id].first_lid = i; // group first list_index
+                this.groups[grp_id].first_iid = item_id; // group first item_index
+                // >> obsolete
 				this.groups[grp_id].first = i;
-                this.groups[grp_id].key = current;
-                switch (col) {
-                    case "collapse":
-                        this.groups[grp_id].collapsed = true;
-                        break;
-                    case "expand":
-                        this.groups[grp_id].collapsed = false;
-                        break;
-                    case "auto":
-                        this.groups[grp_id].collapsed = prop.auto_collaspe;
-                        break;
-                    default:
-                        //if (this.groups[grp_id].collapsed == undefined) {
-                        //    this.groups[grp_id].collapsed = prop.auto_collaspe;
-                        //};
-                        break;
-                };
+                this.groups[grp_id].key = curr;
+                // <<
+                this.groups[grp_id].collapsed = (function() {
+                    switch (col) {
+                        case "collapse":
+                            return true;
+                        case "expand":
+                            return false;
+                        case "auto":
+                            return auto_coll;
+                        default:
+                            break;
+                    };
+                })();
 
-				// prev-grp: add empty row items, type -1
+				// add empty group rows
 				if (grp_id > 0) {
-					this.groups[grp_id - 1].last = i - 1;
-					grp_item_count = this.groups[grp_id - 1].last - this.groups[grp_id - 1].first + 1;
-
+					this.groups[grp_id - 1].last = i - 1; // obsolete
+                    this.groups[grp_id - 1].track_total = i - this.groups[grp_id - 1].first_lid;
+                    this.groups[grp_id - 1].last_lid = i - 1;
+                    var grp_trk_total = this.groups[grp_id - 1].track_total;
+                    //
 					if (!this.groups[grp_id - 1].collapsed) {
-
-                        // 填充物
-						if (grp_item_count < this.min_grp_items) {
-							this.items_to_add = this.min_grp_items - grp_item_count;
-							for (var k = 0; k < this.items_to_add; k++) {
+                        // 填充物, type = -1
+						if (grp_trk_total < grp_min_items) {
+							var to_add = grp_min_items - grp_trk_total;
+							for (var k = 0; k < to_add; k++) {
 								this.items[item_id] = {};
 								this.items[item_id].type = -1;
-								this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
                                 this.items[item_id].grp_id = grp_id - 1;
+								this.items[item_id].is_odd = is_odd;
+                                is_odd = !is_odd;
 								item_id++;
-								list_item_id++;
-								grp_list_item_id++;
 							};
 						};
 
-                        // 隔离物
-						for (var k = 0; k < this.extra_grp_items; k++) {
+                        // 隔离物, type = -2
+						for (var k = 0; k < grp_extra_items; k++) {
 							this.items[item_id] = {};
 							this.items[item_id].type = -2;
                             this.items[item_id].grp_id = grp_id - 1;
 							item_id++;
 						};
-
-						grp_list_item_id = 0;
-
 					};
-
 				};
 
-				// curr-grp: add grp-header items, type k+1
+				// group-header items, type = k + 1;
 				if (show_grp_header) {
+
+                    is_odd = true;
+
 					for (var k = 0; k < grp_header_rows; k++) {
 						this.items[item_id] = {};
 						this.items[item_id].metadb = metadb;
@@ -326,49 +341,53 @@ Playlist = function() {
 				};
 
 				grp_id++;
-				previous = current;
+				prev = curr;
 			};
 
-			// curr-grp: add track items, type 0
+			// track items, type = 0;
 			if (!this.groups[grp_id - 1].collapsed) {
 				this.items[item_id] = {};
 				this.items[item_id].metadb = metadb;
+				this.items[item_id].type = 0;
 				this.items[item_id].list_id = i;
 				this.items[item_id].grp_id = grp_id;
-				this.items[item_id].type = 0;
-				this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
+				this.items[item_id].is_odd = is_odd;
+                is_odd = !is_odd;
 				item_id++;
-				list_item_id++;
-				grp_list_item_id++;
 			};
 		};
 
 		if (grp_id > 0) {
 
-			this.groups[grp_id - 1].last = i - 1;
-			grp_item_count = this.groups[grp_id - 1].last - this.groups[grp_id - 1].first + 1;
+            this.groups[grp_id - 1].last = i - 1; // obsolete
+            this.groups[grp_id - 1].track_total = i - this.groups[grp_id - 1].first_lid;
+            this.groups[grp_id - 1].last_lid = i - 1;
+            var grp_trk_total = this.groups[grp_id - 1].track_total;
 
 			if (!this.groups[grp_id - 1].collapsed) {
 
-				if (grp_item_count < this.min_grp_items) {
-					this.items_to_add = this.min_grp_items - grp_item_count;
-					for (var k = 0; k < this.items_to_add; k++) {
+                // 填充物, type = -1;
+				if (grp_trk_total < grp_min_items) {
+					var to_add = grp_min_items - grp_trk_total;
+					for (var k = 0; k < to_add; k++) {
 						this.items[item_id] = {};
 						this.items[item_id].type = -1;
-						this.items[item_id].is_odd = (show_grp_header ? grp_list_item_id : list_item_id) % 2;
                         this.items[item_id].grp_id = grp_id - 1;
+						this.items[item_id].is_odd = is_odd;
+                        is_odd = !is_odd;
 						item_id++;
 					};
 				}
 
-				for (var k = 0; k < this.extra_grp_items; k++) {
+                // 隔离物, type = -2
+				for (var k = 0; k < grp_extra_items; k++) {
 					this.items[item_id] = {};
 					this.items[item_id].type = -2;
                     this.items[item_id].grp_id = grp_id - 1;
 					item_id++;
 				};
 
-				grp_list_item_id = 0;
+				//grp_list_item_id = 0;
 
 			};
 
@@ -383,7 +402,6 @@ Playlist = function() {
 		this.repaint();
 
         this.name = plman.GetPlaylistName(g_active_playlist);
-        this.total_tracks = plman.PlaylistItemCount(g_active_playlist);;
 
         plman.SetActivePlaylistContext(); // to enable main-menu "Edit"
 		//console("total length: " + this.total);
@@ -391,28 +409,28 @@ Playlist = function() {
         // --------- temp --------------------------------------------------------------------
         // 判断是否显示 group-header
         // 实验性功能
-        var factor = 2.5; // according to my music library, you can change it yourselves.
-        if (this.total > 0 && prop.auto_group) {
-            if (this.handles.Count / this.groups.length < factor && prop.show_group_header) {
+        var factor = 2.3; // according to my music library, you can change it yourselves.
+        if (this.total > 0 && auto_grp) {
+            if (this.list_total / this.groups.length < factor && show_grp_header) {
                 prop.show_group_header = false;
                 get_metrics();
                 get_images();
-                this.update_list();
+                this.init_list();
             } 
-            if (this.handles.Count / this.groups.length > factor && !prop.show_group_header) {
+            if (this.list_total / this.groups.length > factor && !show_grp_header) {
                 prop.show_group_header = true;
                 get_metrics();
                 get_images();
-                this.update_list();
+                this.init_list();
             };
         };
         // ------------------------------------------------------------------------------------
 
         //console("grps: " + this.groups.length);
-        //console("trks: " + this.handles.Count);
+        //console("trks: " + this.list_total);
 
 	};
-	this.update_list("auto");
+	this.init_list("auto");
 
 	this.draw = function(gr) {
 		var grp_id, grp_id_saved = -1;
@@ -729,7 +747,7 @@ Playlist = function() {
 	this.collapse_all = function(bool) {
         if (bool) bool = "collapse";
         else bool = "expand";
-        this.update_list(bool);
+        this.init_list(bool);
 	};
 
 	this.select_a_to_b = function(a, b) {
@@ -1036,7 +1054,7 @@ Playlist = function() {
                     };
 
                     if (this.total_rows > this.total && y > this.items[this.visible_rows - 1].y + this.row_height) {
-                        end_ = this.handles.Count - 1;
+                        end_ = this.list_total - 1;
                     };
 
                     if (y < this.list_y) {
@@ -1170,14 +1188,14 @@ Playlist = function() {
 						// do dragdrop action
                         var handles_sel = plman.GetPlaylistSelectedItems(g_active_playlist);
                         var sel_total = handles_sel.Count;
-                        var list_total = this.handles.Count;
+                        var list_total = this.list_total;
                         if (this.hover_item && this.hover_item.type <= 0) {
                             var list_id;
                             var delta_;
                             if (this.hover_item.type == 0){ 
                                 list_id = this.hover_item.list_id;
                             } else {
-                                //list_id = Math.min(this.handles.Count -1, this.groups[this.hover_item.grp_id].last+1);
+                                //list_id = Math.min(this.list_total -1, this.groups[this.hover_item.grp_id].last+1);
                                 list_id = this.groups[this.hover_item.grp_id].last+1;
                             };
 
@@ -1734,6 +1752,7 @@ Scroll = function(vertical, parent) {
 };
 
 prop = new function() {
+    this.dpi = 96;
 	this.use_system_color = window.GetProperty("_prop_color: Use system color", true);
 	this.colorscheme = window.GetProperty("_prop_color: Colorscheme(light, dark, user)", "dark");
 	this.font_name = window.GetProperty("_prop_font: Default font name", "Segoe UI");
@@ -1872,7 +1891,7 @@ function on_paint(gr) {
     var txt_w = GetTextWidth(txt, g_fonts.info_header);
     var txt_x = ww - p - txt_w;
     gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), txt_x, 0, txt_w, 24, dt_cc);
-    var txt = plst.total_tracks;
+    var txt = plst.list_total;
     var txt_w = GetTextWidth(txt, g_fonts.info_header);
     var txt_x = txt_x - txt_w;
     gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
@@ -1937,7 +1956,7 @@ function on_playlists_changed() {
 	};
 	if (g_active_playlist != plman.ActivePlaylist) {
 		g_active_playlist = plman.ActivePlaylist;
-		plst.update_list();
+		plst.init_list();
 	};
 };
 
@@ -1945,26 +1964,26 @@ function on_playlists_changed() {
 function on_playlist_switch() {
 	g_active_playlist = plman.ActivePlaylist;
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
-	plst.update_list("auto");
+	plst.init_list("auto");
 	if (plman.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
 	g_show_now_playing_called = false;
 };
 
 function on_playlist_items_reordered(playlist) {
 	if (playlist !== g_active_playlist) return;
-	plst.update_list();
+	plst.init_list();
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 };
 
 function on_playlist_items_removed(playlist) {
 	if (playlist !== g_active_playlist) return;
-	plst.update_list();
+	plst.init_list();
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 };
 
 function on_playlist_items_added(playlist) {
 	if (playlist !== g_active_playlist) return;
-	plst.update_list();
+	plst.init_list();
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 };
 
@@ -2224,6 +2243,13 @@ function on_get_album_art_done(metadb, art_id, image, image_path) {
     };
 };
 
+function on_notify_data(name, info) {
+    switch (name) {
+        case "Reload script":
+            window.Reload();
+            break;
+    };
+};
 
 function on_metadb_changed(handles, fromhook) {
 	plst.repaint();
@@ -2241,13 +2267,26 @@ function on_font_changed() {
 	window.Repaint();
 };
 
+
+function gdi_font(name, pt, style) {
+    return gdi.Font(name, pt * prop.dpi / 72, style);
+};
+
+
 function get_fonts() {
-	g_fonts.name = prop.font_name;
+    try {
+        g_fonts.name = (window.InstanceType == 1 ? window.GetFontDUI(3).Name : window.GetFontCUI(0).Name);
+    } catch (e) {
+        g_fonts.name = "Segoe UI";
+        console("Failed to load default font, Use \"" + g_fonts.name + "\" instead");
+    };
+	//g_fonts.name = prop.font_name;
     g_fonts.name_bold = g_fonts.name;
     if (g_fonts.name.toLowerCase() == "segoe ui semibold") {
         g_fonts.name_bold = "segoe ui";
     };
-	g_fonts.item = gdi.Font(g_fonts.name, 12);
+    /*
+	g_fonts.item = gdi.Font(g_fonts.name, 16);
     g_fonts.item_bold = gdi.Font(g_fonts.name, 12, 1);
 	g_fonts.header1 = gdi.Font(g_fonts.name_bold, 18, 1);
 	g_fonts.header2 = gdi.Font(g_fonts.name, 16, 0);
@@ -2256,6 +2295,16 @@ function get_fonts() {
     g_fonts.rating2 = gdi.Font("Segoe UI Symbol", 14, 0);
     g_fonts.item_14b = gdi.Font(g_fonts.name_bold, 14, 1);
     g_fonts.info_header = gdi.Font("Segoe UI Semibold", 12, 0);
+    */
+	g_fonts.item = gdi_font(g_fonts.name, 9);
+    g_fonts.item_bold = gdi_font(g_fonts.name, 9, 1);
+	g_fonts.header1 = gdi_font(g_fonts.name_bold, 13.5, 1);
+	g_fonts.header2 = gdi_font(g_fonts.name, 12, 0);
+	g_fonts.header3 = gdi_font(g_fonts.name, 10.5, 0);
+    g_fonts.rating1 = gdi_font("Segoe UI Symbol", 12, 0);
+    g_fonts.rating2 = gdi_font("Segoe UI Symbol", 10.5, 0);
+    g_fonts.item_14b = gdi_font(g_fonts.name_bold, 10.5, 1);
+    g_fonts.info_header = gdi_font("Segoe UI", 9, 1);
 };
 
 function get_colors() {
@@ -2322,22 +2371,6 @@ function get_images() {
     };
 };
 
-function isTrackQueued(handle) {
-    var queue_total = plman.GetPlaybackQueueCount();
-    if(queue_total > 0) {
-        var vbarr = plman.GetPlaybackQueueContents();
-        var arr = vbarr.toArray();
-        for(var j = 0; j < queue_total; j++) {
-            if(handle.Compare(arr[j].Handle)) {
-                return j+1;
-            }
-        };
-        return -1;
-    }; else {
-        return -1;
-    };
-};
-
 function num(strg, nb) {
     var i;
     var str = strg.toString();
@@ -2349,3 +2382,4 @@ function num(strg, nb) {
     };
     return str.toString();
 };
+
