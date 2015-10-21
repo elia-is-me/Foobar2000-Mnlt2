@@ -1,5 +1,7 @@
 # Foobar2000-UI-Scripts
 
+* **暂停更新（真的只是暂停）**
+
 ## 列表: Playlist.js
 
 #### 使用方法:
