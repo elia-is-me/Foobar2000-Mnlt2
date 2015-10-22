@@ -71,7 +71,6 @@ function format_art(image, w, h, raw_bitmap) {
 Playlist = function() {
 	this.margin = prop.margin;
 	this.handles = null;
-    //this.handles_selection = plman.GetPlaylistSelectedItems(g_active_playlist);
 	this.row_height = prop.row_height;
 	this.total;
 	this.groups = [];
@@ -83,10 +82,6 @@ Playlist = function() {
 	this.scrb = new Scroll(true, this);
 
 	this.start_id = 0;
-	//this.min_grp_items = prop.group_minimum_rows;
-
-	//this.extra_grp_items = prop.group_extra_rows;
-	//this.items_to_add;
 	this.playing_item_visible = false;
 
 	this.repaint = function () {
@@ -180,8 +175,6 @@ Playlist = function() {
         //
 		for (var i = 0; i < this.total; i++) {
 			if (this.items[i].type > 0 && this.items[i].grp_id == grp_id) {
-				//console("expanding...");
-				//console("group id is: " + grp_id);
 				var after = this.items.slice(i+prop.group_header_rows, this.items.length);
 				this.items = this.items.splice(0, i+prop.group_header_rows);
 				var is_odd = false;
@@ -190,7 +183,7 @@ Playlist = function() {
 				for (var j = this.groups[grp_id].firstID; j < end; j++) {
 					this.items[item_id] = {};
                     switch (true) {
-                        case (j <= this.groups[grp_id].last): 
+                        case (j <= this.groups[grp_id].lastID): 
                             // track items
                             this.items[item_id].type = 0;
                             this.items[item_id].list_id = j;
@@ -198,7 +191,7 @@ Playlist = function() {
                             this.items[item_id].grp_id = grp_id;
                             this.items[item_id].is_odd = is_odd;
                             break;
-                        case (j > this.groups[grp_id].last && j < this.groups[grp_id].firstID + prop.group_minimum_rows):
+                        case (j > this.groups[grp_id].lastID && j < this.groups[grp_id].firstID + prop.group_minimum_rows):
                             // 填充物
                             this.items[item_id].type = -1;
                             this.items[item_id].is_odd = is_odd;
@@ -227,9 +220,8 @@ Playlist = function() {
 
 	};
 
-	// item_types >>> group-header: > 0, track: == 0, 填充物: == -1, 隔离物: == -2;
-    // auto, collapse, expand
-    
+	// item_types - group-header: > 0, track: == 0, 填充物: == -1, 隔离物: == -2;
+    // col - auto, collapse, expand
 	this.init_list = function(col) {
 
         // -- load properties setting outside --
@@ -250,7 +242,6 @@ Playlist = function() {
 		var grp_trk_total;
 		var item_id = 0, grp_id = 0;
         var is_odd;
-		//var list_item_id = 0, grp_list_item_id = 0;
 
         // -- init --
 		this.groups = [];
@@ -274,11 +265,6 @@ Playlist = function() {
 				this.groups[grp_id].metadb = metadb;
                 this.groups[grp_id].pattern = curr;
                 this.groups[grp_id].firstID = i; // group first list_index
-                //this.groups[grp_id].first_iid = item_id; // group first item_index
-                // >> obsolete
-				this.groups[grp_id].first = i;
-                this.groups[grp_id].key = curr;
-                // <<
                 this.groups[grp_id].collapsed = (function() {
                     switch (col) {
                         case "collapse":
@@ -294,7 +280,6 @@ Playlist = function() {
 
 				// add empty group rows
 				if (grp_id > 0) {
-					this.groups[grp_id - 1].last = i - 1; // obsolete
                     this.groups[grp_id - 1].track_total = i - this.groups[grp_id - 1].firstID;
                     this.groups[grp_id - 1].lastID = i - 1;
                     var grp_trk_total = this.groups[grp_id - 1].track_total;
@@ -356,7 +341,6 @@ Playlist = function() {
 
 		if (grp_id > 0) {
 
-            this.groups[grp_id - 1].last = i - 1; // obsolete
             this.groups[grp_id - 1].track_total = i - this.groups[grp_id - 1].firstID;
             this.groups[grp_id - 1].lastID = i - 1;
             var grp_trk_total = this.groups[grp_id - 1].track_total;
@@ -383,9 +367,6 @@ Playlist = function() {
                     this.items[item_id].grp_id = grp_id - 1;
 					item_id++;
 				};
-
-				//grp_list_item_id = 0;
-
 			};
 
 		};
@@ -396,14 +377,14 @@ Playlist = function() {
 		this.set_size(resize = false);
 		this.get_start_id();
 		this.scrb.update_cursor();
-		this.repaint();
 
         this.name = plman.GetPlaylistName(g_active_playlist);
-
         plman.SetActivePlaylistContext(); // to enable main-menu "Edit"
+
+		this.repaint();
 		//console("total length: " + this.total);
        
-        // --------- temp --------------------------------------------------------------------
+        // --------- temp ---------------------------------------------------------------
         // 判断是否显示 group-header
         // 实验性功能
         var factor = 2.3; // according to my music library, you can change it yourselves.
@@ -413,7 +394,7 @@ Playlist = function() {
                 get_metrics();
                 get_images();
                 this.init_list();
-            } 
+            } else 
             if (this.list_total / this.groups.length > factor && !show_grp_header) {
                 prop.show_group_header = true;
                 get_metrics();
@@ -421,12 +402,9 @@ Playlist = function() {
                 this.init_list();
             };
         };
-        // ------------------------------------------------------------------------------------
-
-        //console("grps: " + this.groups.length);
-        //console("trks: " + this.list_total);
-
+        // ------------------------------------------------------------------------------
 	};
+
 	this.init_list("auto");
 
 	this.draw = function(gr) {
@@ -459,7 +437,7 @@ Playlist = function() {
 			var total_grps = plst.groups.length;
 			for (var i = 0; i < total_grps; i++) {
 				plst.groups[i].is_focused = false;
-				if (g_focus_id >= plst.groups[i].firstID && g_focus_id <= plst.groups[i].last) {
+				if (g_focus_id >= plst.groups[i].firstID && g_focus_id <= plst.groups[i].lastID) {
 					plst.groups[i].is_focused = true;
 				};
 			};
@@ -677,7 +655,7 @@ Playlist = function() {
 					// length
                     var p = 10;
 					var trk_length = $("%length%", metadb);
-					var trk_length_w = 40;
+					var trk_length_w = 30;
 					var trk_length_x = track_rating.x - trk_length_w - p;
 					gr.GdiDrawText(trk_length, g_fonts.item, font_color, trk_length_x, ry, trk_length_w, rh, dt_rc);
                     // count
@@ -685,11 +663,11 @@ Playlist = function() {
                     var p = 0;
                     if (prop.show_play_count) {
                         var p = 5;
-                        var count = $("%play_count%", metadb);
-                        var count_w = 30;
+                        var count = $("[%play_count%]", metadb);
+                        var count_w = 25;
                     };
                     var count_x = trk_length_x - count_w - p;
-                    if (count_w > 0) gr.GdiDrawText(count, g_fonts.item, blendColors(font_color, g_colors.bg_normal, 0.5), count_x, ry, count_w, rh, dt_cc);
+                    if (count_w > 0) gr.GdiDrawText(count, g_fonts.item, blendColors(font_color, g_colors.bg_normal, 0.5), count_x, ry, count_w, rh, dt_rc);
 					// title
                     var p = 5;
 					var title = $("%title%", metadb);
@@ -709,7 +687,7 @@ Playlist = function() {
 			} // eol;
 		} else { 
 			// ---- draw text info if playlist is empty
-			var font = gdi.Font(g_fonts.name, 32, 1);
+			var font = gdi_font(g_fonts.name, 32, 1);
 			gr.GdiDrawText("空列表", font, g_colors.txt_bg_05, this.list_x, this.list_y - 20, this.list_w, this.list_h, dt_cc);
 		};
 
@@ -769,7 +747,7 @@ Playlist = function() {
 	this.select_group_tracks = function(grp_id) {
 		var selected_indexes = [];
 		var end = this.groups[grp_id].lastID;
-		var start = this.groups[grp_id].first;
+		var start = this.groups[grp_id].firstID;
 		for (var i = start; i <= end; i++) {
 			selected_indexes.push(i);
 		}
@@ -1301,7 +1279,7 @@ Playlist = function() {
 
 	this.is_group_selected = function (grp_id) {
 		var grp = this.groups[grp_id];
-		for (var i = grp.first; i <= grp.lastID; i++) {
+		for (var i = grp.firstID; i <= grp.lastID; i++) {
 			if (!plman.IsPlaylistItemSelected(g_active_playlist, i))
 				return false;
 		};
@@ -1318,7 +1296,7 @@ Playlist = function() {
         for (var i = 0; i < total_grps; i++) {
             this.groups[i].is_playing = false;
             var __playing_id = plman.GetPlayingItemLocation().PlaylistItemIndex;
-            if (__playing_id >= plst.groups[i].first && __playing_id <= plst.groups[i].last) {
+            if (__playing_id >= plst.groups[i].firstID && __playing_id <= plst.groups[i].lastID) {
                 plst.groups[i].is_playing = true;
             };
         };
@@ -1355,7 +1333,7 @@ Playlist = function() {
 			if (this.items[j].type > 0) {
 				var grp_id = this.items[j].grp_id;
 				//console(grp_id);
-				if (this.groups[grp_id].first <= playing_item_list_id && this.groups[grp_id].last >= playing_item_list_id) {
+				if (this.groups[grp_id].firstID <= playing_item_list_id && this.groups[grp_id].lastID >= playing_item_list_id) {
 					playing_grp_id = grp_id;
 					//console("playing group id: " + grp_id);
 					this.expand_group(grp_id);
@@ -1378,12 +1356,8 @@ Playlist = function() {
 		};
 
 		this.scrb.on_mouse("wheel", 0, 0, this.start_id - delta);
-		//this.save_start_id();
-		//this.repaint();
-
 		if (plman.ActivePlaylist != plman.PlayingPlaylist){ 
 			g_show_now_playing_called = true;
-			//console("show now playing...");
 		};
 
 	};
@@ -1590,17 +1564,24 @@ Playlist = function() {
         var _app = window.CreatePopupMenu();
 
         _grp.AppendTo(_menu, MF_STRING | MF_POPUP, "Group");
-        _grp.AppendMenuItem(MF_STRING, 1, "Show group header");
+        _grp.AppendMenuItem(prop.auto_group ? MF_DISABLED : MF_STRING, 1, "Show group header");
+        _grp.CheckMenuItem(1, prop.show_group_header);
         _grp.AppendMenuItem(MF_STRING, 2, "Auto group");
+        _grp.CheckMenuItem(2, prop.auto_group);
         //
         _app.AppendTo(_menu, MF_STRING | MF_POPUP, "Appearences");
         _app.AppendMenuItem(MF_STRING, 10, "Show rating");
+        _app.CheckMenuItem(10, prop.show_rating);
         _app.AppendMenuItem(MF_STRING, 11, "Show play count");
+        _app.CheckMenuItem(11, prop.show_play_count);
         _app.AppendMenuSeparator();
         _app.AppendMenuItem(MF_STRING, 12, "Show scrollbar");
+        _app.CheckMenuItem(12, prop.show_scrollbar);
         _app.AppendMenuSeparator();
         _app.AppendMenuItem(MF_STRING, 13, "Enable odd/even highlight");
+        _app.CheckMenuItem(13, prop.odd_even_rows);
         _app.AppendMenuItem(MF_STRING, 14, "Show focusd item");
+        _app.CheckMenuItem(14, prop.show_focus_item);
         //
         var _art = window.CreatePopupMenu();
         _art.AppendTo(_menu, MF_STRING | MF_POPUP, "Cover");
@@ -1612,12 +1593,90 @@ Playlist = function() {
         _col.AppendMenuItem(MF_STRING, 32, "Catrox(dark)");
         _col.AppendMenuItem(MF_STRING, 33, "Modoki(light)");
         _col.AppendMenuItem(MF_STRING, 34, "User");
-
+        var colorID = (function() {
+            switch (prop.colorscheme) {
+                case "system":
+                    return 31;
+                case "catrox":
+                case "dark":
+                    return 32;
+                case "modoki":
+                case "light":
+                    return 33;
+                case "user":
+                    return 34;
+            }
+        })();
+        _col.CheckMenuRadioItem(31, 34, colorID);
         _menu.AppendMenuSeparator();
 
         _menu.AppendMenuItem(MF_STRING, 50, "Vim-style key bindings");
+        _menu.CheckMenuItem(50, prop.enable_vim_style_keybindings);
 
         var ret = _menu.TrackPopupMenu(x, y);
+
+        var colorArr = ["system", "catrox", "modoki", "user"];
+        // change colorscheme
+        /*
+        for (var i = 31; i <= 34; i++) {
+            if (i == ret) {
+                prop.colorscheme = colorscheme[colorArr[i - 31]];
+                get_colors();
+                window.Repaint();
+                window.SetProperty("_prop_color: Colorscheme(system, catrox, modoki, user)", colorArr[i - 31]);
+                break;
+            };
+        };
+        */
+        
+
+        switch(ret) {
+            case 1:
+                prop.show_group_header = !prop.show_group_header;
+                this.init_list();
+                window.SetProperty("_prop_grp: Show group header", prop.show_group_header);
+                break;
+            case 2:
+                prop.auto_group = !prop.auto_group;
+                prop.show_group_header = window.GetProperty("_prop_grp: Show group header");
+                this.init_list();
+                window.SetProperty("_prop_grp: Auto group tracks", prop.auto_group);
+                break;
+            case 10:
+                prop.show_rating = !prop.show_rating;
+                this.repaint();
+                window.SetProperty("_prop: Show rating", prop.show_rating);
+                break;
+            case 11:
+                prop.show_play_count = !prop.show_play_count;
+                this.repaint();
+                window.SetProperty("_prop: Show play count", prop.show_play_count);
+                break;
+            case 12:
+                prop.show_scrollbar = !prop.show_scrollbar();
+                this.set_size(resize = false);
+                this.repaint();
+                window.SetProperty("_prop: Show scrollbar", prop.show_scrollbar);
+                break;
+            case 13:
+                prop.odd_even_rows = !prop.odd_even_rows;
+                this.repaint();
+                window.SetProperty("_prop: Enable odd/even rows highlight", prop.odd_even_rows);
+                break;
+            case 14:
+                prop.show_focus_item = !prop.show_focus_item;
+                this.repaint();
+                window.SetProperty("_prop: Show focused item", prop.show_focus_item);
+                break;
+            case 20:
+                break;
+            case 21:
+                break;
+            case 50:
+                prop.enable_vim_style_keybindings = !prop.enable_vim_style_keybindings;
+                window.SetProperty("_prop: Enable vim key bindings", prop.enable_vim_style_keybindings);
+                break;
+        };
 
         _col.Dispose();
         _art.Dispose();
@@ -1741,10 +1800,11 @@ Scroll = function(vertical, parent) {
 	};
 };
 
+
 prop = new function() {
     this.dpi = 96;
 	this.use_system_color = window.GetProperty("_prop_color: Use system color", true);
-	this.colorscheme = window.GetProperty("_prop_color: Colorscheme(light, dark, user)", "dark");
+	this.colorscheme = window.GetProperty("_prop_color: Colorscheme(system, catrox, modoki, user)", "dark");
 	this.font_name = window.GetProperty("_prop_font: Default font name", "Segoe UI");
 	this.group_format = window.GetProperty("_prop_grp: Group format", "%album artist% | %album% | %discnumber%");
 	this.group_header_rows = window.GetProperty("_prop_grp: Group header rows", 4);
@@ -1757,7 +1817,7 @@ prop = new function() {
 	this.margin = window.GetProperty("_prop: Margin", 15);
     this.show_scrollbar = window.GetProperty("_prop: Show scrollbar", true);
 	this.scrollbar_width = 12;
-	this.odd_even_rows = window.GetProperty("_prop: Enable odd/even rows hightlight", true);
+	this.odd_even_rows = window.GetProperty("_prop: Enable odd/even rows highlight", true);
 	this.scroll_step = window.GetProperty("_prop: Default scroll step", 3);
 	this.auto_collaspe = window.GetProperty("_prop: Auto collapse", false);
 	this.show_focus_item = window.GetProperty("_prop: Show focused item", false);
@@ -1806,6 +1866,14 @@ colorscheme.catrox = colorscheme.dark;
 track_rating = {
     x: 0,
     w: 0,
+};
+
+
+GroupScheme = function(name, pattern) {
+};
+
+group_scheme = {
+
 };
 
 
@@ -1875,7 +1943,8 @@ function on_paint(gr) {
     // playlist view
 	plst.draw(gr);
     // info header
-	gr.FillSolidRect(0, 0, ww, 24, RGB(84, 86, 82));
+    gr.FillSolidRect(0, 0, ww, 24, RGB(84, 86, 82));
+	//gr.FillSolidRect(0, 0, ww, 24, 0x10000000);
     var p = 10;
     var txt = " tracks";
     var txt_w = GetTextWidth(txt, g_fonts.info_header);
