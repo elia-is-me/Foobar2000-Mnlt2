@@ -1803,6 +1803,7 @@ Scroll = function(vertical, parent) {
 
 prop = new function() {
     this.dpi = 96;
+    this.show_info = window.GetProperty("_prop: Show info header", true);
 	this.use_system_color = window.GetProperty("_prop_color: Use system color", true);
 	this.colorscheme = window.GetProperty("_prop_color: Colorscheme(system, catrox, modoki, user)", "dark");
 	this.font_name = window.GetProperty("_prop_font: Default font name", "Segoe UI");
@@ -1932,7 +1933,10 @@ window.DlgCode = DLGC_WANTALLKEYS;
 function on_size() {
 	ww = window.Width;
 	wh = window.Height;
-	var th = 24;
+    var th = 0;
+    if (prop.show_info) {
+        th = 24;
+    };
 	plst.set_size(resize = true, 1, th, ww-2, wh - th-1);
 };
 
@@ -1943,21 +1947,23 @@ function on_paint(gr) {
     // playlist view
 	plst.draw(gr);
     // info header
-    gr.FillSolidRect(0, 0, ww, 24, RGB(84, 86, 82));
-	//gr.FillSolidRect(0, 0, ww, 24, 0x10000000);
-    var p = 10;
-    var txt = " tracks";
-    var txt_w = GetTextWidth(txt, g_fonts.info_header);
-    var txt_x = ww - p - txt_w;
-    gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), txt_x, 0, txt_w, 24, dt_cc);
-    var txt = plst.list_total;
-    var txt_w = GetTextWidth(txt, g_fonts.info_header);
-    var txt_x = txt_x - txt_w;
-    gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
-    var txt = "Playlist > ";
-    var txt_w = GetTextWidth(txt, g_fonts.info_header);
-    gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), p, 0, txt_w, 24, dt_cc);
-    gr.GdiDrawText(plst.name, g_fonts.info_header, RGB(213, 213, 213), p + txt_w + p, 0, txt_x - txt_w - p * 2, 24, dt_cc);
+    if (prop.show_info) {
+        gr.FillSolidRect(0, 0, ww, 24, RGB(84, 86, 82));
+        //gr.FillSolidRect(0, 0, ww, 24, 0x10000000);
+        var p = 10;
+        var txt = " tracks";
+        var txt_w = GetTextWidth(txt, g_fonts.info_header);
+        var txt_x = ww - p - txt_w;
+        gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), txt_x, 0, txt_w, 24, dt_cc);
+        var txt = plst.list_total;
+        var txt_w = GetTextWidth(txt, g_fonts.info_header);
+        var txt_x = txt_x - txt_w;
+        gr.GdiDrawText(txt, g_fonts.info_header, RGB(213, 213, 213), txt_x, 0, txt_w, 24, dt_cc);
+        var txt = "Playlist > ";
+        var txt_w = GetTextWidth(txt, g_fonts.info_header);
+        gr.GdiDrawText(txt, g_fonts.info_header, RGB(145, 145, 145), p, 0, txt_w, 24, dt_cc);
+        gr.GdiDrawText(plst.name, g_fonts.info_header, RGB(213, 213, 213), p + txt_w + p, 0, txt_x - txt_w - p * 2, 24, dt_cc);
+    };
     var to = new Date();
     //console("paint: " + (to - from) + " ms");
     repaint_counter++;
