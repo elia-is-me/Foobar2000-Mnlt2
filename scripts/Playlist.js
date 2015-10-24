@@ -2383,9 +2383,9 @@ function get_colors() {
 			var c = combineColors(g_colors.bg_normal, g_colors.bg_selected & 0x39ffffff);
 			g_colors.txt_selected = (Luminance(c) > 0.6 ? 0xff000000 : 0xfff5f5f5);
             if (Luminance(c) > 0.6) {
-                g_colors.txt_selected = blendColors(g_colors.txt_normal, 0xff000000, 0.6);
+                g_colors.txt_selected = blendColors(g_colors.txt_normal, 0xff000000, 0.3);
             } else {
-                g_colors.txt_selected = blendColors(g_colors.txt_normal, 0xffffffff, 0.6);
+                g_colors.txt_selected = blendColors(g_colors.txt_normal, 0xffffffff, 0.3);
             };
 		} else { try {
 			g_colors.txt_normal = window.GetColorCUI(ColorTypeCUI.text);
