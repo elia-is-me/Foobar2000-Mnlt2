@@ -536,7 +536,7 @@ Playlist = function() {
                             var color_l1 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.2);
                             //var color_l1 = g_colors.txt_normal;
 							// date
-							var date = $("$year($replace(%date%,/,-))", metadb);
+                            var date = $("[%date%]", metadb).trim().slice(0,4);
 							var date_w = GetTextWidth(date, g_fonts.header1);
 							var date_x = rx + rw - date_w - p;
 							var date_y = grp_y + (grp_h - 50) / 2 ;
@@ -559,7 +559,7 @@ Playlist = function() {
                             var color_l2 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.4);
 
 							// genre
-							var genre = $("$if2(%genre%,Other)", metadb);
+							var genre = $("[%genre%]", metadb);
 							var genre_w = GetTextWidth(genre, g_fonts.header2);
 							var genre_x = rx + rw - genre_w - p;
 							var genre_y = date_y + 25;
