@@ -1,7 +1,184 @@
 ////////////////////////////////////////////// objects
+
+Xiami = function () {
+
+	this.metadb = null;
+	this.albums = [];
+	this.albumID = [];
+	this.search_started = false;
+	
+	this.get_query_txt = function(metadb, has_input) {
+
+		var tt = $("[%title%]", metadb);
+		var at = $("[%artist%]", metadb);
+
+		if (has_input) {
+			var txt = InputBox("INPUT", "搜索字段1", tt);
+			var txt2 = InputBox("INPUT2", "搜索字段2", at);
+			return (txt + "+" + txt2);
+		};
+
+		if (tt == "" && at == "") {
+		   	return "";
+		};
+
+		tt = tt.replace(/\s+/g,"+");
+		at = at.replace(/\s+/g,"+");
+
+		return (at + "+" + tt);
+	};
+
+	this.query = function(has_input) {
+		///
+		var xmlDoc = new ActiveXObject("MSXML.DOMDocument");
+		var xmlhttp = new ActiveXObject("Msxml2.XMLHTTP.3.0");
+
+		var url, rt;
+		var metadb;
+		var search_txt;
+
+		// ## init
+		metadb = fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem();
+		this.metadb = metadb;
+		search_txt = this.get_query_txt(metadb, has_input);
+		url = "http://www.xiami.com/search/song/?key=" + search_txt;
+
+		// ###
+		try {
+			xmlhttp.open("GET", url, false);
+			xmlhttp.send();
+		} catch(e) { 
+			console("Fail to GET!");
+			return;
+		};
+
+		var albumID = [];
+		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+
+			rt = xmlhttp.responseText;
+			if (rt == "") {
+				console("FAILED: no html response text.");
+				return;
+			};
+
+			var albumElem, albumRE;
+
+			albumRE = new RegExp("<a.*href=\".*?/album/(\\d+).*?>", "g");
+			while (albumElem = albumRE.exec(rt)) {
+				albumID.push(albumElem[1]);
+			};
+			albumID.unique();
+			if (albumID.length == 0) {
+				console("FAILED: get no album ID.");
+				return;
+			};
+		} else {
+			console("Fail to get album ID.");
+		};
+
+
+		// ##
+		var trackList, trk;
+		var res_total = Math.min(10, albumID.length);
+		for (var i = 0; i < res_total; i++) {
+			url = "http://www.xiami.com/song/playlist/id/" + albumID[i] + "/type/1";
+			try {
+				xmlhttp.open("GET", url, false);
+				xmlhttp.send();
+			} catch(e) {
+				console("Fail to get " + albumID[i]);
+				continue;
+			};
+			
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+				xmlDoc.loadXML(xmlhttp.responseText);
+				trackList = xmlDoc.getElementsByTagName("trackList");
+				if (trackList) {
+					trk = (trackList[0].getElementsByTagName("track"))[0];
+					this.albums.push({
+						artist: trk.getElementsByTagName("artist")[0].childNodes[0].nodeValue,
+						album: trk.getElementsByTagName("album_name")[0].childNodes[0].nodeValue,
+						album_pic: trk.getElementsByTagName("album_pic")[0].childNodes[0].nodeValue
+					});
+				};
+			};
+		};
+
+	};
+
+	this.exec = function(c, w) {
+		var ws = new ActiveXObject("WScript.Shell");
+		try {
+			ws.Run(c, 0, w);
+		} catch (e) {};
+	};
+
+	this.download = function(idx) {
+		this.check_();
+		if (this.albums.length == 0) return;
+
+		var album_artist = $("[%album artist%]", this.metadb);
+		var album = $("[%album%]", this.metadb);
+		var url = this.albums[idx].album_pic;
+		var ext = /.[^.]+$/.exec(url.substring(url.lastIndexOf("/") + 1));
+		var tgt_file;
+		/************************
+		   TODO: if file exsits?
+		   **********************/
+		tgt_file = "\"" + this.target_folder + album_artist.validate() + "-" +
+			album.validate();
+		try {
+			/**
+			  TODO: various downloader: wget, download.vbs, etc.
+			  **/
+			this.exec(this.downloader + " " + url + " " + " -O " + tgt_file,
+					false);
+			console("Download " + tgt_file + " SUCCESSFULLY!");
+		} catch (e) {
+			console("Fail to save " + tgt_file);
+		};
+
+		window.Repaint();
+
+	};
+
+	this.check_ = function() {
+	};
+
+	this.li_draw = function(gr) {
+
+		//bg
+		gr.FillSolidRect(this.li_x, this.li_y, this.li_w, this.li_h, 0x15000000);
+		if (this.search_started) {
+			if (this.albums.length == 0) {
+				var font0 = gdi.Font("Segoe UI", 18);
+				gr.GdiDrawText("No results!", font0, 0xee000000, this.li_x, this.li_y, this.li_w, this.li_w, dt_cc);
+			};
+		};
+	};
+
+	this.li_set_size = function (x, y, w, h) {
+		this.li_x = x;
+		this.li_y = y;
+		this.li_w = w;
+		this.li_h = h;
+	};
+
+	this.margin = prop.margin;
+
+};
+
+
+
+
+
+// =================================================================================== //
+
 Cover = function() {
+	//
 	this.image_obj = [];
 	this.display_id = prop.cover_art.albumart_id;
+	//
 	this.get_album_art = function(metadb) {
 		if (metadb == null) {
 			this.image_obj[this.display_id] = null;
@@ -31,6 +208,7 @@ Cover = function() {
 		this.grp_saved = this.grp;
 	};
 
+	//
 	this.on_get_album_art_done = function(metadb, art_id, image, image_path) {
 		if (!image) {
 			this.image_obj[art_id] = null;
@@ -145,7 +323,6 @@ Cover = function() {
 			gr.GdiDrawText("Loading", font, color, this.x, this.y, this.w, this.h, dt_cc);
 		};
 	};
-
 };
 
 
@@ -160,8 +337,13 @@ var window_visible = false;
 var repaint_counter = 0;
 var repaint_forced = false;
 var rpt_timer = null, cover_rpt_timer = null;
+
+var xmlDoc = new ActiveXObject("MSXML.DOMDocument");
+var fso = new ActiveXObject("Scripting.FileSystemObject");
+var WshShell = new ActiveXObject("WScript.Shell");
+
 //
-var plm, aart;
+var plm, aart, xm;
 //
 var g_colors = {};
 var g_fonts = {};
@@ -209,6 +391,7 @@ prop = new function() {
 { // on startup
 	aart = new Cover();
 	aart.get_album_art(fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem());
+	xm = new Xiami();
 	//
 	get_fonts();
 	get_colors();
@@ -227,6 +410,8 @@ function on_size() {
 	var aw = ww;
 	var ah = Math.min(wh-ay, 300, aw);
 	aart.set_size(ax, ay, aw, ah);
+
+	xm.li_set_size(ax, ay + ah + 5, aw, wh - ay - ah  - 10);
 };
 
 function on_paint(gr) {
@@ -237,6 +422,8 @@ function on_paint(gr) {
 		repaint_main = false;
 		repaint_forced = false;
 		aart.draw(gr);
+		xm.li_draw(gr);
+
 	};
 
 	repaint_counter++;

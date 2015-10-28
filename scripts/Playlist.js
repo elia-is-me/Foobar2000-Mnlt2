@@ -5,6 +5,8 @@
 // @update "2015-10-19"
 // ============================================ //
 
+var debug = false;
+
 // from br3tt's wsh_playlist
 ImageCache = function(art_id) {
     this._cache_list = {};
@@ -458,8 +460,9 @@ Playlist = function() {
 				this.items[item_id].y = ry;
 				item = this.items[item_id];
 				//console("item id: " + item_id);
-				if (item.type > -1)
+				if (item.type > -1) {
 					metadb = item.metadb;
+                };
 
 				//gr.GdiDrawText(item_id, g_fonts.item, blendColors(g_colors.bg_normal, g_colors.txt_normal, 0.5), rx - 15, ry, 15, rh, dt_cc);
 
@@ -475,14 +478,18 @@ Playlist = function() {
                         this.groups[grp_id].y = grp_y;
 
 						// bg
-						gr.FillSolidRect(rx, grp_y, rw, grp_h, 0x10000000);
+						gr.FillSolidRect(rx, grp_y, rw, grp_h, g_colors.txt_normal & 0x07ffffff);
+                        gr.FillSolidRect(rx, grp_y, rw, 1, g_colors.txt_normal & 0x14ffffff);
+                        if (grp_id == plst.groups.length - 1 && plst.groups[grp_id].collapsed) {
+                            gr.FillSolidRect(rx, grp_y + grp_h - 1, rw, 1, g_colors.txt_normal & 0x14ffffff);
+                        };
 
 						if (this.is_group_selected(grp_id)) {
 							gr.FillSolidRect(rx, grp_y, rw, grp_h, 0x55ffffff & g_colors.bg_selected);
 						};
 
 						// focused rect
-						if (this.groups[grp_id].is_focused && this.groups[grp_id].collapsed) {
+						if (prop.show_focus_item && this.groups[grp_id].is_focused && this.groups[grp_id].collapsed) {
 							gr.DrawRect(rx, grp_y, rw - 1, grp_h - 1, 1, RGB(127, 127, 127));
 						}
 
@@ -491,7 +498,9 @@ Playlist = function() {
 							if (delta > 0) delta = 0;
 							if (delta < -10) delta = -10;
 							var delta2 = 58 + delta;
-							// cover art
+
+							// ## cover art ##
+                            //
                             var cx = rx;
                             var cw = 0;
                             if (prop.show_group_art) {
@@ -500,8 +509,8 @@ Playlist = function() {
                                 var img = this.groups[grp_id].grp_img;
                                 //
                                 if (prop.show_group_header ) {
-                                    var cp = 4;
-                                    var cx = rx + cp * 2;
+                                    var cp = (grp_h - group_art.max_w) / 2;
+                                    var cx = rx + cp;
                                     var cy = grp_y + cp;
                                     var cw = grp_h - cp * 2;
                                     group_art.x = cx;
@@ -521,42 +530,45 @@ Playlist = function() {
                                 }
                             };
 
+                            // ## line 1 ##
+
 							var p = 10;
-							var color_l1 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.3);
+                            var color_l1 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.2);
+                            //var color_l1 = g_colors.txt_normal;
 							// date
 							var date = $("$year($replace(%date%,/,-))", metadb);
 							var date_w = GetTextWidth(date, g_fonts.header1);
 							var date_x = rx + rw - date_w - p;
-							var date_y = grp_y + (grp_h - delta2) / 2;
+							var date_y = grp_y + (grp_h - 50) / 2 ;
 							gr.GdiDrawText(date, g_fonts.header1, color_l1, date_x, date_y, date_w, grp_h, dt_lt);
-							// artist
-							var artist = $("%album artist%", metadb);
-							var artist_x = cx + cw + p;
-							var artist_w = date_x - artist_x - p;
-							var artist_y = date_y;
-							gr.GdiDrawText(artist, g_fonts.header1, color_l1, artist_x, artist_y, artist_w, grp_h, dt_lt);
+							// album
+							var album = $("%album%", metadb);
+                            var nameArr = "微软雅黑,Segoe UI,Segoe UI Semibold";
+                            if (nameArr.toLowerCase().indexOf(g_fonts.header1.Name.toLowerCase()) < 0) {
+                                album = album.replace("・", "\u00b7");
+                                //console("replace dot");
+                            };
+							var album_x = cx + cw + p;
+							var album_w = date_x - album_x - p;
+							var album_y = date_y;
+							gr.GdiDrawText(album, g_fonts.header1, color_l1, album_x, album_y, album_w, grp_h, dt_lt);
+
+
+                            // ## line 2 ##
+                            //
+                            var color_l2 = blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.4);
+
 							// genre
 							var genre = $("$if2(%genre%,Other)", metadb);
 							var genre_w = GetTextWidth(genre, g_fonts.header2);
 							var genre_x = rx + rw - genre_w - p;
-							var genre_y = date_y + 30 + delta;
-							gr.GdiDrawText(genre, g_fonts.header2, g_colors.txt_normal, genre_x, genre_y, genre_w, grp_h, dt_lt);
-							// playing icon
-							var ico_w = 0;
-							var ico = ">";
-							if (this.groups[grp_id].is_playing) {
-								var ico_w = GetTextWidth(ico, g_fonts.header2);
-							};
-							var ico_x = artist_x;
-							var ico_y = genre_y;
-							(ico_w > 0 ) && gr.GdiDrawText(ico, g_fonts.header2, g_colors.txt_normal, ico_x, ico_y, ico_w, grp_h, dt_lt);
-							// album
-							var album = $("%album%", metadb);
-							var album_x = ico_x + ico_w + p;
-							var album_w = genre_x - album_x - p;
-							gr.GdiDrawText(album, g_fonts.header2, g_colors.txt_normal, album_x, genre_y, album_w, grp_h, dt_lt);
-							// split line
-							gr.FillSolidRect(artist_x, grp_y + grp_h - 10, rx + rw - artist_x - p, 1, g_colors.txt_normal & 0x15000000);
+							var genre_y = date_y + 25;
+							gr.GdiDrawText(genre, g_fonts.header2, color_l2, genre_x, genre_y, genre_w, grp_h, dt_lt);
+							// artist
+							var artist = $("%album artist%", metadb);
+							var artist_x = album_x;
+							var artist_w = genre_x - artist_x - p;
+							gr.GdiDrawText(artist, g_fonts.header2, color_l2, artist_x, genre_y, artist_w, grp_h, dt_lt);
 
                         } else { 
                             if (grp_h > 35){
@@ -2311,7 +2323,9 @@ function on_get_album_art_done(metadb, art_id, image, image_path) {
 function on_notify_data(name, info) {
     switch (name) {
         case "Reload script":
-            window.Reload();
+            if (debug) {
+                window.Reload();
+            };
             break;
     };
 };
@@ -2350,26 +2364,26 @@ function get_fonts() {
     if (g_fonts.name.toLowerCase() == "segoe ui semibold") {
         g_fonts.name_bold = "segoe ui";
     };
-    /*
-	g_fonts.item = gdi.Font(g_fonts.name, 16);
+	g_fonts.item = gdi.Font(g_fonts.name, 12);
     g_fonts.item_bold = gdi.Font(g_fonts.name, 12, 1);
 	g_fonts.header1 = gdi.Font(g_fonts.name_bold, 18, 1);
-	g_fonts.header2 = gdi.Font(g_fonts.name, 16, 0);
+	g_fonts.header2 = gdi.Font(g_fonts.name, 14, 0);
 	g_fonts.header3 = gdi.Font(g_fonts.name, 14, 0);
     g_fonts.rating1 = gdi.Font("Segoe UI Symbol", 16, 0);
     g_fonts.rating2 = gdi.Font("Segoe UI Symbol", 14, 0);
     g_fonts.item_14b = gdi.Font(g_fonts.name_bold, 14, 1);
     g_fonts.info_header = gdi.Font("Segoe UI Semibold", 12, 0);
-    */
+    /*
 	g_fonts.item = gdi_font(g_fonts.name, 9);
     g_fonts.item_bold = gdi_font(g_fonts.name, 9, 1);
 	g_fonts.header1 = gdi_font(g_fonts.name_bold, 13.5, 1);
-	g_fonts.header2 = gdi_font(g_fonts.name, 12, 0);
+	g_fonts.header2 = gdi_font(g_fonts.name, 10.5, 0);
 	g_fonts.header3 = gdi_font(g_fonts.name, 10.5, 0);
     g_fonts.rating1 = gdi_font("Segoe UI Symbol", 12, 0);
     g_fonts.rating2 = gdi_font("Segoe UI Symbol", 10.5, 0);
     g_fonts.item_14b = gdi_font(g_fonts.name_bold, 10.5, 1);
     g_fonts.info_header = gdi_font("Segoe UI", 9, 1);
+    */
 };
 
 function get_colors() {
@@ -2402,10 +2416,11 @@ function get_colors() {
 function get_metrics() {
     if (prop.show_group_art) {
         if (prop.show_group_header) {
-            group_art.max_w = prop.group_header_rows * prop.row_height - 12;
+            group_art.max_w = prop.group_header_rows * prop.row_height - 16;
             prop.group_minimum_rows = 0;
             window.SetProperty("_prop_grp: Minimum group rows", prop.group_minimum_rows);
-        } /*
+        };
+        /*
              else {
             prop.group_minimum_rows = 5;
             window.SetProperty("_prop_grp: Minimum group rows", prop.group_minimum_rows);
