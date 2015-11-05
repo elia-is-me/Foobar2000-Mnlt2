@@ -192,9 +192,6 @@ function vol2pos(v) {
 
 
 
-
-
-
 var ww = 0, wh = 0;
 var m_x, m_y;
 var sk, vol;
@@ -294,7 +291,7 @@ function on_mouse_lbtn_up(x, y, mask) {
 	// buttons
 	for (var i = 0; i < btn_length; i++) {
 		if (g_btns[i].check_state("up", x, y) == 1)
-			g_btns[i].on_click();
+			g_btns[i].on_click(g_btns[i].x, g_btns[i].y);
 	};
 };
 
@@ -310,11 +307,17 @@ function on_mouse_wheel(delta) {
 function on_playback_stop(reason) {
 	if (reason != 2) {
 		sk.repaint();
+		update_btn_img();
 	};
+};
+
+function on_playback_pause() {
+	update_btn_img();
 };
 
 function on_playback_starting() {
 	sk.repaint();
+	update_btn_img();
 };
 
 function on_volume_change(val) {
@@ -330,8 +333,6 @@ function get_colors() {
 
 function get_fonts() {
 };
-
-
 
 function get_images() {
 
@@ -483,11 +484,43 @@ function set_btns() {
 	g_btns[0] = new Button(images.prev, function() {fb.Prev()});
 	g_btns[1] = new Button(images.play, function() {fb.PlayOrPause()});
 	g_btns[2] = new Button(images.next, function() {fb.Next()});
-	g_btns[3] = new Button(images.add, function() {});
+	g_btns[3] = new Button(images.add, function(x, y) {
+		var _menu = window.CreatePopupMenu();
+		_menu.AppendMenuItem(MF_STRING, 1, "Add files...");
+		_menu.AppendMenuItem(MF_STRING, 2, "Add folder...");
+		_menu.AppendMenuItem(MF_STRING, 3, "Add location...");
 
-
-
+		var ret = _menu.TrackPopupMenu(x, y);
+		switch (ret) {
+			case 1:
+				fb.AddFiles();
+				break;
+			case 2:
+				fb.AddDirectory();
+				break;
+			case 3:
+				fb.RunMainMenuCommand("File/Add location...");
+				break;
+		};
+		_menu.Dispose();
+	});
 
 	btn_length = g_btns.length;
+	update_btn_img();
 };
+
+function update_btn_img(btn) {
+	// update play-or-pause/stop btn
+	var pp_id = 1;
+	if (fb.IsPlaying) {
+		if (fb.IsPaused) g_btns[pp_id].update_img(images.pause);
+		else g_btns[pp_id].update_img(images.play);
+	} else {
+		g_btns[pp_id].update_img(images.stop);
+	};
+	window.Repaint();
+};
+		
+
+
 

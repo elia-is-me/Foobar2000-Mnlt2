@@ -1,4 +1,4 @@
-var LIB_VERSION = "2015/10/08";
+var LIB_VERSION = "2015-11-05"
 
 /////////////////////////////////////////// prototype
 
@@ -16,13 +16,12 @@ String.prototype.ucfirst = function() {
 
 Array.prototype.unique = function() {
 	var arr = this;
-	if (arr.length > 0) {
-		for (var i = 0; i < arr.length; i++) {
-			for (var j = i + 1; j < arr.length; j++) {
-				if (arr[i] === arr[j]) {
-					arr.splice(j, 1);
-					j -= 1;
-				}
+	if (arr.length <= 0) return [];
+	for (var i = 0; i < arr.length; i++) {
+		for (var j = i + 1; j < arr.length; j++) {
+			if (arr[i] === arr[j]) {
+				arr.splice(j, 1);
+				j -= 1;
 			}
 		}
 	}
@@ -49,8 +48,8 @@ Button = function(img_arr, func) {
 	this.h = this.img[0].Height;
 	this.state = ButtonStates.normal;
 
-	this.on_click = function() {
-		try { func && func() } catch (e) {};
+	this.on_click = function(x, y, extra) {
+		try { func && func(x, y, extra) } catch (e) {};
 	};
 
 	this.draw = function(gr) {
