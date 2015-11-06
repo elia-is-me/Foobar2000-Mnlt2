@@ -1,6 +1,9 @@
 var LIB_VERSION = "2015-11-05"
 
-/////////////////////////////////////////// prototype
+// ======================================================================
+// Prototype
+// ======================================================================
+
 
 String.prototype.trim = function(s) {
 	return this.replace(/^[\s　]*|[\s　]*$/g, "");
@@ -39,67 +42,81 @@ Object.prototype.getPropertyCount = function() {
 };
 
 
-///////////////////////////////////////////////////// constructors
+// ======================================================================
+// Constructors
+// ======================================================================
 
 Button = function(img_arr, func) {
-
 	this.img = img_arr;
 	this.w = this.img[0].Width;
 	this.h = this.img[0].Height;
-	this.state = ButtonStates.normal;
+	this.state = 0; // 0: normal, 1: hover, 2: down
+	this.func = func;
+	this.is_down = false;
+	this.is_hover = false;
+};
 
-	this.on_click = function(x, y, extra) {
-		try { func && func(x, y, extra) } catch (e) {};
-	};
+Button.prototype = {
+	repaint: function() {
+		window.RepaintRect(this.x, this.y, this.w + 1, this.h + 1);
+	},
+	
+	on_click: function(x, y, extra) {
+		if (!this.is_down) return;
+		try { this.func && this.func(x, y, extra) } catch (e) {};
+		this.is_down = false;
+	},
 
-	this.draw = function(gr) {
-		this.img[this.state] && 
-			gr.DrawImage(this.img[this.state], this.x, this.y, this.w, this.h, 0, 0, this.w, this.h, 0, 255);
-	};
-
-	this.update_img = function(img_arr) {
+	update_img: function(img_arr) {
 		this.img = img_arr;
 		this.w = this.img[0].Width;
 		this.h = this.img[0].Height;
-	};
+	},
 
-	this.set_xy = function(x, y) {
+	set_xy: function(x, y) {
 		this.x = x;
 		this.y = y;
-	};
+	},
 
-	// TODO: 有改进的空间 (this.is_down)
-	this.check_state = function(event, x, y) {
+	draw: function(gr) {
+		this.img[this.state] && 
+			gr.DrawImage(this.img[this.state], this.x, this.y, this.w, this.h, 
+					0, 0, this.w, this.h, 0, 255);
+	},
+
+	check_state: function(event, x, y) {
 		this.is_hover = (x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h);
-		this.state_saved = this.state;
+		this.state_old = this.state;
 		switch (event) {
 			case "down":
-				if (this.state !== ButtonStates.down) {
-					this.state = this.is_hover ? ButtonStates.down : ButtonStates.normal;
+				if (this.state != 2) {
+					this.state = this.is_hover ? 2 : 0;
+					this.is_down = this.is_hover;
 				};
 				break;
 			case "up":
-				this.state = this.is_hover ? ButtonStates.hover : ButtonStates.normal;
+				this.state = this.is_hover ? 1 : 0;
+				if (!this.is_hover)
+				   	this.is_down = false;
 				break;
 			case "move":
-				if (this.state !== ButtonStates.down) {
-					this.state = this.is_hover ? ButtonStates.hover : ButtonStates.normal;
+				if (this.state !== 2) {
+					this.state = this.is_hover ? 1 : 0;
 				};
 				break;
 			case "leave":
-				this.state = this.is_down ? ButtonStates.down : ButtonStates.normal;
+				this.state = 0;
 				break;
 		};
-		if (this.state !== this.state_saved) this.repaint();
+		if (this.state !== this.state_old) this.repaint();
 		return this.state;
-	};
-
-	this.repaint = function() {
-		window.RepaintRect(this.x, this.y, this.w + 1, this.h + 1);
-	};
+	}
 };
 
-////////////////////////////////////////////////// functions
+
+// ======================================================================
+// Functions
+// ======================================================================
 
 function console(s) {
 	fb.trace(s);
@@ -238,7 +255,11 @@ function pow(a, b) {
 function Luminance(color) {
 	color = toRGB(color);
 	return (0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]) / 255.0;
-}
+};
+
+// ======================================================================
+// Global Variables
+// ======================================================================
 
 var DT_LEFT = 0x00000000;
 var DT_CENTER = 0x00000001;

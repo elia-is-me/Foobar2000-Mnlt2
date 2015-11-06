@@ -1,6 +1,6 @@
 // =========================================================================
-// seekbar
 
+// Seekbar
 Seekbar = function() {
 
 	var is_drag = false;
@@ -255,7 +255,7 @@ function on_size() {
 	var by = Math.floor(area_h / 2 - bw / 2)  + area_y - 2;
 	var by2 = Math.floor(area_h / 2 - bw2 / 2) + area_y - 2;
 	var bx = 20;
-	var p = 8;
+	var p = 12;
 	g_btns[0].set_xy(bx, by);
 	g_btns[1].set_xy(bx + bw + p, by2);
 	g_btns[2].set_xy(bx + (bw + p) * 2, by2);
@@ -307,6 +307,11 @@ function on_mouse_lbtn_down(x, y, mask) {
 	for (var i = 0; i < btn_length; i++)
 		g_btns[i].check_state("down", x, y, mask);
 
+};
+
+function on_mouse_lbtn_dblclk(x, y, mask) {
+	for (var i = 0; i < btn_length; i++)
+		g_btns[i].check_state("down", x, y);
 };
 
 function on_mouse_lbtn_up(x, y, mask) {
@@ -412,8 +417,8 @@ function get_images() {
 
 	// pause
 	img_arr = [];
-	pt_arr1 = [8,7, 13,7, 13,25, 8,25];
-	pt_arr2 = [17,7, 22,7, 22,25, 17,25];
+	pt_arr1 = [8,8, 12,8, 12,24, 8,24];
+	pt_arr2 = [18,8, 22,8, 22,24, 18,24];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx2;
@@ -504,7 +509,7 @@ function get_images() {
 	img_arr = [];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
-		font = fontGuifx;
+		font = fontGuifx2;
 		if (s == 1) { color = color_hover; }
 		if (s == 2) { 
 			color = color_down; 
@@ -689,6 +694,8 @@ function set_btns() {
 	g_btns[4] = new Button(img, function() {
 		fb.VolumeMute();
 	});
+
+	// playback-order
 	g_btns[5] = new Button(images.repeat_off, function() {
 		var pbo = fb.PlaybackOrder;
 		if (pbo == 0 || pbo > 2) fb.PlaybackOrder = 1;
