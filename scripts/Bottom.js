@@ -1,14 +1,16 @@
 // =========================================================================
 // seekbar
+
 Seekbar = function() {
 
 	var is_drag = false;
 	var pos_p = 0;
 
-	var slider_l = 0;
-	var slider_r = 0;
-	var slider_w = 0;
-	var slider_h = 6;
+	var slider_l = 5; var slider_r = 5;
+	var slider_w = 0; var slider_h = slider_height;
+
+	var img_nob = images.slider_nob;
+	var nob_h = img_nob.Height; var nob_y;
 
 	this.repaint = function() {
 		window.Repaint();
@@ -26,16 +28,19 @@ Seekbar = function() {
 		slider_x = this.x + slider_l;
 		slider_w = this.w - slider_l - slider_r;
 		slider_y = this.y + Math.floor((this.h - slider_h) / 2);
+		nob_y = slider_y - 4;
 	};
 
 	this.draw = function(gr) {
+		var pos_ = 0;
 		gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
 		if (fb.PlaybackTime) {
-			var pos_ = Math.floor(fb.PlaybackTime / fb.PlaybackLength * slider_w);
+			pos_ = Math.floor(fb.PlaybackTime / fb.PlaybackLength * slider_w);
 			if (fb.IsPlaying && pos_ > 0) {
 				gr.FillSolidRect(slider_x, slider_y, pos_, slider_h, g_colors.bg_slider_active);
 			};
 		};
+		gr.DrawImage(img_nob, slider_x + pos_ - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
 	};
 
 	this.on_mouse = function(event, x, y, mask) {
@@ -90,12 +95,13 @@ Volume = function() {
 	var is_drag = false;
 	var pos_p = 0;
 	//
-	var slider_l = 32;
-	var slider_r = 0;
-	var slider_x;
-	var slider_y;
-	var slider_w;
-	var slider_h = 6;
+	var slider_l = 32; var slider_r = 0;
+	var slider_x; var slider_y; var slider_w; var slider_h = slider_height;
+
+	var img_nob = images.slider_nob;
+	var nob_h = img_nob.Height;
+	var nob_y;
+
 
 	this.repaint = function() {
 		window.Repaint();
@@ -113,12 +119,14 @@ Volume = function() {
 		slider_x = this.x + slider_l;
 		slider_y = this.y + Math.floor((this.h - slider_h) / 2);
 		slider_w = this.w - slider_l - slider_r;
+		nob_y = slider_y - 4;
 	};
 
 	this.draw = function(gr) {
 		var pos_w;
 		gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
 		pos_w = vol2pos(fb.Volume) * slider_w;
+		gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
 		if (pos_w > 0) {
 			gr.FillSolidRect(slider_x, slider_y, pos_w, slider_h, g_colors.bg_slider_active);
 		};
@@ -184,11 +192,11 @@ function format_time(t) {
 
 function pos2vol(pos) {
 	return (50 * Math.log(0.99 * pos + 0.01) / Math.LN10);
-}
+};
 
 function vol2pos(v) {
 	return ((Math.pow(10, v / 50) - 0.01) / 0.99);
-}
+};
 
 
 
@@ -199,9 +207,12 @@ var g_colors = {};
 var g_fonts = {};
 var images = {};
 var g_btns = [], btn_length = 0;
+var slider_height = 2;
+var shuffle_id = 4;
+
 
 /** properties **/
-window.MinHeight = window.MaxHeight = 46;
+window.MinHeight = window.MaxHeight = 64;
 var min_width = 400;
 var show_status = false; // TODO: statusbar
 
@@ -221,7 +232,7 @@ function on_size() {
 	wh = window.Height;
 
 	// seekbar
-	var sk_h = 10;
+	var sk_h = 15;
 	var sk_w = Math.max(ww, min_width);
 	sk.set_size(0, 0, sk_w, sk_h);
 
@@ -232,26 +243,39 @@ function on_size() {
 
 	// volumebar
 	var vl_h = 20;
-	var vl_w = 75 + 32;
+	var vl_w = 75 + 30;
 	var vl_y = area_y + Math.floor(area_h / 2 - vl_h / 2) - 2;
-	vl.set_size(ww - vl_w - 10, vl_y, vl_w, vl_h);
+	var bw3 = images.repeat_off[0].Width;
+	var p = 4;
+	vl.set_size(ww - vl_w - (bw3 + p)*2 - 10, vl_y, vl_w, vl_h);
 
 	// buttons
 	var bw = images.play[0].Width;
 	var bw2 = images.stop[0].Width;
 	var by = Math.floor(area_h / 2 - bw / 2)  + area_y - 2;
 	var by2 = Math.floor(area_h / 2 - bw2 / 2) + area_y - 2;
-	var bx = 5;
-	var p = 2;
+	var bx = 20;
+	var p = 8;
 	g_btns[0].set_xy(bx, by);
 	g_btns[1].set_xy(bx + bw + p, by2);
 	g_btns[2].set_xy(bx + (bw + p) * 2, by2);
 	g_btns[3].set_xy(bx + (bw + p) * 3, by2);
+
+	var p = 4;
+	g_btns[4].set_xy(vl.x, by);
+	//
+	by = Math.floor(area_h / 2 - bw3 / 2)  + area_y - 2;
+	g_btns[5].set_xy(vl.x+vl.w+p, by);
+	g_btns[6].set_xy(g_btns[5].x+g_btns[5].w+p, by);
+
 };
+
+var img_tmp = gdi.Image("E:\\img.png");
 
 function on_paint(gr) {
 	//bg
-	gr.FillSolidRect(0, 0, ww, wh, RGB(247, 247, 247));
+	gr.FillSolidRect(0, 0, ww, wh, RGB(38, 38, 38));
+	//gr.DrawImage(img_tmp, 0, 0, ww, wh, 0, 0, img_tmp.Width, img_tmp.Height, 0, 255);
 	//
 	sk.draw(gr);
 	vl.draw(gr);
@@ -320,15 +344,26 @@ function on_playback_starting() {
 	update_btn_img();
 };
 
+function on_playback_order_changed(new_order) {
+	update_btn_img();
+};
+
 function on_volume_change(val) {
+	var muted, muted_;
+
+	muted = (fb.Volume == -100);
+	if (muted != muted_) {
+		g_btns[4].update_img(muted ? images.vol_m : images.vol);
+	};
 	vl.repaint();
 };
 
 
 function get_colors() {
-	g_colors.bg_panel = RGB(247, 247, 247);
-	g_colors.bg_slider_normal = RGB(220, 220, 220);
-	g_colors.bg_slider_active = RGB(25, 25, 25);
+	g_colors.bg_panel = RGB(38, 38, 38);
+	g_colors.bg_slider_normal = RGB(81, 81, 81);
+	g_colors.bg_slider_active = RGB(255, 255, 255);
+	g_colors.bg_btn_active = RGB(28, 28, 28);
 };
 
 function get_fonts() {
@@ -336,21 +371,26 @@ function get_fonts() {
 
 function get_images() {
 
-	var fontGuifx = gdi.Font("Guifx v2 Transports", 15, 0);
-	var fontGuifx2 = gdi.Font("Guifx v2 Transports", 15, 0);
-	var fontGuifx3 = gdi.Font("Guifx v2 Transports", 13, 0);
-	var w = 28;
-	var w2 = 28;
-	var color_normal, color_hover, color_down, color;
-	var s, img_arr, img, font;
+	var fontGuifx = gdi.Font("Guifx v2 Transports", 18, 0);
+	var fontGuifx2 = gdi.Font("Guifx v2 Transports", 16, 0);
+	var fontGuifx3 = gdi.Font("Guifx v2 Transports", 18, 0);
+
+	var fontAwesome = gdi.Font("FontAwesome", 16, 0);
+
+
+	var w = 30;
+	var w2 = 30;
+	var color_normal, color_hover, color_down, color, color_off;
+	var s, img_arr, img, font, pt_arr;
 	var sf = StringFormat(1, 1);
 
-	color_normal = RGB(25, 25, 25);
-	color_hover = RGB(120, 120, 120);
+	color_normal = RGB(245, 245, 245);
+	color_hover = RGB(224, 224, 224);
 	color_down = RGB(100, 100, 100);
 
 	// play
 	img_arr = [];
+	pt_arr = [8,6, 22,15, 8,24];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx2;
@@ -361,10 +401,10 @@ function get_images() {
 		};
 		img = gdi.CreateImage(w2, w2);
 		g = img.GetGraphics();
-		g.SetTextRenderingHint(5);
 
-		g.FillSolidRect(1, 0, w2, w2, g_colors.bg_panel);
-		g.DrawString("1", font, color, 0, 0, w2, w2, sf);
+		g.SetSmoothingMode(2);
+		g.FillPolygon(color, 1, pt_arr);
+
 		img.ReleaseGraphics(g);
 		img_arr[s] = img;
 	};
@@ -372,6 +412,8 @@ function get_images() {
 
 	// pause
 	img_arr = [];
+	pt_arr1 = [8,7, 13,7, 13,25, 8,25];
+	pt_arr2 = [17,7, 22,7, 22,25, 17,25];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx2;
@@ -382,10 +424,10 @@ function get_images() {
 		};
 		img = gdi.CreateImage(w2, w2);
 		g = img.GetGraphics();
-		g.SetTextRenderingHint(5);
+		g.SetSmoothingMode(1);
+		g.FillPolygon(color, 1, pt_arr1);
+		g.FillPolygon(color, 1, pt_arr2);
 
-		g.FillSolidRect(0, 0, w2, w2, g_colors.bg_panel);
-		g.DrawString("2", font, color, 0, 0, w2, w2, sf);
 		img.ReleaseGraphics(g);
 		img_arr[s] = img;
 	};
@@ -404,9 +446,8 @@ function get_images() {
 
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
-		g.SetTextRenderingHint(5);
+		g.SetTextRenderingHint(4);
 
-		g.FillSolidRect(0, 0, w, w, g_colors.bg_panel);
 		g.DrawString("3", font, color, 0, 0, w, w, sf);
 		img.ReleaseGraphics(g);
 		img_arr[s] = img;
@@ -415,6 +456,8 @@ function get_images() {
 
 	// prev
 	img_arr = [];
+	pt_arr1 = [5,15, 15,9, 15,21];
+	pt_arr2 = [15,15, 25,9, 25,21];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx;
@@ -425,10 +468,10 @@ function get_images() {
 		};
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
-		g.SetTextRenderingHint(5);
+		g.SetSmoothingMode(2);
+		g.FillPolygon(color, 1, pt_arr1);
+		g.FillPolygon(color, 1, pt_arr2);
 
-		g.FillSolidRect(0, 0, w, w, g_colors.bg_panel);
-		g.DrawString("5", font, color, 0, 0, w, w, sf);
 		img.ReleaseGraphics(g);
 		img_arr[s] = img;
 	};
@@ -436,6 +479,8 @@ function get_images() {
 
 	// next
 	img_arr = [];
+	pt_arr1 = [5,9, 15,15, 5,21];
+	pt_arr2 = [15,9, 25,15, 15,21];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx;
@@ -446,10 +491,10 @@ function get_images() {
 		}
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
-		g.SetTextRenderingHint(5);
+		g.SetSmoothingMode(2);
+		g.FillPolygon(color, 1, pt_arr1);
+		g.FillPolygon(color, 1, pt_arr2);
 
-		g.FillSolidRect(0, 0, w, w, g_colors.bg_panel);
-		g.DrawString("6", font, color, 0, 0, w, w, sf);
 		img.ReleaseGraphics(g);
 		img_arr[s] = img;
 	};
@@ -463,18 +508,152 @@ function get_images() {
 		if (s == 1) { color = color_hover; }
 		if (s == 2) { 
 			color = color_down; 
-			font = fontGuifx2;
+			font = fontGuifx;
 		}
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
-		g.SetTextRenderingHint(5);
+		g.SetTextRenderingHint(4);
 
-		g.FillSolidRect(0, 0, w, w, g_colors.bg_panel);
 		g.DrawString("'", font, color, 0, 0, w, w, sf);
 		img.ReleaseGraphics(g);
 		img_arr[s] = img;
 	};
 	images.add = img_arr;
+
+	// vol
+	img_arr = [];
+	for (s = 0; s < 3; s++) {
+		color = color_normal;
+		font = fontAwesome;
+		if (s == 1) {color = color_hover};
+		if (s == 2) { color = color_down};
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetTextRenderingHint(4);
+		g.DrawString("\uf028", font, color, 0, 0, w, w, sf);
+		img.ReleaseGraphics(g);
+		img_arr[s] = img;
+	};
+	images.vol = img_arr;
+
+	// vol_mute
+	img_arr = [];
+	for (s = 0; s < 3; s++) {
+		color = color_normal;
+		font = fontAwesome;
+		if (s == 1) color = color_hover;
+		if (s == 2) color = color_down;
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetTextRenderingHint(4);
+		g.DrawString("\uf026", font, color, 0, 0, w, w, sf);
+		img.ReleaseGraphics(g);
+		img_arr[s] = img;
+	};
+	images.vol_m = img_arr;
+
+	//
+	w = 24;
+	var color_off = g_colors.bg_slider_normal;
+
+	// repeat_off
+	img_arr = [];
+	for (s = 0; s < 3; s++) {
+		color = color_off;
+		font = fontGuifx2;
+		if (s == 1) color = color_hover;
+		else if (s == 2) color = color_down;
+
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetTextRenderingHint(4);
+		g.DrawString("*", font, color, 0, 0, w, w, sf);
+		img.ReleaseGraphics(g);
+		img_arr[s] = img;
+	};
+	images.repeat_off = img_arr;
+	
+	// repeat_pl
+	img_arr = [];
+	for (s = 0; s < 3; s++) {
+		color = color_normal;
+		font = fontGuifx2;
+		if (s == 1) color = color_hover;
+		else if (s == 2) color = color_down;
+
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetSmoothingMode(4);
+		g.FillEllipse(0, 0, w-1, w-1, g_colors.bg_btn_active);
+		g.SetTextRenderingHint(4);
+		g.DrawString("*", font, color, 0, 0, w, w, sf);
+		img.ReleaseGraphics(g);
+		img_arr[s] = img;
+	};
+	images.repeat_pl = img_arr;
+
+	// repeat_1
+	img_arr = [];
+	for (s = 0; s < 3; s++) {
+		color = color_normal;
+		font = fontGuifx2;
+		if (s == 1) color = color_hover;
+		else if (s == 2) color = color_down;
+
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetSmoothingMode(4);
+		g.FillEllipse(0, 0, w-1, w-1, g_colors.bg_btn_active);
+		g.SetTextRenderingHint(4);
+		g.DrawString("(", font, color, 0, 0, w, w, sf);
+		img.ReleaseGraphics(g);
+		img_arr[s] = img;
+	};
+	images.repeat_1 = img_arr;
+
+	// shuffle_off
+	img_arr = [];
+	for (s = 0; s < 3; s++) {
+		color = color_off;
+		font = fontGuifx2;
+		if (s == 1) color = color_hover;
+		else if (s == 2) color = color_down;
+
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetTextRenderingHint(4);
+		g.DrawString("&", font, color, 0, 0, w, w, sf);
+		img.ReleaseGraphics(g);
+		img_arr[s] = img;
+	};
+	images.shuffle_off = img_arr;
+
+	// shuffle_on
+	img_arr = [];
+	for (s = 0; s < 3; s++) {
+		color = color_normal;
+		font = fontGuifx2;
+		if (s == 1) color = color_hover;
+		else if (s == 2) color = color_down;
+
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetSmoothingMode(4);
+		g.FillEllipse(0, 0, w-1, w-1, g_colors.bg_btn_active);
+		g.SetTextRenderingHint(4);
+		g.DrawString("&", font, color, 0, 0, w, w, sf);
+		img.ReleaseGraphics(g);
+		img_arr[s] = img;
+	};
+	images.shuffle_on = img_arr;
+	
+
+	// slider_nob
+	images.slider_nob = gdi.CreateImage(10, 10);
+	g = images.slider_nob.GetGraphics();
+	g.SetSmoothingMode(2);
+	g.FillEllipse(1, 1, 7, 7, 0xffffffff);
+	images.slider_nob.ReleaseGraphics(g);
 };
 
 
@@ -505,6 +684,26 @@ function set_btns() {
 		_menu.Dispose();
 	});
 
+	// vol
+	var img = ((fb.Volume == -100) ? images.vol_m : images.vol);
+	g_btns[4] = new Button(img, function() {
+		fb.VolumeMute();
+	});
+	g_btns[5] = new Button(images.repeat_off, function() {
+		var pbo = fb.PlaybackOrder;
+		if (pbo == 0 || pbo > 2) fb.PlaybackOrder = 1;
+		else if (pbo == 1) fb.PlaybackOrder = 2;
+		else if (pbo == 2) fb.PlaybackOrder = 0;
+	});
+	g_btns[6] = new Button(images.shuffle_off, function() {
+		// check shuffle id
+		if (shuffle_id < 3 || shuffle_id > 5) {
+			shuffle_id = 4;
+		};
+		fb.PlaybackOrder = (fb.PlaybackOrder >= 3 ? 0 : shuffle_id);
+
+	});
+
 	btn_length = g_btns.length;
 	update_btn_img();
 };
@@ -513,14 +712,20 @@ function update_btn_img(btn) {
 	// update play-or-pause/stop btn
 	var pp_id = 1;
 	if (fb.IsPlaying) {
-		if (fb.IsPaused) g_btns[pp_id].update_img(images.pause);
-		else g_btns[pp_id].update_img(images.play);
+		if (fb.IsPaused) g_btns[pp_id].update_img(images.play);
+		else g_btns[pp_id].update_img(images.pause);
 	} else {
 		g_btns[pp_id].update_img(images.stop);
 	};
+
+	// update pbo btns
+	var pbo = fb.PlaybackOrder;
+	g_btns[5].update_img(images.repeat_off);
+	g_btns[6].update_img(images.shuffle_off);
+	if (pbo == 1) g_btns[5].update_img(images.repeat_pl);
+	else if (pbo == 2) g_btns[5].update_img(images.repeat_1);
+	else if (pbo > 2) g_btns[6].update_img(images.shuffle_on);
+
+	//
 	window.Repaint();
 };
-		
-
-
-
