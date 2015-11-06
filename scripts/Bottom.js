@@ -4,13 +4,15 @@
 Seekbar = function() {
 
 	var is_drag = false;
-	var pos_p = 0;
+	var pos_p = 0, pos_p_old = 0;
 
 	var slider_l = 5; var slider_r = 5;
 	var slider_w = 0; var slider_h = slider_height;
 
 	var img_nob = images.slider_nob;
 	var nob_h = img_nob.Height; var nob_y;
+
+	var tfont = gdi.Font("Tahoma", 9);
 
 	this.repaint = function() {
 		window.Repaint();
@@ -20,27 +22,47 @@ Seekbar = function() {
 		return (x > slider_x && x < slider_x + slider_w && y > this.y && y < this.h + this.y);
 	};
 
+	this.show_time = true;
+
 	this.set_size = function(x, y, w, h) {
 		this.x = x;
 		this.y = y;
 		this.w = w;
 		this.h = h;
+	};
+
+	this.draw = function(gr) {
+
+		// Set lr
+		var len = format_time(fb.PlaybackLength);
+		var tim = format_time(fb.PlaybackTime);
+
+		if (this.show_time) {
+			slider_r = slider_l = GetTextWidth(len, tfont) + 10;
+		} else {
+			slider_r = slider_l = 5;
+		};
+
 		slider_x = this.x + slider_l;
 		slider_w = this.w - slider_l - slider_r;
 		slider_y = this.y + Math.floor((this.h - slider_h) / 2);
 		nob_y = slider_y - 4;
-	};
 
-	this.draw = function(gr) {
-		var pos_ = 0;
+		// Draw time/length
+		gr.GdiDrawText(tim, tfont, g_colors.bg_slider_active, this.x, this.y, slider_l, this.h, dt_cc);
+		gr.GdiDrawText(len, tfont, g_colors.bg_slider_active, this.x + this.w - slider_r, this.y, slider_r, this.h, dt_cc);
+
+		// Draw slider
+		var pos_w = 0;
+		
 		gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
 		if (fb.PlaybackTime) {
-			pos_ = Math.floor(fb.PlaybackTime / fb.PlaybackLength * slider_w);
-			if (fb.IsPlaying && pos_ > 0) {
-				gr.FillSolidRect(slider_x, slider_y, pos_, slider_h, g_colors.bg_slider_active);
+			pos_w = Math.floor(fb.PlaybackTime / fb.PlaybackLength * slider_w);
+			if (fb.IsPlaying && pos_w > 0) {
+				gr.FillSolidRect(slider_x, slider_y, pos_w, slider_h, g_colors.bg_slider_active);
 			};
 		};
-		gr.DrawImage(img_nob, slider_x + pos_ - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
+		gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
 	};
 
 	this.on_mouse = function(event, x, y, mask) {
@@ -200,6 +222,7 @@ function vol2pos(v) {
 
 
 
+var dt_cc = DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
 var ww = 0, wh = 0;
 var m_x, m_y;
 var sk, vol;
@@ -210,11 +233,8 @@ var g_btns = [], btn_length = 0;
 var slider_height = 2;
 var shuffle_id = 4;
 
-
 /** properties **/
 window.MinHeight = window.MaxHeight = 64;
-var min_width = 400;
-var show_status = false; // TODO: statusbar
 
 get_colors();
 get_fonts();
@@ -227,19 +247,21 @@ set_btns();
 
 
 function on_size() {
+	var min_w = 380
+
 	if (!window.Width || !window.Height) return;
-	ww = window.Width;
+	ww = Math.max(window.Width, min_w);
 	wh = window.Height;
 
 	// seekbar
 	var sk_h = 15;
-	var sk_w = Math.max(ww, min_width);
+	var sk_w = ww;
 	sk.set_size(0, 0, sk_w, sk_h);
-
 
 	// area
 	var area_y = sk_h;
 	var area_h = wh - sk_h;
+	var min_w = 380;
 
 	// volumebar
 	var vl_h = 20;
@@ -247,7 +269,8 @@ function on_size() {
 	var vl_y = area_y + Math.floor(area_h / 2 - vl_h / 2) - 2;
 	var bw3 = images.repeat_off[0].Width;
 	var p = 4;
-	vl.set_size(ww - vl_w - (bw3 + p)*2 - 10, vl_y, vl_w, vl_h);
+	var vl_x = ww - vl_w - (bw3 + p) * 2 - 10;
+	vl.set_size(vl_x, vl_y, vl_w, vl_h);
 
 	// buttons
 	var bw = images.play[0].Width;
@@ -275,7 +298,6 @@ var img_tmp = gdi.Image("E:\\img.png");
 function on_paint(gr) {
 	//bg
 	gr.FillSolidRect(0, 0, ww, wh, RGB(38, 38, 38));
-	//gr.DrawImage(img_tmp, 0, 0, ww, wh, 0, 0, img_tmp.Width, img_tmp.Height, 0, 255);
 	//
 	sk.draw(gr);
 	vl.draw(gr);
@@ -383,8 +405,7 @@ function get_images() {
 	var fontAwesome = gdi.Font("FontAwesome", 16, 0);
 
 
-	var w = 30;
-	var w2 = 30;
+	var w = 30, r;
 	var color_normal, color_hover, color_down, color, color_off;
 	var s, img_arr, img, font, pt_arr;
 	var sf = StringFormat(1, 1);
@@ -404,7 +425,7 @@ function get_images() {
 			color = color_down;
 			font = fontGuifx2;
 		};
-		img = gdi.CreateImage(w2, w2);
+		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
 
 		g.SetSmoothingMode(2);
@@ -427,7 +448,7 @@ function get_images() {
 			color = color_down;
 			font = fontGuifx2;
 		};
-		img = gdi.CreateImage(w2, w2);
+		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
 		g.SetSmoothingMode(1);
 		g.FillPolygon(color, 1, pt_arr1);
@@ -559,6 +580,8 @@ function get_images() {
 
 	//
 	w = 24;
+	r = 4;
+	
 	var color_off = g_colors.bg_slider_normal;
 
 	// repeat_off
@@ -589,7 +612,7 @@ function get_images() {
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
 		g.SetSmoothingMode(4);
-		g.FillEllipse(0, 0, w-1, w-1, g_colors.bg_btn_active);
+		g.FillRoundRect(0, 2, w-1, w-5, r, r, g_colors.bg_btn_active);
 		g.SetTextRenderingHint(4);
 		g.DrawString("*", font, color, 0, 0, w, w, sf);
 		img.ReleaseGraphics(g);
@@ -608,7 +631,7 @@ function get_images() {
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
 		g.SetSmoothingMode(4);
-		g.FillEllipse(0, 0, w-1, w-1, g_colors.bg_btn_active);
+		g.FillRoundRect(0, 2, w-1, w-5, r, r, g_colors.bg_btn_active);
 		g.SetTextRenderingHint(4);
 		g.DrawString("(", font, color, 0, 0, w, w, sf);
 		img.ReleaseGraphics(g);
@@ -644,7 +667,7 @@ function get_images() {
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
 		g.SetSmoothingMode(4);
-		g.FillEllipse(0, 0, w-1, w-1, g_colors.bg_btn_active);
+		g.FillRoundRect(0, 2, w-1, w-5, r, r, g_colors.bg_btn_active);
 		g.SetTextRenderingHint(4);
 		g.DrawString("&", font, color, 0, 0, w, w, sf);
 		img.ReleaseGraphics(g);

@@ -1944,7 +1944,7 @@ var plst = new Playlist();
 window.DlgCode = DLGC_WANTALLKEYS;
 
 function on_size() {
-	ww = window.Width;
+	ww = Math.max(380, window.Width);
 	wh = window.Height;
     var th = 0;
     if (prop.show_info) {
@@ -1961,21 +1961,22 @@ function on_paint(gr) {
 	plst.draw(gr);
     // info header
     if (prop.show_info) {
+        var tcolor = RGB(245, 245, 245);
         gr.FillSolidRect(0, 0, ww, 24, RGB(24, 24, 24));
         //gr.FillSolidRect(0, 0, ww, 24, 0x10000000);
         var p = 10;
         var txt = " tracks";
         var txt_w = GetTextWidth(txt, g_fonts.info_header);
         var txt_x = ww - p - txt_w;
-        gr.GdiDrawText(txt, g_fonts.info_header, g_colors.txt_normal, txt_x, 0, txt_w, 24, dt_cc);
+        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, txt_x, 0, txt_w, 24, dt_cc);
         var txt = plst.list_total;
         var txt_w = GetTextWidth(txt, g_fonts.info_header);
         var txt_x = txt_x - txt_w;
-        gr.GdiDrawText(txt, g_fonts.info_header, g_colors.txt_normal, txt_x, 0, txt_w, 24, dt_cc);
-        var txt = "Playlist > ";
-        var txt_w = GetTextWidth(txt, g_fonts.info_header);
-        gr.GdiDrawText(txt, g_fonts.info_header, g_colors.txt_normal, p, 0, txt_w, 24, dt_cc);
-        gr.GdiDrawText(plst.name, g_fonts.info_header, g_colors.txt_normal, p + txt_w + p, 0, txt_x - txt_w - p * 2, 24, dt_cc);
+        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, txt_x, 0, txt_w, 24, dt_cc);
+        var txt = "Playlist > " + plst.name ;
+        //var txt_w = GetTextWidth(txt, g_fonts.info_header);
+        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, p, 0, txt_x - txt_w - p * 2, 24, dt_lc);
+        //gr.GdiDrawText(plst.name, g_fonts.info_header, g_colors.txt_normal, p + txt_w + p, 0, txt_x - txt_w - p * 2, 24, dt_cc);
     };
     var to = new Date();
     //console("paint: " + (to - from) + " ms");
