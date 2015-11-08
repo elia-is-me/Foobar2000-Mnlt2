@@ -1883,14 +1883,6 @@ track_rating = {
 };
 
 
-GroupScheme = function(name, pattern) {
-};
-
-group_scheme = {
-
-};
-
-
 group_art = {
     kar: prop.keep_aspect_ratio,
     w: 0,
