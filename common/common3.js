@@ -122,6 +122,10 @@ function console(s) {
 	fb.trace(s);
 };
 
+function alert(msg) {
+	fb.ShowPopupMessage(msg, "WSH Panel Mod", 0);
+};
+
 function caller() {
 	var caller = /^function\s+([^(]+)/.exec(arguments.callee.caller.caller);
 	if (caller) return caller[1];

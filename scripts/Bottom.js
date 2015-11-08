@@ -56,7 +56,7 @@ Seekbar = function() {
 		var pos_w = 0;
 		
 		gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
-		if (fb.PlaybackTime) {
+		if (fb.PlaybackLength) {
 			pos_w = Math.floor(fb.PlaybackTime / fb.PlaybackLength * slider_w);
 			if (fb.IsPlaying && pos_w > 0) {
 				gr.FillSolidRect(slider_x, slider_y, pos_w, slider_h, g_colors.bg_slider_active);
@@ -247,47 +247,51 @@ set_btns();
 
 
 function on_size() {
+
 	var min_w = 380
 
 	if (!window.Width || !window.Height) return;
 	ww = Math.max(window.Width, min_w);
 	wh = window.Height;
 
+	var sk_h;
+	var area_y, area_h;
+	var vl_h, vl_w, vl_y, vl_x;
+	var bw, bx, by;
+	var p;
+
 	// seekbar
-	var sk_h = 15;
-	var sk_w = ww;
-	sk.set_size(0, 0, sk_w, sk_h);
+	sk_h = 16;
+	sk.set_size(0, 0, ww, sk_h);
 
 	// area
-	var area_y = sk_h;
-	var area_h = wh - sk_h;
-	var min_w = 380;
+	area_y = sk_h;
+	area_h = wh - sk_h;
 
 	// volumebar
-	var vl_h = 20;
-	var vl_w = 75 + 30;
-	var vl_y = area_y + Math.floor(area_h / 2 - vl_h / 2) - 2;
-	var bw3 = images.repeat_off[0].Width;
-	var p = 4;
-	var vl_x = ww - vl_w - (bw3 + p) * 2 - 10;
+	vl_h = 20;
+	vl_w = 75 + 30;
+	vl_y = area_y + Math.floor(area_h / 2 - vl_h / 2) - 2;
+	bw = images.repeat_off[0].Width;
+	p = 4;
+	vl_x = ww - vl_w - (bw + p) * 2 - 10;
 	vl.set_size(vl_x, vl_y, vl_w, vl_h);
 
 	// buttons
-	var bw = images.play[0].Width;
-	var bw2 = images.stop[0].Width;
-	var by = Math.floor(area_h / 2 - bw / 2)  + area_y - 2;
-	var by2 = Math.floor(area_h / 2 - bw2 / 2) + area_y - 2;
-	var bx = 20;
-	var p = 12;
-	g_btns[0].set_xy(bx, by);
-	g_btns[1].set_xy(bx + bw + p, by2);
-	g_btns[2].set_xy(bx + (bw + p) * 2, by2);
-	g_btns[3].set_xy(bx + (bw + p) * 3, by2);
+	bw = images.play[0].Width;
+	by = Math.floor(area_h / 2 - bw / 2)  + area_y - 2;
+	bx = 20;
+	p = 12;
+	for (var i = 0; i < 4; i++) {
+		g_btns[i].set_xy(bx, by);
+		bx = bx + bw + p;
+	};
 
-	var p = 4;
+	p = 4;
 	g_btns[4].set_xy(vl.x, by);
 	//
-	by = Math.floor(area_h / 2 - bw3 / 2)  + area_y - 2;
+	bw = images.repeat_off[0].Width;
+	by = Math.floor(area_h / 2 - bw / 2)  + area_y - 2;
 	g_btns[5].set_xy(vl.x+vl.w+p, by);
 	g_btns[6].set_xy(g_btns[5].x+g_btns[5].w+p, by);
 
