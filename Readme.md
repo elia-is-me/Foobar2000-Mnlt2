@@ -45,11 +45,6 @@
 * **Shift-G(大写G)**: 同 Home
 * **gg(连续两次g)**: 同 End
 
-
-## 侧边栏: Cover + Playlist Manager.js
-* 各种待完成
-
-
 #### 待完成：
 ##### 近期
 * ~~Show cover art~~
@@ -70,3 +65,9 @@
 * Jump to websites
 * Send/recieve messages from other panels
 * ~~Add property editing mode~~(废弃)
+
+
+## 侧边栏: Cover + Playlist Manager.js
+* 各种待完成
+
+
