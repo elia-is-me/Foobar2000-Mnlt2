@@ -1697,11 +1697,11 @@
 		};
 
 		this.update_cursor = function() {
-			this.cursor_h = this.parent.total_rows / this.parent.total * this.h;
-			this.cursor_y = this.parent.start_id / this.parent.total * this.h + this.y;
+			this.cursor_h = Math.floor(this.parent.total_rows / this.parent.total * this.h);
+			this.cursor_y = Math.floor(this.parent.start_id / this.parent.total * this.h) + this.y;
 			if (this.cursor_h < this.cursor_h_min) {
 				this.cursor_h = this.cursor_h_min;
-				this.cursor_y = this.parent.start_id / this.parent.total * (this.h - this.cursor_h) + this.y;
+				this.cursor_y = Math.floor(this.parent.start_id / this.parent.total * (this.h - this.cursor_h)) + this.y;
 			};
 		};
 
@@ -1746,7 +1746,7 @@
 						if (this.cursor_y + this.cursor_h > this.y + this.h) {
 							this.cursor_y = this.y + this.h - this.cursor_h;
 						}
-						this.parent.start_id = Math.ceil((this.cursor_y - this.y) * this.parent.total / this.parent.h);
+						this.parent.start_id = Math.floor((this.cursor_y - this.y) * this.parent.total / this.h);
 						this.parent.check_start_id();
 						this.parent.repaint();
 					};
@@ -2061,7 +2061,7 @@
 		// info header
 		if (prop.show_info) {
 			var tcolor = RGB(245, 245, 245);
-			gr.FillSolidRect(0, 0, ww, 24, RGB(24, 24, 24));
+			gr.FillSolidRect(0, 0, ww, 24, RGB(38, 38, 38));
 			//gr.FillSolidRect(0, 0, ww, 24, 0x10000000);
 			var p = 10;
 			var txt = " tracks";
