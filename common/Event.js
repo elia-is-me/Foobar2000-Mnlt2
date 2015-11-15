@@ -39,10 +39,17 @@ $Event = new function() {
 	};
 
 	this.reset = function(event) {
-		if (!event) return;
+		if (!event) {
+			for (var i in $sys_callbacks) {
+				$sys_callbacks[i] = [];
+				$exec(i);
+			}
+			return;
+		};
 		$sys_callbacks[event] = [];
 		$exec(event);
 	};
+
 
 };
 
