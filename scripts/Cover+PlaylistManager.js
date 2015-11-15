@@ -65,7 +65,7 @@ Scroll = function(vertical, parent) {
 					if (this.cursor_y + this.cursor_h > this.y + this.h) {
 						this.cursor_y = this.y + this.h - this.cursor_h;
 					}
-					this.parent.start_id = Math.floor((this.cursor_y - this.y) * this.parent.total / this.parent.h);
+					this.parent.start_id = Math.floor((this.cursor_y - this.y) * this.parent.total / this.h);
 					this.parent.check_start_id();
 					this.parent.repaint();
 				};
