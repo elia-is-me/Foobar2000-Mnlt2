@@ -1,7 +1,5 @@
 # Foobar2000-UI-Scripts
 
-* **暂停更新（真的只是暂停）**
-
 ## 列表: Playlist.js
 
 #### 使用方法:
@@ -21,27 +19,6 @@
 * 封面显示
 * 歌曲分组显示
 * 等等
-
-#### 待完成：
-##### 近期
-* ~~Show cover art~~
-* ~~Show playback queue items~~
-* ~~Collapse/Expand features~~
-* ~~Playlist info viewer~~
-* Dragdrop files
-* Settings menu(or settings panel)
-* ~~Keymap settings~~
-* ~~Auto group/ungroup based on track\_number/group\_number~~
-* Scroll bugfix
-* ~~Vim-style key bindings~~
-
-##### 远景
-* Save playlist scroll position according to track position rather than item position
-* Quick search Media library
-* Jump to websites
-* Send/recieve messages from other panels
-* Add property editing mode(???)
-
 
 #### 快捷键设定:
 * **Up**: 
@@ -72,3 +49,24 @@
 ## 侧边栏: Cover + Playlist Manager.js
 * 各种待完成
 
+
+#### 待完成：
+##### 近期
+* ~~Show cover art~~
+* ~~Show playback queue items~~
+* ~~Collapse/Expand features~~
+* ~~Playlist info viewer~~
+* ~~Settings menu~~(or settings panel)
+* ~~Keymap settings~~
+* ~~Auto group/ungroup based on track\_number/group\_number~~
+* ~~Scroll bugfix~~
+* ~~Vim-style key bindings~~
+* Dragdrop files
+* Re-write mouse event
+
+##### 远景
+* Save playlist scroll position according to track position rather than item position
+* Quick search Media library
+* Jump to websites
+* Send/recieve messages from other panels
+* ~~Add property editing mode~~(废弃)
