@@ -1,4 +1,4 @@
-var LIB_VERSION = "2015-11-05"
+var LIB_VERSION = "2015-11-15";
 
 // ======================================================================
 // Prototype
@@ -10,7 +10,7 @@ String.prototype.trim = function(s) {
 };
 
 String.prototype.validate = function() {
-	return this.replace(/[\/\\|:]/g, '-').replace(/\*/g, 'x').replace(/"/g, "''").replace(/[<>]/g, '_').replace(/\?/g, "");
+	return this.replace(/[\/\\|:\*"<>\?]/g, "_");
 };
 
 String.prototype.ucfirst = function() {
