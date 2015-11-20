@@ -60,7 +60,7 @@ Button.prototype = {
 	repaint: function() {
 		window.RepaintRect(this.x, this.y, this.w + 1, this.h + 1);
 	},
-	
+
 	on_click: function(x, y, extra) {
 		if (!this.is_down) return;
 		try { this.func && this.func(x, y, extra) } catch (e) {};
@@ -79,9 +79,15 @@ Button.prototype = {
 	},
 
 	draw: function(gr) {
-		this.img[this.state] && 
-			gr.DrawImage(this.img[this.state], this.x, this.y, this.w, this.h, 
-					0, 0, this.w, this.h, 0, 255);
+		var _img = this.img[this.state];
+		_img && gr.DrawImage(_img, this.x, this.y, this.w, this.h, 0, 0, this.w, this.h, 0, 255);
+	},
+
+	reset: function() {
+		if (this.state != 0) {
+			this.state = 0;
+			this.repaint();
+		};
 	},
 
 	check_state: function(event, x, y) {
@@ -89,24 +95,31 @@ Button.prototype = {
 		this.state_old = this.state;
 		switch (event) {
 			case "down":
+				/*
 				if (this.state != 2) {
 					this.state = this.is_hover ? 2 : 0;
 					this.is_down = this.is_hover;
 				};
+				*/
+				if (this.state == 1) {
+					this.is_down = this.is_hover;
+				};
+				this.state = this.is_hover ? 2 : 0;
 				break;
 			case "up":
 				this.state = this.is_hover ? 1 : 0;
-				if (!this.is_hover)
-				   	this.is_down = false;
+				if (!this.is_hover) this.is_down = false;
 				break;
 			case "move":
 				if (this.state !== 2) {
 					this.state = this.is_hover ? 1 : 0;
 				};
 				break;
+				/*
 			case "leave":
 				this.state = 0;
 				break;
+				*/
 		};
 		if (this.state !== this.state_old) this.repaint();
 		return this.state;
