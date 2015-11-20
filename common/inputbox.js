@@ -2,6 +2,8 @@
 // INPUT BOX by Br3tt aka Falstaff (c)2013
 // *****************************************************************************************************************************************
 
+// Mod by Elia @2015-11-20
+
 cInputbox = {
 	temp_gr: gdi.CreateImage(1, 1).GetGraphics(),
 	timer_cursor: false,
@@ -25,8 +27,10 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
 	this.empty_text = empty_text;
     this.stext = "";
     this.prev_text = "";
-    this.func = func;
-	var gfunc = func;
+    this.func = func ? func : function() {
+		fb.trace("Inputbox: no func!");
+	};
+	var gfunc = this.func;
     var gfunc_launch_timer = false;
 	var g_parentObjectName = parentObjectName;
 	this.autovalidation = false;
@@ -39,6 +43,13 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
     this.offset = 0;
     this.right_margin = 2;
     this.drag = false;
+
+	this.set_font = function(font) {
+		try {
+			this.font = font;
+			this.font_italic = gdi.Font(font.Name, font.Size, 2);
+		} catch (e) {}
+	};
 
     this.draw = function (gr, x, y) {
         this.x = x;
@@ -119,7 +130,12 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
     }
     
     this.repaint = function () {
-		eval(g_parentObjectName+".repaint()");
+		//if (g_parentObjectName) {
+		try {
+			eval(g_parentObjectName+".repaint()");
+		} catch(e) {
+			window.Repaint();
+		};
     }
     
     this.CalcText = function () {
@@ -175,7 +191,12 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
         }
         cInputbox.timer_cursor = window.SetInterval(function() {
             cInputbox.cursor_state = !cInputbox.cursor_state;
-			eval(g_parentObjectName+".repaint()");
+			try {
+				eval(g_parentObjectName+".repaint()");
+			} catch(e) {
+				window.Repaint();
+			};
+			//this.repaint();
         }, 500);
     }
 

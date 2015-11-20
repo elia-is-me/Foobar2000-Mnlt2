@@ -62,7 +62,10 @@ Seekbar = function() {
 				gr.FillSolidRect(slider_x, slider_y, pos_w, slider_h, g_colors.bg_slider_active);
 			};
 		};
-		gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
+		if (fb.IsPlaying) {
+			gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
+		};
+
 	};
 
 	this.on_mouse = function(event, x, y, mask) {
@@ -420,7 +423,7 @@ function get_images() {
 
 	// play
 	img_arr = [];
-	pt_arr = [8,6, 22,15, 8,24];
+	pt_arr = [9,7, 21,15, 9,23];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx2;
@@ -439,6 +442,7 @@ function get_images() {
 		img_arr[s] = img;
 	};
 	images.play = img_arr;
+	//images.play[0].SaveAs("E:\play.png");
 
 	// pause
 	img_arr = [];
@@ -454,14 +458,17 @@ function get_images() {
 		};
 		img = gdi.CreateImage(w, w);
 		g = img.GetGraphics();
-		g.SetSmoothingMode(1);
-		g.FillPolygon(color, 1, pt_arr1);
-		g.FillPolygon(color, 1, pt_arr2);
+		//g.SetSmoothingMode(1);
+		//g.FillPolygon(color, 1, pt_arr1);
+		//g.FillPolygon(color, 1, pt_arr2);
+		g.FillSolidRect(10, 8, 3, 14, color);
+		g.FillSolidRect(17, 8, 3, 14, color);
 
 		img.ReleaseGraphics(g);
 		img_arr[s] = img;
 	};
 	images.pause = img_arr;
+	//images.pause[0].SaveAs("E:\pause.png");
 
 	// stop
 	img_arr = [];
@@ -486,8 +493,8 @@ function get_images() {
 
 	// prev
 	img_arr = [];
-	pt_arr1 = [5,15, 15,9, 15,21];
-	pt_arr2 = [15,15, 25,9, 25,21];
+	pt_arr1 = [7,15, 15,10, 15,20];
+	pt_arr2 = [15,15, 23,10, 23,20];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx;
@@ -509,8 +516,8 @@ function get_images() {
 
 	// next
 	img_arr = [];
-	pt_arr1 = [5,9, 15,15, 5,21];
-	pt_arr2 = [15,9, 25,15, 15,21];
+	pt_arr1 = [7,10, 15,15, 7,20];
+	pt_arr2 = [15,10, 23,15, 15,20];
 	for (s = 0; s < 3; s++) {
 		color = color_normal;
 		font = fontGuifx;
@@ -749,7 +756,7 @@ function update_btn_img(btn) {
 		if (fb.IsPaused) g_btns[pp_id].update_img(images.play);
 		else g_btns[pp_id].update_img(images.pause);
 	} else {
-		g_btns[pp_id].update_img(images.stop);
+		g_btns[pp_id].update_img(images.play);
 	};
 
 	// update pbo btns

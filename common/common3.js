@@ -261,6 +261,20 @@ function Luminance(color) {
 	return (0.2126 * color[0] + 0.7152 * color[1] + 0.0722 * color[2]) / 255.0;
 };
 
+function GetKeyboardMask() {
+    var c = utils.IsKeyPressed(VK_CONTROL) ? true : false;
+    var a = utils.IsKeyPressed(VK_ALT) ? true : false;
+    var s = utils.IsKeyPressed(VK_SHIFT) ? true : false;
+    var ret = KMask.none;
+    if (c && !a && !s) ret = KMask.ctrl;
+    if (!c && !a && s) ret = KMask.shift;
+    if (c && !a && s) ret = KMask.ctrlshift;
+    if (c && a && !s) ret = KMask.ctrlalt;
+    if (c && a && s) ret = KMask.ctrlaltshift;
+    if (!c && a && !s) ret = KMask.alt;
+    return ret;
+};
+
 // ======================================================================
 // Global Variables
 // ======================================================================
@@ -284,9 +298,10 @@ var IDC_ARROW = 32512;
 var IDC_HAND = 32649;
 var IDC_HELP = 32651;
 var IDC_NO = 32648
+var IDC_ARROW = 32512;
+var IDC_IBEAM = 32513;
 
 var DLGC_WANTALLKEYS = 0x0004; /* Control wants all keys           */
-
 
 var VK_BACK = 0x08;
 var VK_CONTROL = 0x11;
@@ -393,4 +408,12 @@ var ColorTypeCUI={text:0,selection_text:1,inactive_selection_text:2,background:3
 var FontTypeCUI={items:0,labels:1};
 var FontTypeDUI={defaults:0,tabs:1,lists:2,playlists:3,statusbar:4,console:5};
 var ButtonStates = {normal: 0, hover: 1, down: 2};
-
+var KMask = {
+    none: 0,
+    ctrl: 1,
+    shift: 2,
+    ctrlshift: 3,
+    ctrlalt: 4,
+    ctrlaltshift: 5,
+    alt: 6
+};
