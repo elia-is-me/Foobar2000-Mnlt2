@@ -2041,7 +2041,7 @@ function num(strg, nb) {
 };
 
 
-$Event.add("on_size", function() {
+function on_size() {
     ww = Math.max(380, window.Width);
     wh = window.Height;
     var th = 0;
@@ -2049,9 +2049,9 @@ $Event.add("on_size", function() {
         th = 24;
     };
     plst.set_size(true, 1, th, ww - 2, wh - th - 1);
-});
+}
 
-$Event.add("on_paint", function (gr) {
+function on_paint(gr) {
     var from = new Date();
     // bg
     gr.FillSolidRect(0, 0, ww, wh, g_colors.bg_normal);
@@ -2059,8 +2059,8 @@ $Event.add("on_paint", function (gr) {
     plst.draw(gr);
     // info header
     if (prop.show_info) {
-        var tcolor = RGB(245, 245, 245);
-        gr.FillSolidRect(0, 0, ww, 24, RGB(24, 24, 24));
+        var tcolor = RGB(120, 120, 120);
+        gr.FillSolidRect(0, 0, ww, 24, RGB(15, 15, 15));
         //gr.FillSolidRect(0, 0, ww, 24, 0x10000000);
         var p = 10;
         var txt = " tracks";
@@ -2076,57 +2076,51 @@ $Event.add("on_paint", function (gr) {
         gr.GdiDrawText(txt, g_fonts.info_header, tcolor, p, 0, txt_x - txt_w - p * 2, 24, dt_lc);
         //gr.GdiDrawText(plst.name, g_fonts.info_header, g_colors.txt_normal, p + txt_w + p, 0, txt_x - txt_w - p * 2, 24, dt_cc);
     };
-    var to = new Date();
+    //var to = new Date();
     //console("paint: " + (to - from) + " ms");
     repaint_counter++;
     if (repaint_counter > 100) {
         repaint_counter = 0;
         CollectGarbage();
     };
-});
+}
 
-$Event.add("on_mouse_move", function(x, y, mask) {
-    plst.on_mouse("move", x, y, mask);
-});
+function on_mouse_move(x, y) {
+    plst.on_mouse("move", x, y);
+}
 
-$Event.add("on_mouse_lbtn_down", function(x, y, mask) {
+function on_mouse_lbtn_down(x, y, mask) {
     plst.on_mouse("down", x, y, mask);
-});
+}
 
-$Event.add("on_mouse_lbtn_dblclk", function (x, y, mask) {
+function on_mouse_lbtn_dblclk(x, y, mask) {
     plst.on_mouse("dblclk", x, y, mask);
-});
+}
 
-$Event.add("on_mouse_lbtn_up", function(x, y, mask) {
+function on_mouse_lbtn_up(x, y, mask) {
     plst.on_mouse("up", x, y, mask);
-});
+}
 
-var rbtn_down = false;
-$Event.add("on_mouse_rbtn_down", function(x, y, mask) {
+function on_mouse_rbtn_down(x, y, mask) {
     plst.right_clicked = true;
     plst.on_mouse("down", x, y, mask);
-    rbtn_down = mask == 6;
-});
+}
 
 function on_mouse_rbtn_up(x, y, mask) {
     if (plst.scrb.is_hover_object(x, y)) {
         return true;
     };
     plst.on_mouse("right", x, y, mask);
-    if (rbtn_down) {
-        rbtn_down = false;
-        //return mask != 4;
-    } //else 
     return true;
 }
 
-$Event.add("on_mouse_wheel", function(delta) {
+function on_mouse_wheel(delta) {
     plst.on_mouse("wheel", 0, 0, delta);
-});
+}
 
 //// playlist callbacsk
 
-$Event.add("on_playlists_changed", function () {
+function on_playlists_changed() {
 
     if (g_active_playlist > plman.PlaylistCount - 1) {
         g_active_playlist = plman.PlaylistCount - 1;
@@ -2138,54 +2132,54 @@ $Event.add("on_playlists_changed", function () {
         g_active_playlist = plman.ActivePlaylist;
         plst.init_list();
     };
-});
+}
 
 
-$Event.add("on_playlist_switch", function() {
+function on_playlist_switch() {
     g_active_playlist = plman.ActivePlaylist;
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
     plst.init_list();
     if (plman.ActivePlaylist == plman.PlayingPlaylist) plst.show_now_playing();
     g_show_now_playing_called = false;
-});
+}
 
-$Event.add("on_playlist_items_reordered", function (playlist) {
+function on_playlist_items_reordered(playlist) {
     if (playlist !== g_active_playlist) return;
     plst.init_list();
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
-});
+}
 
-$Event.add("on_playlist_items_removed", function (playlist) {
+function on_playlist_items_removed(playlist) {
     if (playlist !== g_active_playlist) return;
     plst.init_list();
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
-});
+}
 
-$Event.add("on_playlist_items_added", function (playlist) {
+function on_playlist_items_added(playlist) {
     if (playlist !== g_active_playlist) return;
     plst.init_list();
     g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
-});
+}
 
-$Event.add("on_playlist_items_selection_change", function () {
+function on_playlist_items_selection_change() {
     plst.repaint();
-});
+}
 
-$Event.add("on_item_selection_change", function () {
+function on_item_selection_change() {
     plst.repaint();
-});
+}
 
-$Event.add("on_item_focus_change", function (playlist, from, to) {
+function on_item_focus_change(playlist, from, to) {
     g_focus_id = to;
     plst.repaint();
-});
+}
 
 
 //// playback callbacks
 
-$Event.add("on_playback_pause", function (state) {
+function on_playback_pause(state) {
     if (plst.playing_item_visible) plst.repaint();
-});
+}
 
 /*
    function on_playback_starting(cmd, is_paused) {
@@ -2194,52 +2188,52 @@ $Event.add("on_playback_pause", function (state) {
    };
    */
 
-$Event.add("on_playback_edited", function (metadb) {
+function on_playback_edited(metadb) {
     plst.repaint();
-});
+}
 
-$Event.add("on_playback_new_track", function (metadb) {
+function on_playback_new_track(metadb) {
     if (prop.auto_show_now_playing && g_active_playlist == fb.PlayingPlaylist) {
         plst.show_now_playing();
         g_show_now_playing_called = false;
     };
     plst.get_playing_item();
     plst.repaint();
-});
+}
 
-$Event.add("on_playback_stop", function (reason) {
+function on_playback_stop(reason) {
     if (reason != 2) {
         plst.get_playing_item();
         plst.repaint();
     };
-});
+}
 
-$Event.add("on_playback_queue_changed", function () {
+function on_playback_queue_changed() {
     plst.repaint();
-});
+}
 
 //// dragdrop functions
 
-$Event.add("on_drag_enter",  function(action, x, y, mask) {
+function on_drag_enter(action, x, y, mask) {
     plst.on_drag("enter", action, x, y, mask);
-});
+}
 
-$Event.add("on_drag_over", function (action, x, y, mask) {
+function on_drag_over(action, x, y, mask) {
     plst.on_drag("over", action, x, y, mask);
-});
+}
 
-$Event.add("on_drag_drop", function (action, x, y, mask) {
+function on_drag_drop(action, x, y, mask) {
     plst.on_drag("drop", action, x, y, mask);
-});
+}
 
 
-$Event.add("on_drag_leave", function () {
+function on_drag_leave() {
     plst.on_drag("leave");
-});
+}
 
 
 //// keymap
-$Event.add("on_key_down", function (vkey) {
+function on_key_down(vkey) {
     var ctrl_pressed = utils.IsKeyPressed(VK_CONTROL);
     var shift_pressed = utils.IsKeyPressed(VK_SHIFT);
 
@@ -2394,14 +2388,14 @@ $Event.add("on_key_down", function (vkey) {
                 break;
         };
     };
-});
+}
 
-$Event.add("on_key_up", function (vkey) {
+function on_key_up(vkey){ 
     if (plst.auto_scrolling) {
         plst.auto_scrolling = false;
         plst.repaint();
     };
-});
+}
 
 function on_char(code) {
 };
@@ -2410,7 +2404,7 @@ function on_char(code) {
 
 
 //// misc
-$Event.add("on_get_album_art_done", function(metadb, art_id, image, image_path) {
+function on_get_album_art_done(metadb, art_id, image, image_path) {
     var tot = plst.groups.length;
     //console(art_id);
     for (var i = 0; i < tot; i++) {
@@ -2420,9 +2414,9 @@ $Event.add("on_get_album_art_done", function(metadb, art_id, image, image_path) 
             break;
         };
     };
-});
+}
 
-$Event.add("on_notify_data", function (name, info) {
+function on_notify_data(name, info) {
     switch (name) {
         case "Reload script":
             if (debug) {
@@ -2437,21 +2431,21 @@ $Event.add("on_notify_data", function (name, info) {
             break;
 
     };
-});
+}
 
-$Event.add("on_metadb_changed", function (handles, fromhook) {
+function on_metadb_changed(handles, fromhook) {
     plst.repaint();
-});
+}
 
-$Event.add("on_colors_changed", function () {
+function on_colors_changed() {
     get_colors();
     get_images();
     img_cache = new ImageCache(prop.group_art_id);
     window.Repaint();
-});
+}
 
-$Event.add("on_font_changed", function () {
+function on_font_changed() {
     get_fonts();
     window.Repaint();
-});
+}
 
