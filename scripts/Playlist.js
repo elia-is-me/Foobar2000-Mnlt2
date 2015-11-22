@@ -1896,12 +1896,15 @@ var g_focus_id = plman.GetPlaylistFocusItemIndex(g_active_playlist);
 var g_show_now_playing_called = false;
 var g_fast_scrolling = true;
 var g_avoid_to_clear_selection_on_mouse_up = false;
+var g_btns = [], g_btn_l = 0;
 
 
 get_metrics();
 get_fonts();
 get_colors();
 get_images();
+get_btn_images();
+set_btns();
 
 var img_cache = new ImageCache(prop.group_art_id);
 var plst = new Playlist();
@@ -1944,21 +1947,7 @@ function get_fonts() {
     g_fonts.rating2 = gdi.Font("Segoe UI Symbol", 14, 0);
     g_fonts.item_14b = gdi.Font(g_fonts.name_bold, 14, 1);
     g_fonts.info_header = gdi.Font("Segoe UI Semibold", 12, 0);
-    /*
-       g_fonts.item = gdi_font(g_fonts.name, 9);
-       g_fonts.item_bold = gdi_font(g_fonts.name, 9, 1);
-       g_fonts.header1 = gdi_font(g_fonts.name_bold, 13.5, 1);
-       g_fonts.header2 = gdi_font(g_fonts.name, 10.5, 0);
-       g_fonts.header3 = gdi_font(g_fonts.name, 10.5, 0);
-       g_fonts.rating1 = gdi_font("Segoe UI Symbol", 12, 0);
-       g_fonts.rating2 = gdi_font("Segoe UI Symbol", 10.5, 0);
-       g_fonts.item_14b = gdi_font(g_fonts.name_bold, 10.5, 1);
-       g_fonts.info_header = gdi_font("Segoe UI", 9, 1);
-       */
 };
-
-
-
 
 function get_colors() {
     g_colors = colorscheme[prop.colorscheme];
@@ -2028,6 +2017,117 @@ function get_images() {
     };
 };
 
+function get_btn_images() {
+
+	var font = gdi.Font("FontAwesome", 16);
+	var colors = [RGB(200, 200, 200), RGB(255, 255, 255), RGB(86, 156, 214)];
+	var w = 25;
+	var s, imgarr, img;
+	var sf = 285212672;
+
+	// Add
+	imgarr = [];
+	for (s = 0; s < 3; s++) {
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetTextRenderingHint(4);
+		
+		g.DrawString("\uF055", font, colors[s], 0, 0, w, w, sf);
+
+		img.ReleaseGraphics(g);
+		imgarr[s] = img;
+	};
+	images.add = imgarr;
+
+	// Rating
+	imgarr = [];
+	for (s = 0; s < 3; s++) {
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetTextRenderingHint(4);
+		
+		g.DrawString("\uF005", font, colors[s], 0, 0, w, w, sf);
+
+		img.ReleaseGraphics(g);
+		imgarr[s] = img;
+	};
+	images.rat = imgarr;
+
+    img = gdi.CreateImage(w, w);
+    g = img.GetGraphics();
+    g.SetTextRenderingHint(4);
+
+    g.DrawString("\uF005", font, blendColors(colors[1], colors[2], 0.8), 0, 0, w, w, sf);
+
+    img.ReleaseGraphics(g);
+    images.rat2 = [images.rat[2], img, images.rat[1]];
+	
+	var font = gdi.Font("FontAwesome", 14);
+	// Sort
+	imgarr = [];
+	for (s = 0; s < 3; s++) {
+		img = gdi.CreateImage(w, w);
+		g = img.GetGraphics();
+		g.SetTextRenderingHint(4);
+		
+		g.DrawString("\uF161", font, colors[s], 0, 0, w, w, sf);
+
+		img.ReleaseGraphics(g);
+		imgarr[s] = img;
+	};
+	images.sort = imgarr;
+
+};
+
+function set_btns() {
+    g_btns = [];
+    g_btns[0] = new Button(images.add, function(x, y) {
+        add_menu(x, y);
+    });
+    g_btns[1] = new Button(images.sort, function(x, y) {
+        sort_menu(x, y);
+    });
+    g_btns[2] = new Button(images.rat, function() {
+        toggle_show_rating();
+    });
+    g_btn_l = g_btns.length;
+}
+
+function toggle_show_rating() {
+    prop.show_rating = !prop.show_rating;
+    //g_btns[2].update_img(prop.show_rating ? images.rat2 : images.rat);
+    plst.repaint();
+    window.SetProperty("_prop: Show rating", prop.show_rating);
+}
+
+function add_menu(x, y) {
+
+	g_btns[0].state = 2;
+
+	var _menu = window.CreatePopupMenu();
+	var id = 1;
+	_menu.AppendMenuItem(MF_STRING, id++, "Add files...");
+	_menu.AppendMenuItem(MF_STRING, id++, "Add folder...");
+	_menu.AppendMenuItem(MF_STRING, id++, "Add location...");
+
+	var ret = _menu.TrackPopupMenu(x, y);
+	var cmd = ["Add files...", "Add folder...", "Add location..."];
+
+	for (var i = 1; i < id; i++) {
+		if (i == ret){ 
+			fb.RunMainMenuCommand("File/" + cmd[i-1]);
+			break;
+		};
+	};
+	_menu.Dispose();
+
+	g_btns[0].reset();
+
+}
+
+function sort_menu(x, y) {
+}
+
 function num(strg, nb) {
     var i;
     var str = strg.toString();
@@ -2046,9 +2146,21 @@ function on_size() {
     wh = window.Height;
     var th = 0;
     if (prop.show_info) {
-        th = 24;
+        ih = 25;
+        // Set buttons pos
+        var bh = g_btns[0].h;
+        var by = 0;
+        var bx = 20;
+        g_btns[0].set_xy(bx, by);
+
+        bx = bx + g_btns[0].w + 4;
+        g_btns[1].set_xy(bx, by);
+
+        bx = bx + g_btns[1].w + 4;
+        g_btns[2].set_xy(bx, by);
     };
-    plst.set_size(true, 1, th, ww - 2, wh - th - 1);
+    plst.set_size(true, 1, ih, ww - 2, wh - ih - 1);
+
 }
 
 function on_paint(gr) {
@@ -2059,22 +2171,22 @@ function on_paint(gr) {
     plst.draw(gr);
     // info header
     if (prop.show_info) {
+        gr.FillSolidRect(0, 0, ww, 25, RGB(15, 15, 15));
+        // Draw buttons
+        for (var i = 0; i < g_btn_l; i++) {
+            g_btns[i].draw(gr);
+        }
+
+        // Draw infos
         var tcolor = RGB(120, 120, 120);
-        gr.FillSolidRect(0, 0, ww, 24, RGB(15, 15, 15));
-        //gr.FillSolidRect(0, 0, ww, 24, 0x10000000);
         var p = 10;
-        var txt = " tracks";
+        var txt = ", " + plst.list_total + " tracks";
         var txt_w = GetTextWidth(txt, g_fonts.info_header);
         var txt_x = ww - p - txt_w;
-        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, txt_x, 0, txt_w, 24, dt_cc);
-        var txt = plst.list_total;
-        var txt_w = GetTextWidth(txt, g_fonts.info_header);
-        var txt_x = txt_x - txt_w;
-        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, txt_x, 0, txt_w, 24, dt_cc);
-        var txt = "Playlist > " + plst.name ;
-        //var txt_w = GetTextWidth(txt, g_fonts.info_header);
-        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, p, 0, txt_x - txt_w - p * 2, 24, dt_lc);
-        //gr.GdiDrawText(plst.name, g_fonts.info_header, g_colors.txt_normal, p + txt_w + p, 0, txt_x - txt_w - p * 2, 24, dt_cc);
+        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, txt_x, 0, txt_w, 25, dt_cc);
+        var txt = plst.name ;
+        var txt_x2 = Math.max(txt_x - GetTextWidth(txt, g_fonts.info_header), g_btns[2].x + g_btns[2].w + 10);
+        gr.GdiDrawText(txt, g_fonts.info_header, tcolor, txt_x2, 0, txt_x - txt_x2, 25, dt_rc);
     };
     //var to = new Date();
     //console("paint: " + (to - from) + " ms");
@@ -2087,18 +2199,34 @@ function on_paint(gr) {
 
 function on_mouse_move(x, y) {
     plst.on_mouse("move", x, y);
+
+    for (var i = 0; i < g_btn_l;i++) {
+        g_btns[i].check_state("move", x, y);
+    }
 }
 
 function on_mouse_lbtn_down(x, y, mask) {
     plst.on_mouse("down", x, y, mask);
+    for (var i = 0; i < g_btn_l; i++) {
+        g_btns[i].check_state("down", x, y);
+    }
 }
 
 function on_mouse_lbtn_dblclk(x, y, mask) {
     plst.on_mouse("dblclk", x, y, mask);
+
+    for (var i = 0;i < g_btn_l; i++) {
+        g_btns[i].check_state("down", x, y);
+    }
 }
 
 function on_mouse_lbtn_up(x, y, mask) {
     plst.on_mouse("up", x, y, mask);
+
+    for (var i = 0;i < g_btn_l; i++) {
+        g_btns[i].check_state("up", x, y) == 1 &&
+            g_btns[i].on_click(g_btns[i].x, g_btns[i].y+g_btns[i].h);
+    }
 }
 
 function on_mouse_rbtn_down(x, y, mask) {
@@ -2117,6 +2245,15 @@ function on_mouse_rbtn_up(x, y, mask) {
 function on_mouse_wheel(delta) {
     plst.on_mouse("wheel", 0, 0, delta);
 }
+
+function on_mouse_leave() {
+    for (var i = 0;i < g_btn_l; i++) {
+        if (g_btns[i].state == 1) {
+            g_btns[i].reset();
+        }
+    };
+};
+
 
 //// playlist callbacsk
 
