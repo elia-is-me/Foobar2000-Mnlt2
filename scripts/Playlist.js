@@ -2556,7 +2556,7 @@ function on_get_album_art_done(metadb, art_id, image, image_path) {
 function on_notify_data(name, info) {
     switch (name) {
         case "Reload script":
-            if (debug) {
+            if (window.IsVisible) {
                 window.Reload();
             };
             break;
