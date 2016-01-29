@@ -158,6 +158,66 @@ if (!Array.prototype.map) {
 	};
 }
 
+
+// Production steps of ECMA-262, Edition 5, 15.4.4.18
+// Reference: http://es5.github.io/#x15.4.4.18
+if (!Array.prototype.forEach) {
+
+	Array.prototype.forEach = function(callback, thisArg) {
+
+		var T, k;
+
+		if (this == null) {
+			throw new TypeError(' this is null or not defined');
+		}
+
+		// 1. Let O be the result of calling ToObject passing the |this| value as the argument.
+		var O = Object(this);
+
+		// 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
+		// 3. Let len be ToUint32(lenValue).
+		var len = O.length >>> 0;
+
+		// 4. If IsCallable(callback) is false, throw a TypeError exception.
+		// See: http://es5.github.com/#x9.11
+		if (typeof callback !== "function") {
+			throw new TypeError(callback + ' is not a function');
+		}
+
+		// 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
+		if (arguments.length > 1) {
+			T = thisArg;
+		}
+
+		// 6. Let k be 0
+		k = 0;
+
+		// 7. Repeat, while k < len
+		while (k < len) {
+
+			var kValue;
+
+			// a. Let Pk be ToString(k).
+			//   This is implicit for LHS operands of the in operator
+			// b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
+			//   This step can be combined with c
+			// c. If kPresent is true, then
+			if (k in O) {
+
+				// i. Let kValue be the result of calling the Get internal method of O with argument Pk.
+				kValue = O[k];
+
+				// ii. Call the Call internal method of callback with T as the this value and
+				// argument list containing kValue, k, and O.
+				callback.call(T, kValue, k, O);
+			}
+			// d. Increase k by 1.
+			k++;
+		}
+		// 8. return undefined
+	};
+}
+
 // Refer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
 if (!Array.isArray) {
 	Array.isArray = function(arg) {
@@ -165,22 +225,11 @@ if (!Array.isArray) {
 	};
 }
 
-
-Object.prototype.getPropertyCount = function() {
-	var c = 0;
-	for (var i in this) {
-		if (this.hasOwnProperty(i)) {
-			c++;
-		};
-	}
-	return c;
-};
-
-
 // ======================================================================
 // Constructors
 // ======================================================================
 
+/*
 Button = function(img_arr, func) {
 	this.img = img_arr;
 	this.w = this.img[0].Width;
@@ -230,12 +279,6 @@ Button.prototype = {
 		this.state_old = this.state;
 		switch (event) {
 			case "down":
-				/*
-				if (this.state != 2) {
-					this.state = this.is_hover ? 2 : 0;
-					this.is_down = this.is_hover;
-				};
-				*/
 				if (this.state == 1) {
 					this.is_down = this.is_hover;
 				};
@@ -250,16 +293,117 @@ Button.prototype = {
 					this.state = this.is_hover ? 1 : 0;
 				};
 				break;
-				/*
-			case "leave":
-				this.state = 0;
-				break;
-				*/
 		};
 		if (this.state !== this.state_old) this.repaint();
 		return this.state;
 	}
 };
+*/
+
+/**
+ * Button: create buttons on wsh panel.
+ * img_arr: [img_normal, img_hover, img_down], array elements are gdi_images.
+ * func: on_click event function
+ * tooltip_text:
+ */
+
+Button = function (img_arr, func, tooltip_text) {
+	this.state = 0;
+	this.is_down = false;
+	this.is_hover = false;
+	this.img;
+	this.w = 0;
+	this.h = 0;
+	this.x = 0;
+	this.y = 0;
+	this.func = func;
+	this.tooltip = window.CreateTooltip();
+
+	this.set_tooltip = function (tooltip_text) {
+		this.tooltip_text = tooltip_text;
+		if (this.tooltip_text && tooltip_text.length > 0) {
+			this.tooltip.Text = this.tooltip_text;
+			this.tooltip.Deactivate();
+		} else {
+			this.tooltip = null;
+		}
+	}
+
+	this.update_img = function(img_arr_) {
+		this.img = img_arr_;
+		this.w = this.img[0].Width;
+		this.h = this.img[0].Height;
+	}
+
+	this.update_img(img_arr);
+	this.set_tooltip(tooltip_text);
+}
+
+
+Button.prototype.repaint = function() {
+	window.RepaintRect(this.x, this.y, this.w+1, this.h+1);
+}
+
+Button.prototype.set_xy = function(x, y) {
+	this.x = x;
+	this.y = y;
+}
+
+Button.prototype.on_click = function(x, y, extra) {
+	if (!this.is_down) { return; }
+	try {
+		this.func && this.func(x, y, extra)
+	} catch (e) {};
+	this.is_down  = false;
+}
+
+Button.prototype.draw = function (gr) {
+	var img_ = this.img[this.state];
+	img_ && gr.DrawImage(img_, this.x, this.y + (this.state == 2 ? 1 : 0), this.w, this.h, 0, 0, this.w, this.h, 0, 255);
+}
+
+Button.prototype.reset = function() {
+	if (this.state != 0) {
+		this.state = 0;
+		this.tooltip  && this.tooltip.Deactivate();
+		this.repaint();
+	}
+}
+
+Button.prototype.check_state = function(event, x, y) {
+	this.is_hover = (x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h);
+	var old_state = this.state;
+	switch (event) {
+		case "down":
+			if (this.state == 1) {
+				this.is_down = this.is_hover;
+			}
+			this.state = this.is_hover ? 2 : 0;
+			break;
+		case "up":
+			this.state = this.is_hover ? 1 : 0;
+			if (!this.is_hover) {
+				this.is_down = false;
+			}
+			break;
+		case "move":
+			if (this.state != 2) {
+				this.state = this.is_hover ? 1 : 0;
+			}
+			if (this.tooltip) {
+				if (this.is_hover) {
+					this.tooltip.Activate();
+				} else {
+					this.tooltip.Deactivate();
+				}
+			}
+			break;
+	}
+	if (this.state != old_state) {
+		this.repaint();
+	}
+	return this.state;
+}
 
 
 // ======================================================================
@@ -353,6 +497,14 @@ function toRGB(d) {
 	var g = d >> 8 & 0xFF;
 	var b = d & 0xFF;
 	return [r, g, b];
+};
+
+
+function negativeColor(colour) {
+	var R = getRed(colour);
+	var G = getGreen(colour);	
+	var B = getBlue(colour);
+	return RGB(Math.abs(R-255), Math.abs(G-255), Math.abs(B-255));
 };
 
 function blendColors(c1, c2, factor) {
@@ -565,3 +717,19 @@ var KMask = {
     ctrlaltshift: 5,
     alt: 6
 };
+
+function get_system_dpi_percent() {
+    var objShell = new ActiveXObject("WScript.Shell");
+    var temp;
+    try {
+        temp = objShell.RegRead("HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI");
+        console("DPI: " + temp);
+    } catch (e) {
+        temp = 96;
+    }
+    return Math.round(temp / 96 * 100);
+}
+
+function zoom(value, factor) {
+    return Math.round(value * factor / 100);
+}

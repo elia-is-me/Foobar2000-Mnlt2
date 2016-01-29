@@ -1,18 +1,106 @@
-// =========================================================================
+﻿// vim:set fileencoding=utf-8 bomb et:
+//
+// Created by Elia_Is_Me @2015-12-30
 
-// Seekbar
+// Requirements:
+// * foobar2000 v1.3.3 or newer
+// * WSH Panel Mod Plus v1.5.6.1003 or newer
+
+//------------------START----------------------------------------------------------------
+
+// ** l18n ** //
+var lang = window.GetProperty("界面语言(lang)(cn:中文, en: English)", "auto").toLowerCase();
+if (lang != "cn" && lang != "en") {
+    lang = (fb.TitleFormat("$meta()").Eval(true) == "[未知函数]") ? "cn" : "en";
+}
+
+var lang_pack = {};
+
+if (lang.toLowerCase() == "cn") {
+    lang_pack = {
+        "Color scheme(0: SYS, 1: LIGHT, 2: DARK, 3: USER)": "颜色主题 0: 系统 1: 亮色 2: 暗色 3: 用户",
+		"Default": "默认",
+		"Repeat (playlist)": "重复 (播放列表)",
+		"Repeat (track)": "重复 (音轨)",
+		"Random": "随机",
+		"Shuffle (tracks)": "乱序 (音轨)",
+		"Shuffle (albums)": "乱序 (专辑)",
+		"Shuffle (folders)": "乱序 (目录)",
+        "File,Edit,View,Playback,Library,Help": "文件,编辑,视图,播放,媒体库,帮助",
+        "Shuffle type": "随机类型",
+        "Now playing": "正在播放",
+        "Volume: ": "音量: ",
+        "Previous": "前一首",
+        "Play or pause": "播放/暂停",
+        "Next": "后一首",
+        "Peferences": "首选项",
+        "Console": "控制台",
+    }
+}
+
+function __(name) {
+    var str = lang_pack[name];
+    if (!str) str = name;
+    return str;
+}
+
+
+var g_dpi_percent = get_system_dpi_percent();
+var g_forced_percent = window.GetProperty("DPI (default = 0)", 0);
+var g_dpi = (g_forced_percent == 0 ? g_dpi_percent : g_forced_percent);
+if (g_dpi < 100) g_dpi = 100;
+
+(function zoom_all() {
+    z1 = zoom(1, g_dpi);
+    z2 = zoom(2, g_dpi);
+    z4 = zoom(4, g_dpi);
+    z5 = zoom(5, g_dpi);
+    z7 = zoom(7, g_dpi);
+    z10 = zoom(10, g_dpi);
+    z12 = zoom(12, g_dpi);
+    z14 = zoom(14, g_dpi);
+    z15 = zoom(15, g_dpi);
+    z16 = zoom(16, g_dpi);
+    z20 = zoom(20, g_dpi);
+    z30 = zoom(30, g_dpi);
+    z32 = zoom(32, g_dpi);
+    z115 = zoom(115, g_dpi);
+    z380 = zoom(380, g_dpi);
+})();
+
+var DT_CC = DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
+
+var ww = 0, wh = 0;
+var m_x, m_y;
+var sk, vol;
+var g_colors = {};
+var g_fonts = {};
+var images = {};
+var bt = [], bt_len = 0;
+var slider_height = z2;
+var g_pbo = fb.PlaybackOrder;
+var g_shuffle_type = window.GetProperty("SHUFFLE TYPE", 4);
+var vol_state = 0;
+var g_is_hover_obj = false;
+
+var playback_order_text = "Default,Repeat (playlist),Repeat (track),Random,Shuffle (tracks),Shuffle (albums),Shuffle (folders)".split(",");
+var debug = 0;
+
+
+// Constructors
+
+
 Seekbar = function() {
 
 	var is_drag = false;
 	var pos_p = 0, pos_p_old = 0;
 
-	var slider_l = 5; var slider_r = 5;
+	var slider_l = z5; var slider_r = z5;
 	var slider_w = 0; var slider_h = slider_height;
+    var slider_x, slider_y;
 
-	var img_nob = images.slider_nob;
-	var nob_h = img_nob.Height; var nob_y;
 
-	var tfont = gdi.Font("Tahoma", 9);
+	var tfont = gdi.Font("Tahoma", z10);
 
 	this.repaint = function() {
 		window.Repaint();
@@ -33,42 +121,50 @@ Seekbar = function() {
 
 	this.draw = function(gr) {
 
+        var img_nob = images.slider_nob;
+        var nob_h = img_nob.Height; var nob_y;
+
+		//
+		debug && gr.FillSolidRect(this.x, this.y, this.w, this.h, 0xff112233);
+
 		// Set lr
 		var len = format_time(fb.PlaybackLength);
 		var tim = format_time(fb.PlaybackTime);
 
 		if (this.show_time) {
-			slider_r = slider_l = GetTextWidth(len, tfont) + 10;
+			slider_r = slider_l = GetTextWidth(len, tfont) + z20;
 		} else {
-			slider_r = slider_l = 5;
+			slider_r = slider_l = z5;
 		};
 
 		slider_x = this.x + slider_l;
 		slider_w = this.w - slider_l - slider_r;
 		slider_y = this.y + Math.floor((this.h - slider_h) / 2);
-		nob_y = slider_y - 4;
+		nob_y = slider_y - z4;
 
 		// Draw time/length
-		gr.GdiDrawText(tim, tfont, g_colors.bg_slider_active, this.x, this.y, slider_l, this.h, dt_cc);
-		gr.GdiDrawText(len, tfont, g_colors.bg_slider_active, this.x + this.w - slider_r, this.y, slider_r, this.h, dt_cc);
+        if (fb.IsPlaying) {
+            gr.GdiDrawText(tim, tfont, g_colors.bg_slider_active, this.x, this.y, slider_l, this.h, DT_CC);
+            gr.GdiDrawText(len, tfont, g_colors.bg_slider_active, this.x + this.w - slider_r, this.y, slider_r, this.h, DT_CC);
+        }
 
 		// Draw slider
 		var pos_w = 0;
 		
-		gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
 		if (fb.PlaybackLength) {
 			pos_w = Math.floor(fb.PlaybackTime / fb.PlaybackLength * slider_w);
-			if (fb.IsPlaying && pos_w > 0) {
-				gr.FillSolidRect(slider_x, slider_y, pos_w, slider_h, g_colors.bg_slider_active);
+			if (fb.IsPlaying) {
+                gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
+                if (pos_w > 0) {
+                    gr.FillSolidRect(slider_x, slider_y, pos_w, slider_h, g_colors.bg_slider_active);
+                    gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 236);
+                }
 			};
 		};
-		if (fb.IsPlaying) {
-			gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
-		};
-
 	};
 
 	this.on_mouse = function(event, x, y, mask) {
+
 		switch (event) {
 			case "move":
 				if (is_drag) {
@@ -103,30 +199,30 @@ Seekbar = function() {
 		fb.PlaybackTime = pt < fb.PlaybackLength ? pt : fb.PlaybackLength;
 	};
 
+    /*
 	this.on_playback_time = function() {
 		if (!fb.IsPlaying || fb.IsPaused || fb.PlaybackLength <= 0 || is_drag) return;
 		this.repaint();
 	};
+    */
 
 	window.SetInterval(function() {
 		if (!fb.IsPlaying || fb.IsPaused || fb.PlaybackLength <= 0 || is_drag) return;
 		sk.repaint();
-	}, 1000);
+	}, 30);
 
 };
+
 
 Volume = function() {
 
 	var is_drag = false;
 	var pos_p = 0;
 	//
-	var slider_l = 32; var slider_r = 0;
+	var slider_l = z32; var slider_r = 0;
 	var slider_x; var slider_y; var slider_w; var slider_h = slider_height;
 
-	var img_nob = images.slider_nob;
-	var nob_h = img_nob.Height;
-	var nob_y;
-
+    this.tooltip = window.CreateTooltip();
 
 	this.repaint = function() {
 		window.Repaint();
@@ -144,14 +240,21 @@ Volume = function() {
 		slider_x = this.x + slider_l;
 		slider_y = this.y + Math.floor((this.h - slider_h) / 2);
 		slider_w = this.w - slider_l - slider_r;
-		nob_y = slider_y - 4;
 	};
 
 	this.draw = function(gr) {
+
+		//
+		debug && gr.FillSolidRect(this.x, this.y, this.w, this.h, 0xff223344);
+
+        var img_nob = images.slider_nob;
+        var nob_h = img_nob.Height;
+		var nob_y = slider_y - z4;
+
 		var pos_w;
 		gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
 		pos_w = vol2pos(fb.Volume) * slider_w;
-		gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 255);
+		gr.DrawImage(img_nob, slider_x + pos_w - nob_h / 2, nob_y, nob_h, nob_h, 0, 0, nob_h, nob_h, 0, 236);
 		if (pos_w > 0) {
 			gr.FillSolidRect(slider_x, slider_y, pos_w, slider_h, g_colors.bg_slider_active);
 		};
@@ -174,6 +277,7 @@ Volume = function() {
 				break;
 			case "up":
 				if (is_drag) is_drag = false;
+                this.tooltip.Deactivate();
 				break;
 			case "wheel":
 				if (is_hover) {
@@ -196,7 +300,6 @@ Volume = function() {
 
 };
 
-// functions
 
 function format_time(t) {
 	var zpad = function(n) {
@@ -225,19 +328,7 @@ function vol2pos(v) {
 
 
 
-var dt_cc = DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
-var ww = 0, wh = 0;
-var m_x, m_y;
-var sk, vol;
-var g_colors = {};
-var g_fonts = {};
-var images = {};
-var g_btns = [], btn_length = 0;
-var slider_height = 2;
-var shuffle_id = 4;
-
-/** properties **/
-window.MinHeight = window.MaxHeight = 64;
+// ** on load **
 
 get_colors();
 get_fonts();
@@ -245,85 +336,103 @@ get_images();
 
 sk = new Seekbar();
 vl = new Volume();
-vl.repaint();
-set_btns();
+//set_btns();
 
+
+// ** Callback functions **
 
 function on_size() {
 
-	var min_w = 380
+	var min_w = z380;
 
 	if (!window.Width || !window.Height) return;
 	ww = Math.max(window.Width, min_w);
 	wh = window.Height;
 
+
 	var sk_h;
 	var area_y, area_h;
 	var vl_h, vl_w, vl_y, vl_x;
-	var bw, bx, by;
+	var bh, bx, by;
 	var p;
 
 	// seekbar
-	sk_h = 16;
+	sk_h = z20;
 	sk.set_size(0, 0, ww, sk_h);
 
 	// area
 	area_y = sk_h;
 	area_h = wh - sk_h;
 
-	// volumebar
-	vl_h = 20;
-	vl_w = 75 + 30;
-	vl_y = area_y + Math.floor(area_h / 2 - vl_h / 2) - 2;
-	bw = images.repeat_off[0].Width;
-	p = 4;
-	vl_x = ww - vl_w - (bw + p) * 2 - 10;
-	vl.set_size(vl_x, vl_y, vl_w, vl_h);
+	// Volume
+	vl_h = z20;
+	vl_w = z115;
+	vl_y = area_y + Math.floor(area_h / 2 - vl_h / 2) - z2;
+	vl.set_size(ww - vl_w - z15, vl_y, vl_w, vl_h);
 
 	// buttons
-	bw = images.play[0].Width;
-	by = Math.floor(area_h / 2 - bw / 2)  + area_y - 2;
-	bx = 20;
-	p = 12;
-	for (var i = 0; i < 4; i++) {
-		g_btns[i].set_xy(bx, by);
-		bx = bx + bw + p;
-	};
+	bh = bt[0].h;
+	by = area_y + Math.floor(area_h / 2 - bh / 2) - z2;
+	// Prev, Play, Next
+	bt[1].set_xy(ww/2 - bh/2, by); 
+	bt[0].set_xy(ww/2 - bh/2*3 -z10, by);
+	bt[2].set_xy(ww/2 + bh/2+z10, by);
 
-	p = 4;
-	g_btns[4].set_xy(vl.x, by);
-	//
-	bw = images.repeat_off[0].Width;
-	by = Math.floor(area_h / 2 - bw / 2)  + area_y - 2;
-	g_btns[5].set_xy(vl.x+vl.w+p, by);
-	g_btns[6].set_xy(g_btns[5].x+g_btns[5].w+p, by);
+	// PBO
+	bh = bt[3].h;
+	by = area_y + Math.floor(area_h / 2 - bh / 2) - z2;
+	bt[3].set_xy(bt[0].x - bt[3].w - z10, by);
+
+    // ...
+    bt[5].set_xy(z12, by);
+    bt[6].set_xy(z12 + bt[5].w + zoom(3, g_dpi), by);
+
+	// VOL
+	bh = bt[4].h;
+	bw = bt[4].w;
+	by = area_y + Math.floor(area_h / 2 - bh / 2) - z2;
+	bt[4].set_xy(vl.x, by);
+
 
 };
 
-var img_tmp = gdi.Image("E:\\img.png");
+
 
 function on_paint(gr) {
 	//bg
-	gr.FillSolidRect(0, 0, ww, wh, RGB(38, 38, 38));
+	gr.FillSolidRect(0, 0, ww, wh, g_colors.bg_panel);
+    gr.FillSolidRect(0, 0, ww, 1, 0x10ffffff);
 	//
 	sk.draw(gr);
 	vl.draw(gr);
-
-	// btns
-	for (var i = 0; i < btn_length; i++) {
-		g_btns[i].draw(gr);
-	};
+	
+	// Buttons
+	for (var i = 0; i < bt_len; i++) {
+		bt[i].draw(gr);
+    }
 
 };
 
 function on_mouse_move(x, y, mask) {
+
+    g_is_hover_obj = false;
 	//
 	sk.on_mouse("move", x, y, mask);
 	vl.on_mouse("move", x, y, mask);
 	//
 	
-	for (var i = 0; i < btn_length; i++)
-		g_btns[i].check_state("move", x, y, mask);
+	for (var i = 0; i < bt_len; i++) {
+		bt[i].check_state("move", x, y, mask);
+        if (x > bt[i].x && x < bt[i].x + bt[i].w && y > bt[i].y && y < bt[i].y + bt[i].h) {
+            g_is_hover_obj = true;
+        }
+    }
+
+    if (!g_is_hover_obj) {
+        if (sk.is_hover(x, y) || vl.is_hover(x, y)) {
+            g_is_hover_obj = true;
+        }
+    }
 	//
 	m_x = x;
 	m_y = y;
@@ -332,31 +441,51 @@ function on_mouse_move(x, y, mask) {
 function on_mouse_lbtn_down(x, y, mask) {
 	sk.on_mouse("down", x, y, mask);
 	vl.on_mouse("down", x, y, mask);
+	//console(bt[3].menu);
 	// buttons
-	for (var i = 0; i < btn_length; i++)
-		g_btns[i].check_state("down", x, y, mask);
+	for (var i = 0; i < bt_len; i++)
+		bt[i].check_state("down", x, y, mask);
 
 };
 
 function on_mouse_lbtn_dblclk(x, y, mask) {
-	for (var i = 0; i < btn_length; i++)
-		g_btns[i].check_state("down", x, y);
+	for (var i = 0; i < bt_len; i++) {
+		bt[i].check_state("down", x, y);
+	};
+
+    if (!g_is_hover_obj) {
+        window.NotifyOthers("Show now playing", true);
+    }
 };
 
 function on_mouse_lbtn_up(x, y, mask) {
 	sk.on_mouse("up", x, y, mask);
 	vl.on_mouse("up", x, y, mask);
 	// buttons
-	for (var i = 0; i < btn_length; i++) {
-		if (g_btns[i].check_state("up", x, y) == 1)
-			g_btns[i].on_click(g_btns[i].x, g_btns[i].y);
+	for (var i = 0; i < bt_len; i++) {
+		if (bt[i].check_state("up", x, y) == 1) {
+			bt[i].on_click(bt[i].x, bt[i].y);
+			break;
+		}
 	};
 };
 
+function on_mouse_rbtn_up(x, y, mask) {
+    if (utils.IsKeyPressed(VK_SHIFT)) {
+        return false;
+    } else {
+        main_menu(x, y);
+        return true;
+    }
+}
+
+
 function on_mouse_leave() {
-	for (var i = 0; i < btn_length; i++)
-		g_btns[i].check_state("leave", 0, 0);
-};
+	for (var i = 0; i < bt_len; i++) {
+		if (bt[i].state == 1) bt[i].reset();
+	}
+}
+
 
 function on_mouse_wheel(delta) {
 	vl.on_mouse("wheel", m_x, m_y, delta);
@@ -365,408 +494,309 @@ function on_mouse_wheel(delta) {
 function on_playback_stop(reason) {
 	if (reason != 2) {
 		sk.repaint();
-		update_btn_img();
+		update_bt_images();
 	};
 };
 
 function on_playback_pause() {
-	update_btn_img();
+	update_bt_images();
 };
 
 function on_playback_starting() {
 	sk.repaint();
-	update_btn_img();
+    update_bt_images();
 };
 
 function on_playback_order_changed(new_order) {
-	update_btn_img();
+	g_pbo = new_order;
+	update_bt_images();
+    bt[3].set_tooltip(__(playback_order_text[fb.PlaybackOrder]));
 };
 
 function on_volume_change(val) {
-	var muted, muted_;
-
-	muted = (fb.Volume == -100);
-	if (muted != muted_) {
-		g_btns[4].update_img(muted ? images.vol_m : images.vol);
-	};
+    bt[4].set_tooltip(__("Volume: ") + Math.round(fb.Volume));
+    update_bt_images();
 	vl.repaint();
 };
 
+on_volume_change();
+
+function on_notify_data(name, info) {
+	switch (name) {
+		case "Reload script":
+			if (window.IsVisible) {
+				window.Reload();
+			};
+			break;
+        case "DPI":
+            g_dpi = info;
+            zoom_all();
+            slider_height = z2;
+            get_images();
+            sk = new Seekbar();
+            vl = new Volume();
+            on_size();
+            window.Repaint();
+            break;
+
+	}
+}
+
 
 function get_colors() {
-	g_colors.bg_panel = RGB(38, 38, 38);
+	g_colors.bg_panel = RGB(25, 25, 25);
 	g_colors.bg_slider_normal = RGB(81, 81, 81);
-	g_colors.bg_slider_active = RGB(255, 255, 255);
+	g_colors.bg_slider_active = RGB(236, 236, 236);
 	g_colors.bg_btn_active = RGB(28, 28, 28);
 };
 
 function get_fonts() {
 };
 
+function load_image_arr(img) {
+	var img_path = fb.ProfilePath + "Skins\\Mnlt2\\";
+	return [
+		gdi.Image(img_path + img + ".png"), 
+		gdi.Image(img_path + img + "_h.png"),
+		gdi.Image(img_path + img + "_h.png")
+	];
+};
+
+
+
 function get_images() {
 
-	var fontGuifx = gdi.Font("Guifx v2 Transports", 18, 0);
-	var fontGuifx2 = gdi.Font("Guifx v2 Transports", 16, 0);
-	var fontGuifx3 = gdi.Font("Guifx v2 Transports", 18, 0);
-
-	var fontAwesome = gdi.Font("FontAwesome", 16, 0);
-
-
-	var w = 30, r;
-	var color_normal, color_hover, color_down, color, color_off;
-	var s, img_arr, img, font, pt_arr;
-	var sf = StringFormat(1, 1);
-
-	color_normal = RGB(245, 245, 245);
-	color_hover = RGB(224, 224, 224);
-	color_down = RGB(100, 100, 100);
-
-	// play
-	img_arr = [];
-	pt_arr = [9,7, 21,15, 9,23];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx2;
-		if (s == 1) {color = color_hover};
-		if (s == 2) {
-			color = color_down;
-			font = fontGuifx2;
-		};
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-
-		g.SetSmoothingMode(2);
-		g.FillPolygon(color, 1, pt_arr);
-
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.play = img_arr;
-	//images.play[0].SaveAs("E:\play.png");
-
-	// pause
-	img_arr = [];
-	pt_arr1 = [8,8, 12,8, 12,24, 8,24];
-	pt_arr2 = [18,8, 22,8, 22,24, 18,24];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx2;
-		(s == 1) && (color = color_hover);
-		if (s == 2) {
-			color = color_down;
-			font = fontGuifx2;
-		};
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		//g.SetSmoothingMode(1);
-		//g.FillPolygon(color, 1, pt_arr1);
-		//g.FillPolygon(color, 1, pt_arr2);
-		g.FillSolidRect(10, 8, 3, 14, color);
-		g.FillSolidRect(17, 8, 3, 14, color);
-
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.pause = img_arr;
-	//images.pause[0].SaveAs("E:\pause.png");
-
-	// stop
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx3;
-		(s == 1) && (color = color_hover);
-		if (s == 2) { 
-			color = color_down;
-			font = fontGuifx2;
-		};
-
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetTextRenderingHint(4);
-
-		g.DrawString("3", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.stop = img_arr;
-
-	// prev
-	img_arr = [];
-	pt_arr1 = [7,15, 15,10, 15,20];
-	pt_arr2 = [15,15, 23,10, 23,20];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx;
-		(s == 1) && (color = color_hover);
-		if (s == 2) {
-			color = color_down;
-			font = fontGuifx2;
-		};
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetSmoothingMode(2);
-		g.FillPolygon(color, 1, pt_arr1);
-		g.FillPolygon(color, 1, pt_arr2);
-
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.prev = img_arr;
-
-	// next
-	img_arr = [];
-	pt_arr1 = [7,10, 15,15, 7,20];
-	pt_arr2 = [15,10, 23,15, 15,20];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx;
-		(s == 1) && (color = color_hover);
-		if (s == 2) {
-		   color = color_down;
-		   font = fontGuifx2;
-		}
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetSmoothingMode(2);
-		g.FillPolygon(color, 1, pt_arr1);
-		g.FillPolygon(color, 1, pt_arr2);
-
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.next = img_arr;
-
-	// add
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx2;
-		if (s == 1) { color = color_hover; }
-		if (s == 2) { 
-			color = color_down; 
-			font = fontGuifx;
-		}
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetTextRenderingHint(4);
-
-		g.DrawString("'", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.add = img_arr;
-
-	// vol
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontAwesome;
-		if (s == 1) {color = color_hover};
-		if (s == 2) { color = color_down};
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetTextRenderingHint(4);
-		g.DrawString("\uf028", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.vol = img_arr;
-
-	// vol_mute
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontAwesome;
-		if (s == 1) color = color_hover;
-		if (s == 2) color = color_down;
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetTextRenderingHint(4);
-		g.DrawString("\uf026", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.vol_m = img_arr;
-
-	//
-	w = 24;
-	r = 4;
-	
-	var color_off = g_colors.bg_slider_normal;
-
-	// repeat_off
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_off;
-		font = fontGuifx2;
-		if (s == 1) color = color_hover;
-		else if (s == 2) color = color_down;
-
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetTextRenderingHint(4);
-		g.DrawString("*", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.repeat_off = img_arr;
-	
-	// repeat_pl
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx2;
-		if (s == 1) color = color_hover;
-		else if (s == 2) color = color_down;
-
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetSmoothingMode(4);
-		g.FillRoundRect(0, 2, w-1, w-5, r, r, g_colors.bg_btn_active);
-		g.SetTextRenderingHint(4);
-		g.DrawString("*", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.repeat_pl = img_arr;
-
-	// repeat_1
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx2;
-		if (s == 1) color = color_hover;
-		else if (s == 2) color = color_down;
-
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetSmoothingMode(4);
-		g.FillRoundRect(0, 2, w-1, w-5, r, r, g_colors.bg_btn_active);
-		g.SetTextRenderingHint(4);
-		g.DrawString("(", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.repeat_1 = img_arr;
-
-	// shuffle_off
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_off;
-		font = fontGuifx2;
-		if (s == 1) color = color_hover;
-		else if (s == 2) color = color_down;
-
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetTextRenderingHint(4);
-		g.DrawString("&", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.shuffle_off = img_arr;
-
-	// shuffle_on
-	img_arr = [];
-	for (s = 0; s < 3; s++) {
-		color = color_normal;
-		font = fontGuifx2;
-		if (s == 1) color = color_hover;
-		else if (s == 2) color = color_down;
-
-		img = gdi.CreateImage(w, w);
-		g = img.GetGraphics();
-		g.SetSmoothingMode(4);
-		g.FillRoundRect(0, 2, w-1, w-5, r, r, g_colors.bg_btn_active);
-		g.SetTextRenderingHint(4);
-		g.DrawString("&", font, color, 0, 0, w, w, sf);
-		img.ReleaseGraphics(g);
-		img_arr[s] = img;
-	};
-	images.shuffle_on = img_arr;
-	
-
 	// slider_nob
-	images.slider_nob = gdi.CreateImage(10, 10);
+	images.slider_nob = gdi.CreateImage(z10, z10);
 	g = images.slider_nob.GetGraphics();
 	g.SetSmoothingMode(2);
-	g.FillEllipse(1, 1, 7, 7, 0xffffffff);
+	g.FillEllipse(z1, z1, z7, z7, 0xffffffff);
 	images.slider_nob.ReleaseGraphics(g);
-};
 
+    var colors = [RGB(245, 245, 245), RGB(255, 255, 255), RGB(185, 185, 185)];
+    var icons = ["\uF001", "\uF002", "\uF003", "\uF004", "\uF005", "\uF006", "\uF007"];
+    var obj = ("prev,play,pause,next,repeat,repeat1,shuffle").split(",");
+    var font = gdi.Font("mnlt2", z16);
+    var rendering_hint = 3;
 
-function set_btns() {
-	g_btns = [];
+    var w = z30;
+    var s, imgarr, img;
+    var sf = StringFormat(1, 1);
+
+    for (var i = 0; i < obj.length; i++) {
+
+        // Create images
+        imgarr = [];
+        for (s = 0; s < 3; s++) {
+            img = gdi.CreateImage(w, w);
+            g = img.GetGraphics();
+            g.SetTextRenderingHint(rendering_hint);
+
+            g.DrawString(icons[i], font, colors[s], 0, 0, w, w, sf);
+
+            img.ReleaseGraphics(g);
+            imgarr[s] = img;
+        };
+
+        images[obj[i]] = imgarr;
+
+    }
+
+    var color2 = [RGB(120, 120, 120), RGB(120, 120, 120), RGB(80, 80, 80)];
+    imgarr = [];
+    for (var s = 0; s < 3; s++) {
+        img = gdi.CreateImage(w, w);
+        g = img.GetGraphics();
+        g.SetTextRenderingHint(rendering_hint);
+
+        g.DrawString("\uF005", font, color2[s], 0, 0, w, w, sf);
+
+        img.ReleaseGraphics(g);
+        imgarr[s] = img;
+    }
+
+    images["defaul"] = imgarr;
+
+    var icons = ["\uf028", "\uf026", "\uF26C", "\uF013"];
+    var obj = ["mute", "mute2", "console", "cog"];
+    var font = gdi.Font("FontAwesome", z14);
+
+    for (var i = 0; i < obj.length; i++) {
+
+        // Create images
+        imgarr = [];
+        for (s = 0; s < 3; s++) {
+            img = gdi.CreateImage(w, w);
+            g = img.GetGraphics();
+            g.SetTextRenderingHint(rendering_hint);
+
+            g.DrawString(icons[i], font, colors[s], 0, 0, w, w, sf);
+
+            img.ReleaseGraphics(g);
+            imgarr[s] = img;
+        };
+
+        images[obj[i]] = imgarr;
+
+    }
+
+    // Set buttons
+	bt = [];
 	// playback control
-	g_btns[0] = new Button(images.prev, function() {fb.Prev()});
-	g_btns[1] = new Button(images.play, function() {fb.PlayOrPause()});
-	g_btns[2] = new Button(images.next, function() {fb.Next()});
-	g_btns[3] = new Button(images.add, function(x, y) {
-		var _menu = window.CreatePopupMenu();
-		_menu.AppendMenuItem(MF_STRING, 1, "Add files...");
-		_menu.AppendMenuItem(MF_STRING, 2, "Add folder...");
-		_menu.AppendMenuItem(MF_STRING, 3, "Add location...");
+	bt[0] = new Button(images.prev, function() {fb.Prev()}, __("Previous"));
+	bt[1] = new Button(images.play, function() {fb.PlayOrPause()}, __("Play or pause"));
+	bt[2] = new Button(images.next, function() {fb.Next()}, __("Next"));
+    bt[3] = new Button(images.defaul, function() {
+        switch (fb.PlaybackOrder) {
+            case 0:
+            case 1:
+                fb.PlaybackOrder += 1;
+                break;
+            case 2:
+                try {
+                    fb.PlaybackOrder = g_shuffle_type;
+                } catch (e) {
+                    fb.PlaybackOrder = 4;
+                    g_shuffle_type = 4;
+                    window.SetProperty("SHUFFLE TYPE", g_shuffle_type);
+                }
+                break;
+            default:
+                fb.PlaybackOrder = 0;
+                break;
+        }
+    }, __(playback_order_text[fb.PlaybackOrder]));
+    bt[4] = new Button(images.mute, function() {
+        fb.VolumeMute();
+    }, __("Volume: ") + Math.round(fb.Volume));
+    bt[5] = new Button(images.console, function() {
+        fb.ShowConsole();
+    }, __("Console"));
+    bt[6] = new Button(images.cog, function() {
+        fb.ShowPreferences();
+    }, __("Peferences"));
 
-		var ret = _menu.TrackPopupMenu(x, y);
-		switch (ret) {
-			case 1:
-				fb.AddFiles();
-				break;
-			case 2:
-				fb.AddDirectory();
-				break;
-			case 3:
-				fb.RunMainMenuCommand("File/Add location...");
-				break;
-		};
-		_menu.Dispose();
-	});
+    bt_len = bt.length;
 
-	// vol
-	var img = ((fb.Volume == -100) ? images.vol_m : images.vol);
-	g_btns[4] = new Button(img, function() {
-		fb.VolumeMute();
-	});
+    update_bt_images();
 
-	// playback-order
-	g_btns[5] = new Button(images.repeat_off, function() {
-		var pbo = fb.PlaybackOrder;
-		if (pbo == 0 || pbo > 2) fb.PlaybackOrder = 1;
-		else if (pbo == 1) fb.PlaybackOrder = 2;
-		else if (pbo == 2) fb.PlaybackOrder = 0;
-	});
-	g_btns[6] = new Button(images.shuffle_off, function() {
-		// check shuffle id
-		if (shuffle_id < 3 || shuffle_id > 5) {
-			shuffle_id = 4;
-		};
-		fb.PlaybackOrder = (fb.PlaybackOrder >= 3 ? 0 : shuffle_id);
-
-	});
-
-	btn_length = g_btns.length;
-	update_btn_img();
 };
 
-function update_btn_img(btn) {
+function update_bt_images() {
+    switch (fb.PlaybackOrder) {
+        case 0:
+            bt[3].update_img(images.defaul);
+            break;
+        case 1:
+            bt[3].update_img(images.repeat);
+            break;
+        case 2:
+            bt[3].update_img(images.repeat1);
+            break;
+        default:
+            bt[3].update_img(images.shuffle);
+            break;
+    }
+
 	// update play-or-pause/stop btn
-	var pp_id = 1;
-	if (fb.IsPlaying) {
-		if (fb.IsPaused) g_btns[pp_id].update_img(images.play);
-		else g_btns[pp_id].update_img(images.pause);
+	if (fb.IsPlaying && fb.IsPaused || !fb.IsPlaying) {
+		bt[1].update_img(images.play);
 	} else {
-		g_btns[pp_id].update_img(images.play);
+		bt[1].update_img(images.pause);
 	};
 
-	// update pbo btns
-	var pbo = fb.PlaybackOrder;
-	g_btns[5].update_img(images.repeat_off);
-	g_btns[6].update_img(images.shuffle_off);
-	if (pbo == 1) g_btns[5].update_img(images.repeat_pl);
-	else if (pbo == 2) g_btns[5].update_img(images.repeat_1);
-	else if (pbo > 2) g_btns[6].update_img(images.shuffle_on);
+    //
+    bt[4].update_img((fb.Volume == -100) ? images.mute2 : images.mute);
 
-	//
-	window.Repaint();
-};
+
+    window.Repaint();
+}
+
+
+function main_menu (x, y) {
+
+    var _menu = window.CreatePopupMenu();
+    var contextman = fb.CreateContextMenuManager();
+
+    contextman.InitNowPlaying();
+
+    // Create main menus
+    var main = ("File,Edit,View,Playback,Library,Help").split(",");
+    var main_text = (__("File,Edit,View,Playback,Library,Help")).split(",");
+    var menuman = [];
+    var child = [];
+    for (var i = 0; i < main.length; i++) {
+        child[i] = window.CreatePopupMenu();
+        child[i].AppendTo(_menu, MF_STRING, __(main_text[i]));
+        menuman[i] = fb.CreateMainMenuManager();
+        menuman[i].Init(main[i]);
+    }
+
+    menuman[0].BuildMenu(child[0], 1, 200);
+    menuman[1].BuildMenu(child[1], 201, 200);
+    menuman[2].BuildMenu(child[2], 401, 200);
+    menuman[3].BuildMenu(child[3], 601, 300);
+    menuman[4].BuildMenu(child[4], 901, 300);
+    menuman[5].BuildMenu(child[5], 1201, 100);
+    _menu.AppendMenuSeparator();
+
+    var _st = window.CreatePopupMenu();
+    _st.AppendTo(_menu, MF_STRING, __("Shuffle type"));
+    _st.AppendMenuItem(MF_STRING, 2500, __("Random"));
+    _st.AppendMenuSeparator();
+    _st.AppendMenuItem(MF_STRING, 2501, __("Shuffle (tracks)"));
+    _st.AppendMenuItem(MF_STRING, 2502, __("Shuffle (albums)"));
+    _st.AppendMenuItem(MF_STRING, 2503, __("Shuffle (folders)"));
+    _st.CheckMenuRadioItem(2500, 2503, 2500+g_shuffle_type-3);
+
+    _menu.AppendMenuSeparator();
+
+    var _cont = window.CreatePopupMenu();
+    _cont.AppendTo(_menu, MF_STRING, __("Now playing"));
+
+    contextman.InitNowPlaying();
+    contextman.BuildMenu(_cont, 1301, -1);
+    
+
+    var ret = _menu.TrackPopupMenu(x, y);
+
+    switch (true) {
+        case(ret >= 1 && ret < 201):
+            menuman[0].ExecuteByID(ret - 1);
+            break;
+
+        case (ret >= 201 && ret < 401):
+            menuman[1].ExecuteByID(ret - 201);
+            break;
+
+        case (ret >= 401 && ret < 601):
+            menuman[2].ExecuteByID(ret - 401);
+            break;
+
+        case (ret >= 601 && ret < 901):
+            menuman[3].ExecuteByID(ret - 601);
+            break;
+
+        case (ret >= 901 && ret < 1201):
+            menuman[4].ExecuteByID(ret - 901);
+            break;
+
+        case (ret >= 1201 && ret < 1301):
+            menuman[5].ExecuteByID(ret - 1201);
+            break;
+
+        case (ret >= 1301 && ret < 2500):
+            contextman.ExecuteByID(ret - 1301);
+            break;
+    }
+
+
+    _menu.Dispose();
+    _st.Dispose();
+    contextman.Dispose();
+    for (var i = 0; i < main.length; i++) {
+        menuman[i].Dispose();
+    }
+
+}
+

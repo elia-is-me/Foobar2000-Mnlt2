@@ -2,7 +2,14 @@
 // INPUT BOX by Br3tt aka Falstaff (c)2013
 // *****************************************************************************************************************************************
 
-// Mod by Elia @2015-11-20
+// Mod by Elia @2016-01-18
+
+if (typeof __ != "object") {
+	__ = function(name) {
+		return name;
+	}
+	//console("\"__\" 未定义");
+}
 
 cInputbox = {
 	temp_gr: gdi.CreateImage(1, 1).GetGraphics(),
@@ -109,7 +116,9 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
         if(this.text.length>0) {
             gr.GdiDrawText(this.text.substr(this.offset), this.edit ? this.font : this.font, this.edit ? this.textcolor : blendColors(textcolor, backcolor, 0.5), this.x, this.y, this.w, this.h, DT);
         } else {
-            gr.GdiDrawText(this.empty_text, this.font_italic, blendColors(textcolor, backcolor, 0.5), this.x, this.y, this.w, this.h, DT);
+			if (!this.edit) {
+				gr.GdiDrawText(this.empty_text, this.font_italic, blendColors(textcolor, backcolor, 0.5), this.x, this.y, this.w, this.h, DT);
+			}
         }
         // draw cursor
         if(this.edit && !this.select) this.drawcursor(gr);
@@ -323,14 +332,15 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
         var idx;
         var _menu = window.CreatePopupMenu();
         cInputbox.clipboard = cInputbox.doc.parentWindow.clipboardData.getData("Text");
-        _menu.AppendMenuItem(this.select?MF_STRING:MF_GRAYED|MF_DISABLED, 1, "Copy");
-        _menu.AppendMenuItem(this.select?MF_STRING:MF_GRAYED|MF_DISABLED, 2, "Cut");
+        _menu.AppendMenuItem(this.select?MF_STRING:MF_GRAYED|MF_DISABLED, 1, __("Copy"));
+        _menu.AppendMenuItem(this.select?MF_STRING:MF_GRAYED|MF_DISABLED, 2, __("Cut"));
         _menu.AppendMenuSeparator();
-        _menu.AppendMenuItem(cInputbox.clipboard?MF_STRING:MF_GRAYED|MF_DISABLED, 3, "Paste");
+        _menu.AppendMenuItem(cInputbox.clipboard?MF_STRING:MF_GRAYED|MF_DISABLED, 3, __("Paste"));
         if(utils.IsKeyPressed(VK_SHIFT)) {
             _menu.AppendMenuSeparator();
-            _menu.AppendMenuItem(MF_STRING, 20, "Properties");
-            _menu.AppendMenuItem(MF_STRING, 21, "Configure...");
+            _menu.AppendMenuItem(MF_STRING, 20, __("Properties"));
+            _menu.AppendMenuItem(MF_STRING, 21, __("Configure..."));
+			_menu.AppendMenuItem(MF_STRING, 22, __("Reload"));
         }
         idx = _menu.TrackPopupMenu(x, y);
         switch(idx) {
@@ -353,7 +363,7 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
                     this.CalcText();
 					
                     this.repaint();
-					gfunc();
+					//gfunc();
                 }
                 break;
             case 3:
@@ -384,7 +394,7 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
                         this.CalcText();
                         this.repaint();
                     }
-					gfunc();
+					//gfunc();
                 };
                 break;
             case 20:
@@ -393,6 +403,9 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
             case 21:
                 window.ShowConfigure();
                 break;
+			case 22:
+				window.Reload();
+				break;
         }
         _menu.Dispose();
     }
@@ -808,3 +821,7 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
     };
     
 };
+
+// Update 2016-01-18:
+// * Do not exec gfunc on "Cut" and "Paste"
+//
