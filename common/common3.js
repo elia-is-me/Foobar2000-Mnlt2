@@ -1,9 +1,14 @@
-var LIB_VERSION = "2015-11-15";
+﻿// vim: set ft=javascript fileencoding=utf-8 bomb et:
+/*
+Discriptsion: ...
+Update: 2016-02-12
+*/
+
+var VERSION = "0.1.0"
 
 // ======================================================================
 // Prototype
 // ======================================================================
-
 
 String.prototype.trim = function(s) {
 	return this.replace(/^[\s　]*|[\s　]*$/g, "");
@@ -17,205 +22,106 @@ String.prototype.ucfirst = function() {
 	return this.charAt(0).toUpperCase() + this.substr(1);
 };
 
-Array.prototype.unique = function() {
-	var arr = this;
-	if (arr.length <= 0) return [];
-	for (var i = 0; i < arr.length; i++) {
-		for (var j = i + 1; j < arr.length; j++) {
-			if (arr[i] === arr[j]) {
-				arr.splice(j, 1);
-				j -= 1;
+if (!Array.prototype.unique) {
+	Array.prototype.unique = function() {
+		var arr = this;
+		if (arr.length <= 0) return [];
+		for (var i = 0; i < arr.length; i++) {
+			for (var j = i + 1; j < arr.length; j++) {
+				if (arr[i] === arr[j]) {
+					arr.splice(j, 1);
+					j -= 1;
+				}
 			}
 		}
-	}
-	return arr;
-};
+		return arr;
+	};
+}
 
 
 // Refer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
 if (!Array.prototype.filter) {
-	Array.prototype.filter = function(fun/*, thisArg*/) {
-		'use strict';
-
-		if (this === void 0 || this === null) {
-			throw new TypeError();
-		}
-
-		var t = Object(this);
-		var len = t.length >>> 0;
-		if (typeof fun !== 'function') {
-			throw new TypeError();
-		}
-
-		var res = [];
-		var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
-		for (var i = 0; i < len; i++) {
-			if (i in t) {
-				var val = t[i];
-
-				// NOTE: Technically this should Object.defineProperty at
-				//       the next index, as push can be affected by
-				//       properties on Object.prototype and Array.prototype.
-				//       But that method's new, and collisions should be
-				//       rare, so use the more-compatible alternative.
-				if (fun.call(thisArg, val, i, t)) {
-					res.push(val);
-				}
-			}
-		}
-
-		return res;
-	};
+    Array.prototype.filter = function(fun) {
+        'use strict';
+        if (this === void 0 || this === null) {
+            throw new TypeError();
+        }
+        var t = Object(this);
+        var len = t.length >>> 0;
+        if (typeof fun !== 'function') {
+            throw new TypeError();
+        }
+        var res = [];
+        var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+        for (var i = 0; i < len; i++) {
+            if (i in t) {
+                var val = t[i];
+                if (fun.call(thisArg, val, i, t)) {
+                    res.push(val)
+                }
+            }
+        }
+        return res;
+    }
 }
 
 // Production steps of ECMA-262, Edition 5, 15.4.4.19
 // Reference: http://es5.github.io/#x15.4.4.19
 if (!Array.prototype.map) {
-
-	Array.prototype.map = function(callback, thisArg) {
-
-		var T, A, k;
-
-		if (this == null) {
-			throw new TypeError(' this is null or not defined');
-		}
-
-		// 1. Let O be the result of calling ToObject passing the |this| 
-		//    value as the argument.
-		var O = Object(this);
-
-		// 2. Let lenValue be the result of calling the Get internal 
-		//    method of O with the argument "length".
-		// 3. Let len be ToUint32(lenValue).
-		var len = O.length >>> 0;
-
-		// 4. If IsCallable(callback) is false, throw a TypeError exception.
-		// See: http://es5.github.com/#x9.11
-		if (typeof callback !== 'function') {
-			throw new TypeError(callback + ' is not a function');
-		}
-
-		// 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-		if (arguments.length > 1) {
-			T = thisArg;
-		}
-
-		// 6. Let A be a new array created as if by the expression new Array(len) 
-		//    where Array is the standard built-in constructor with that name and 
-		//    len is the value of len.
-		A = new Array(len);
-
-		// 7. Let k be 0
-		k = 0;
-
-		// 8. Repeat, while k < len
-		while (k < len) {
-
-			var kValue, mappedValue;
-
-			// a. Let Pk be ToString(k).
-			//   This is implicit for LHS operands of the in operator
-			// b. Let kPresent be the result of calling the HasProperty internal 
-			//    method of O with argument Pk.
-			//   This step can be combined with c
-			// c. If kPresent is true, then
-			if (k in O) {
-
-				// i. Let kValue be the result of calling the Get internal 
-				//    method of O with argument Pk.
-				kValue = O[k];
-
-				// ii. Let mappedValue be the result of calling the Call internal 
-				//     method of callback with T as the this value and argument 
-				//     list containing kValue, k, and O.
-				mappedValue = callback.call(T, kValue, k, O);
-
-				// iii. Call the DefineOwnProperty internal method of A with arguments
-				// Pk, Property Descriptor
-				// { Value: mappedValue,
-				//   Writable: true,
-				//   Enumerable: true,
-				//   Configurable: true },
-				// and false.
-
-				// In browsers that support Object.defineProperty, use the following:
-				// Object.defineProperty(A, k, {
-				//   value: mappedValue,
-				//   writable: true,
-				//   enumerable: true,
-				//   configurable: true
-				// });
-
-				// For best browser support, use the following:
-				A[k] = mappedValue;
-			}
-			// d. Increase k by 1.
-			k++;
-		}
-
-		// 9. return A
-		return A;
-	};
+    Array.prototype.map = function(callback, thisArg) {
+        var T, A, k;
+        if (this == null) {
+            throw new TypeError(' this is null or not defined');
+        }
+        var O = Object(this);
+        var len = O.length >>> 0;
+        if (typeof callback !== 'function') {
+            throw new TypeError(callback + ' is not a function');
+        }
+        if (arguments.length > 1) {
+            T = thisArg;
+        }
+        A = new Array(len);
+        k = 0;
+        while (k < len) {
+            var kValue, mappedValue;
+            if (k in O) {
+                kValue = O[k];
+                mappedValue = callback.call(T, kValue, k, O);
+                A[k] = mappedValue;
+            }
+            k++;
+        }
+        return A
+    }
 }
-
 
 // Production steps of ECMA-262, Edition 5, 15.4.4.18
 // Reference: http://es5.github.io/#x15.4.4.18
 if (!Array.prototype.forEach) {
-
-	Array.prototype.forEach = function(callback, thisArg) {
-
-		var T, k;
-
-		if (this == null) {
-			throw new TypeError(' this is null or not defined');
-		}
-
-		// 1. Let O be the result of calling ToObject passing the |this| value as the argument.
-		var O = Object(this);
-
-		// 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
-		// 3. Let len be ToUint32(lenValue).
-		var len = O.length >>> 0;
-
-		// 4. If IsCallable(callback) is false, throw a TypeError exception.
-		// See: http://es5.github.com/#x9.11
-		if (typeof callback !== "function") {
-			throw new TypeError(callback + ' is not a function');
-		}
-
-		// 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-		if (arguments.length > 1) {
-			T = thisArg;
-		}
-
-		// 6. Let k be 0
-		k = 0;
-
-		// 7. Repeat, while k < len
-		while (k < len) {
-
-			var kValue;
-
-			// a. Let Pk be ToString(k).
-			//   This is implicit for LHS operands of the in operator
-			// b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
-			//   This step can be combined with c
-			// c. If kPresent is true, then
-			if (k in O) {
-
-				// i. Let kValue be the result of calling the Get internal method of O with argument Pk.
-				kValue = O[k];
-
-				// ii. Call the Call internal method of callback with T as the this value and
-				// argument list containing kValue, k, and O.
-				callback.call(T, kValue, k, O);
-			}
-			// d. Increase k by 1.
-			k++;
-		}
-		// 8. return undefined
-	};
+    Array.prototype.forEach = function(callback, thisArg) {
+        var T, k;
+        if (this == null) {
+            throw new TypeError(' this is null or not defined');
+        }
+        var O = Object(this);
+        var len = O.length >>> 0;
+        if (typeof callback !== "function") {
+            throw new TypeError(callback + ' is not a function');
+        }
+        if (arguments.length > 1) {
+            T = thisArg;
+        }
+        k = 0;
+        while (k < len) {
+            var kValue;
+            if (k in O) {
+                kValue = O[k];
+                callback.call(T, kValue, k, O)
+            }
+            k++;
+        }
+    }
 }
 
 // Refer: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
@@ -228,77 +134,6 @@ if (!Array.isArray) {
 // ======================================================================
 // Constructors
 // ======================================================================
-
-/*
-Button = function(img_arr, func) {
-	this.img = img_arr;
-	this.w = this.img[0].Width;
-	this.h = this.img[0].Height;
-	this.state = 0; // 0: normal, 1: hover, 2: down
-	this.func = func;
-	this.is_down = false;
-	this.is_hover = false;
-};
-
-Button.prototype = {
-	repaint: function() {
-		window.RepaintRect(this.x, this.y, this.w + 1, this.h + 1);
-	},
-
-	on_click: function(x, y, extra) {
-		if (!this.is_down) return;
-		try { this.func && this.func(x, y, extra) } catch (e) {};
-		this.is_down = false;
-	},
-
-	update_img: function(img_arr) {
-		this.img = img_arr;
-		this.w = this.img[0].Width;
-		this.h = this.img[0].Height;
-	},
-
-	set_xy: function(x, y) {
-		this.x = x;
-		this.y = y;
-	},
-
-	draw: function(gr) {
-		var _img = this.img[this.state];
-		_img && gr.DrawImage(_img, this.x, this.y, this.w, this.h, 0, 0, this.w, this.h, 0, 255);
-	},
-
-	reset: function() {
-		if (this.state != 0) {
-			this.state = 0;
-			this.repaint();
-		};
-	},
-
-	check_state: function(event, x, y) {
-		this.is_hover = (x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h);
-		this.state_old = this.state;
-		switch (event) {
-			case "down":
-				if (this.state == 1) {
-					this.is_down = this.is_hover;
-				};
-				this.state = this.is_hover ? 2 : 0;
-				break;
-			case "up":
-				this.state = this.is_hover ? 1 : 0;
-				if (!this.is_hover) this.is_down = false;
-				break;
-			case "move":
-				if (this.state !== 2) {
-					this.state = this.is_hover ? 1 : 0;
-				};
-				break;
-		};
-		if (this.state !== this.state_old) this.repaint();
-		return this.state;
-	}
-};
-*/
 
 /**
  * Button: create buttons on wsh panel.
@@ -424,6 +259,7 @@ function caller() {
 	else return 0;
 };
 
+// Note: Not recommented to use this in `on_paint' callback, .
 function GetTextWidth(str, font, type) {
 	var temp_gr = gdi.CreateImage(1, 1);
 	var g = temp_gr.GetGraphics();
@@ -575,6 +411,22 @@ function GetKeyboardMask() {
     return ret;
 };
 
+function get_system_dpi_percent() {
+    var objShell = new ActiveXObject("WScript.Shell");
+    var temp;
+    try {
+        temp = objShell.RegRead("HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI");
+        console("DPI: " + temp);
+    } catch (e) {
+        temp = 96;
+    }
+    return Math.round(temp / 96 * 100);
+}
+
+function zoom(value, factor) {
+    return Math.round(value * factor / 100);
+}
+
 // ======================================================================
 // Global Variables
 // ======================================================================
@@ -718,18 +570,3 @@ var KMask = {
     alt: 6
 };
 
-function get_system_dpi_percent() {
-    var objShell = new ActiveXObject("WScript.Shell");
-    var temp;
-    try {
-        temp = objShell.RegRead("HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI");
-        console("DPI: " + temp);
-    } catch (e) {
-        temp = 96;
-    }
-    return Math.round(temp / 96 * 100);
-}
-
-function zoom(value, factor) {
-    return Math.round(value * factor / 100);
-}
