@@ -209,7 +209,7 @@ Seekbar = function() {
 	window.SetInterval(function() {
 		if (!fb.IsPlaying || fb.IsPaused || fb.PlaybackLength <= 0 || is_drag) return;
 		sk.repaint();
-	}, 30);
+	}, 1000);
 
 };
 

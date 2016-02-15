@@ -97,6 +97,7 @@ if (lang == "cn") {
         "View default playlist manager": "显示默认列表管理器",
         "Web": "网络",
         "Search cover": "搜索封面",
+        "PLAYLISTS": "播放列表",
     }
 } else {
     lang_pack = {};
@@ -304,7 +305,6 @@ function get_fonts() {
         try {
             var sys_font = (window.InstanceType == 1 ? window.GetFontDUI(3) : window.GetFontCUI(0));
             g_fonts.name = sys_font.Name;
-            //g_fonts.name = (window.InstanceType == 1 ? window.GetFontDUI(3).Name : window.GetFontCUI(0).Name);
             g_fonts.size = sys_font.Size;
         } catch (e) {
             g_fonts.name = "Segoe UI";
@@ -1048,7 +1048,7 @@ PlManager = function () {
         gr.DrawString("\uF067", ico_font, text_color2, ico_x, this.y, ico_w, this.row_height, StringFormat(1, 1));
         gr.SetTextRenderingHint(0);
 
-        gr.GdiDrawText("播放列表", gdi.Font(g_fonts.name, z12, 1), text_color2, rx+ico_w+z10/2, this.y, this.w, this.row_height, DT_LC);
+        gr.GdiDrawText(__("PLAYLISTS"), gdi.Font(g_fonts.name, z12, 1), text_color2, rx+ico_w+z10/2, this.y, this.w, this.row_height, DT_LC);
 
         gr.FillSolidRect(this.x, this.y+this.h-this.row_height+1, this.w, this.row_height-2, g_colors.bg_normal);
         gr.FillSolidRect(this.x, this.y+this.row_height-1, this.w, 1, line_color);
@@ -1233,12 +1233,14 @@ PlManager = function () {
 
     }
 
+    var this_ = this;
+
     this.start_scrolling = function(delta, callback) {
         if (this.is_scrolling) return;
         if (!this.is_scrolling) {
-            plm.stimer1 = window.SetTimeout(function() {
-                plm.stimer2 = window.SetInterval(function() {
-                    plm.scrollbar.on_mouse("wheel", plm.x+1, plm.y+1, delta);
+            this_.stimer1 = window.SetTimeout(function() {
+                this_.stimer2 = window.SetInterval(function() {
+                    this_.scrollbar.on_mouse("wheel", this_.x+1, this_.y+1, delta);
                     /*
                     if (plm.offset_y == 0 || plm.offset_y + plm.list_h == pl.total_h) {
                         plm.stop_scrolling();
@@ -1624,11 +1626,13 @@ Playlist = function(mode) {
         } else {
             this.__ltimer && window.ClearTimeout(this.__ltimer);
             this.__ltimer = window.SetTimeout(function() {
-                pl.load_list(idx, compare, callback);
+                this_.load_list(idx, compare, callback);
             }, 30);
         }
 
     }
+
+    var this_ = this;
 
 
     this.on_load = function() {
@@ -2585,12 +2589,12 @@ Playlist = function(mode) {
 
         if (!this.is_scrolling) {
 
-            pl.scroll_timeout = window.SetTimeout(function() {
-                pl.scroll_interval = window.SetInterval(function() {
+            this_.scroll_timeout = window.SetTimeout(function() {
+                this_.scroll_interval = window.SetInterval(function() {
 
-                    pl.scrollbar.on_mouse("wheel", 0, 0, delta/3);
-                    if (pl.offset_y == 0 || pl.offset_y + pl.list_h == pl.total_h) {
-                        pl.stop_scrolling();
+                    this_.scrollbar.on_mouse("wheel", 0, 0, delta/3);
+                    if (this_.offset_y == 0 || this_.offset_y + this_.list_h == this_.total_h) {
+                        this_.stop_scrolling();
                     }
                     callback && callback();
 
@@ -2650,12 +2654,14 @@ Playlist = function(mode) {
         }
 
         var _web = null;
+        /*
         if (lang == "cn" && has_sel) {
             _web = window.CreatePopupMenu();
             _web.AppendTo(_menu, MF_STRING, __("Web"));
             _menu.AppendMenuSeparator();
             _web.AppendMenuItem(MF_STRING, 60, __("Search cover"));
         }
+        */
 
         _pr.AppendTo(_menu, MF_STRING | MF_POPUP, __("Preferences"));
 
@@ -2682,8 +2688,8 @@ Playlist = function(mode) {
             }
         }
         _pr.AppendMenuSeparator();
-        _pr.AppendMenuItem(MF_STRING, 50, __("Show configure..."));
         _pr.AppendMenuItem(MF_STRING, 51, __("Show properties..."));
+        _pr.AppendMenuItem(MF_STRING, 50, __("Show configure..."));
 
         _menu.AppendMenuSeparator();
         _menu.AppendMenuItem(has_sel ? MF_STRING : MF_DISABLED, 12, __("Cut") + "\tCtrl+X");

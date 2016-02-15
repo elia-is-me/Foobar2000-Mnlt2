@@ -164,6 +164,96 @@ var z12 = zoom(12, g_dpi);
 var z14 = zoom(14, g_dpi);
 var z60 = zoom(60, g_dpi);
 
+Scrollbar = function(parent) {
+
+    this.cursor_h = 0;
+    this.cursor_y = 0;
+    this.cursor_state = 0;
+    this.parent = parent;
+
+    this.draw = function(gr, x, y, w, h, list_h, total_h, scroll) {
+
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.list_h = list_h;
+        this.total_h = total_h;
+
+        if (list_h >= total_h) {
+            return;
+        }
+
+        // calc
+        this.cursor_h = Math.round(list_h / total_h * list_h);
+        if (this.cursor_h < 25) {
+            this.cursor_h = 25;
+        }
+        this.cursor_y = y + Math.round((list_h - this.cursor_h) * scroll / (total_h - list_h));
+        // draw
+        var alpha = this.cursor_state == 2 ? 0x99ffffff : this.cursor_state == 1 ? 0x55ffffff : 0x33ffffff;
+        gr.FillSolidRect(x, this.cursor_y, w, this.cursor_h, g_colors.txt_normal & alpha);
+
+    }
+
+    this.is_hover_cursor = function(x, y) {
+        return (x > this.x && x < this.x + this.w && y > this.cursor_y && y < this.cursor_y + this.cursor_h);
+    }
+
+    this.mouse_move = function(x, y) {
+        if (this.cursor_state == 2) {
+            this.cursor_y = y - this.cursor_delta;
+            if (this.cursor_y < this.y) {
+                this.cursor_y = this.y;
+            }
+            if (this.cursor_y + this.cursor_h > this.y + this.h) {
+                this.cursor_y = this.y + this.h - this.cursor_h;
+            }
+            this.set_scroll(parent);
+            window.Repaint();
+        } else {
+            var temp_state = (this.is_hover_cursor(x, y) ? 1 : 0);
+            if (temp_state != this.cursor_state) {
+                this.cursor_state = temp_state;
+                window.Repaint();
+            }
+        }
+    }
+
+    this.mouse_down = function (x, y) {
+        if (x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h) {
+            switch (true) {
+                case (y < this.cursor_y):
+                    break;
+                case (this.is_hover_cursor(x, y)):
+                    this.cursor_state = 2;
+                    this.cursor_delta = y - this.cursor_y;
+                    window.Repaint();
+                    break;
+                case (y > this.cursor_y + this.cursor_h):
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    this.mouse_up = function(x, y) {
+        if (this.is_hover_cursor(x, y)) {
+            this.cursor_state = 1;
+        } else {
+            this.cursor_state = 0;
+        }
+        window.Repaint();
+    }
+
+    this.set_scroll = function (parent) {
+        var ratio = (this.cursor_y - this.y) / (this.h - this.cursor_h);
+        parent.offset_y = Math.round((this.total_h - this.list_h) * ratio);
+    }
+
+}
+
 Textbrowser = function() {
 
 	//createFolder(folder_data);
@@ -319,6 +409,8 @@ Textbrowser = function() {
     this.need_scrollbar = false;
     this.show_scrollbar = window.GetProperty(__("Show scrollbar"), true);
 
+    this.scrollbar = new Scrollbar(this);
+
 	this.set_size = function(x, y, w, h) {
 		this.x = x;
 		this.y = y;
@@ -372,6 +464,8 @@ Textbrowser = function() {
 			}
 
             // Scrollbar
+            this.scrollbar.draw(gr, ww-z10-1, this.y + this.margin_t, z10, this.h - this.margin_t, this.h - this.margin_t, this.total_h, this.offset_y);
+            /*
             if (this.h-this.margin_t < this.total_h) {
                 var cursor_h = Math.round((this.h-this.margin_t) / this.total_h * this.h);
                 if (cursor_h < 25) {
@@ -381,6 +475,7 @@ Textbrowser = function() {
 
                 gr.FillSolidRect(ww-z10-1, cursor_y, z10, cursor_h, g_colors.txt_normal & 0x33ffffff);
             }
+            */
 
 		}
 
@@ -547,217 +642,6 @@ function save2File(value, file, format) {
 }
 
 
-ScrollBar = function(parent) {
-
-    this.parent = parent;
-    this.clicked = false; // Mouse click cursor
-    this.hover = false; // Mouse over cursor
-
-    this.repaint = function() {
-        parent.repaint();
-    }
-
-    this.set_size = function(x, y, w, h) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
-        this.update_cursor();
-    }
-
-    var z25 = zoom(25, g_dpi);
-    this.update_cursor = function() {
-        this.total_h = this.parent.total_h;
-        this.list_h = this.parent.list_h;
-
-        this.cursor_h = Math.round(this.h * this.list_h / this.total_h);
-        if (this.cursor_h < z25) {
-            this.cursor_h = z25;
-        }
-        this.set_cursor_y();
-    }
-
-    this.set_cursor_y = function() {
-        var ratio = this.parent.offset_y / (this.total_h - this.list_h);
-        this.cursor_y = this.y + Math.round((this.h - this.cursor_h) * ratio);
-    }
-
-    this.set_parent_offset_y = function() {
-        var ratio = (this.cursor_y - this.y) / (this.h - this.cursor_h);
-        this.parent.offset_y = Math.round((this.total_h - this.list_h) * ratio);
-    }
-
-    this.step_offset = function (offset) {
-        var _offset = parent.offset_y;
-        parent.offset_y -= offset;
-        parent.check_offset();
-        this.update_cursor();
-
-        var to_paint = (_offset != parent.offset_y);
-        return to_paint ? true : false;
-    }
-
-    this.scroll_to_y = function(y) {
-
-        var half_cursor_h = Math.round(this.cursor_h / 2);
-
-        if (y != this.cursor_y + half_cursor_h) {
-
-            this.cursor_y = y - half_cursor_h;
-
-            if (this.cursor_y < this.y) {
-                this.cursor_y = this.y;
-            } else if (this.cursor_y > this.y + this.h - this.cursor_h) {
-                this.cursor_y = this.y + this.h - this.cursor_h;
-            }
-
-        }
-
-        this.set_parent_offset_y();
-        this.repaint();
-
-    }
-            
-    this.on_mouse = function(event, x, y, m) {
-        this.is_hover_scrollbar = (x > this.x && x < this.x+this.w && y > this.y && y < this.y+this.h);
-        this.is_hover_cursor = (x > this.x && x < this.x+this.w && y > this.cursor_y && y < this.cursor_y+this.cursor_h);
-        switch (event) {
-            case "move":
-                if (this.hover != this.is_hover_cursor) {
-                    this.hover = this.is_hover_cursor;
-                    this.parent.repaint();
-                    return;
-                }
-                if (this.clicked) {
-                    this.cursor_y = y - this.drag_delta;
-                    if (this.cursor_y < this.y) {
-                        this.cursor_y = this.y;
-                    } else if (this.cursor_y > this.y+this.h - this.cursor_h) {
-                        this.cursor_y = this.y+this.h - this.cursor_h;
-                    }
-                    this.set_parent_offset_y();
-                    this.repaint();
-                }
-                break;
-            case "down":
-                if (this.is_hover_scrollbar) {
-                    switch (true) {
-                        case (y < this.cursor_y):
-                            // page up
-                            break;
-                        case (this.hover):
-                            this.clicked = true;
-                            this.drag_delta = y - this.cursor_y;
-                            parent.repaint();
-                            break;
-                        case (y > this.cursor_y+this.cursor_h):
-                            // page down
-                            break;
-                    }
-                }
-                break;
-            case "right":
-                if (this.is_hover_list) {
-                    this.context_menu(x, y);
-                }
-                break;
-            case "up":
-                if (this.clicked) {
-                    this.clicked = false;
-                    parent.repaint();
-                }
-                break;
-            case "wheel":
-                if (this.total_h > this.list_h - this.margin_t) {
-
-                    var delta_h = properties.scroll_step * pl.row_height;
-                    if (utils.IsKeyPressed(VK_SHIFT)) delta_h = this.list_h;
-                    if (utils.IsKeyPressed(VK_CONTROL)) delta_h = pl.row_height;
-
-                    var _paint = this.step_offset(m * delta_h);
-                    _paint && parent.repaint();
-                }
-                break;
-            case "leave":
-                this.hover = false;
-                this.clicked = false;
-                parent.repaint();
-                break;
-
-        }
-    }
-
-    this.draw = function(gr) {
-
-        if (this.h < z25) {
-            return;
-        }
-
-        // Bg
-        gr.FillSolidRect(this.x, this.y, this.w, this.h, g_colors.txt_normal & 0x05ffffff);
-
-        // Cursor
-        var color = g_colors.txt_normal & 0x33ffffff;
-        if (this.clicked) {
-            color = g_colors.txt_normal & 0x99ffffff;
-        } else if (this.hover) {
-            color = g_colors.txt_normal & 0x55ffffff;
-        }
-
-        gr.FillSolidRect(this.x, this.cursor_y, this.w, this.cursor_h, color);
-
-    }
-
-    this.context_menu = function(x, y) {
-
-        var _menu = window.CreatePopupMenu();
-        var ret;
-
-        _menu.AppendMenuItem(MF_STRING, 1, "滚动至此");
-        _menu.AppendMenuSeparator();
-        _menu.AppendMenuItem(MF_STRING, 2, "顶部");
-        _menu.AppendMenuItem(MF_STRING, 3, "底部");
-        _menu.AppendMenuSeparator();
-        _menu.AppendMenuItem(MF_STRING, 4, "向下翻页");
-        _menu.AppendMenuItem(MF_STRING, 5, "向上翻页");
-        _menu.AppendMenuSeparator();
-        _menu.AppendMenuItem(MF_STRING, 6, "向上滚动");
-        _menu.AppendMenuItem(MF_STRING, 7, "向下滚动");
-
-        ret = _menu.TrackPopupMenu(x, y);
-        switch (ret) {
-            case 1:
-                this.scroll_to_y(y);
-                break;
-            case 2:
-                this.scroll_to_y(this.y);
-                break;
-            case 3:
-                this.scroll_to_y(this.y+this.h);
-                break;
-            case 4:
-                this.step_offset(-this.list_h);
-                this.repaint();
-                break;
-            case 5:
-                this.step_offset(this.list_h);
-                this.repaint();
-                break;
-            case 6:
-                this.on_mouse("wheel", 0, 0, 1);
-                break;
-            case 7:
-                this.on_mouse("wheel", 0, 0, -1);
-                break;
-        }
-
-        _menu.Dispose();
-
-    }
-
-}
-
-
 get_fonts();
 get_colors();
 brw = new Textbrowser();
@@ -793,6 +677,20 @@ function on_paint(gr) {
 			z20, 0, ww-z20*2, z30, DT_LC);
 
 }
+
+function on_mouse_move(x, y) {
+    brw.scrollbar.mouse_move(x, y);
+}
+
+function on_mouse_lbtn_down(x, y) {
+    brw.scrollbar.mouse_down(x, y);
+}
+
+function on_mouse_lbtn_up(x, y) {
+    brw.scrollbar.mouse_up(x, y);
+}
+
+
 
 function on_mouse_rbtn_up(x, y) {
     brw.context_menu(x, y);

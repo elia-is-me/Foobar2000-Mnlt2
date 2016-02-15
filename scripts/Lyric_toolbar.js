@@ -23,6 +23,7 @@ if (lang.toLowerCase() == "cn") {
         "Search lyrics": "搜索歌词",
         "Reload lyric": "重载歌词",
         "Filtering": "过滤",
+        "Segoe UI": "微软雅黑",
     }
 }
 
@@ -99,7 +100,6 @@ function get_colors () {
     window.NotifyOthers(ESLyric.background_color, g_colors.bg_normal);
     window.NotifyOthers(ESLyric.text_color, g_colors.txt_normal);
     window.NotifyOthers(ESLyric.highlight_color, g_colors.highlight);
-    window.NotifyOthers(ESLyric.font, gdi.Font("Segoe UI", 14));
 }
 
 function get_default_colors () {
@@ -242,8 +242,23 @@ addEventListener("on_colors_changed", function () {
 }, true);
 
 addEventListener("on_font_changed", function () {
+    g_fonts.name = fb.TitleFormat(window.GetProperty(__("Font name"), "")).Eval(true);
+    if (!utils.CheckFont(g_fonts.name)) {
+        try {
+            var sys_font = (window.InstanceType == 1 ? window.GetFontDUI(3) : window.GetFontCUI(0));
+            g_fonts.name = sys_font.Name;
+            g_fonts.size = sys_font.Size;
+        } catch (e) {
+            g_fonts.name = "Segoe UI";
+            g_fonts.size = zoom(12, g_dpi);
+            console(__("Failed to load default font, Use \"") + g_fonts.name + "\" instead!");
+        };
+    }
+    window.NotifyOthers(ESLyric.font, gdi.Font(g_fonts.name, 14, 1));
 	window.Repaint();
 }, true);
+
+on_font_changed();
 
 
 //// On script load
