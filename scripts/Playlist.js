@@ -922,6 +922,13 @@ PlManager = function () {
 
     this.load_list();
 
+    this.load_fonts = function() {
+        this.text_font = gdi.Font(g_fonts.name, z11);
+        this.ico_font = gdi.Font("FontAwesome", z14);
+        this.mnlt2_font = gdi.Font("mnlt2", z7);
+        this.edit_font = gdi.Font("Tahoma", z11);
+    }
+    this.load_fonts();
 
     this.draw = function(gr) {
 
@@ -936,8 +943,6 @@ PlManager = function () {
 
         var line_color = blendColors(g_colors.bg_normal, g_colors.txt_normal, 0.2);
 
-        var text_font = gdi.Font(g_fonts.name, z11);
-        var ico_font = gdi.Font("FontAwesome", z14);
         var ico_w = z25;
         var ico_x = this.list_x + 0;
         var ico = "";
@@ -967,7 +972,7 @@ PlManager = function () {
                 row = this.playlist[i];
 
                 text_color = g_colors.txt_normal;
-                text_font = gdi.Font(g_fonts.name, z11, 0);
+                //text_font = gdi.Font(g_fonts.name, z11, 0);
 
 
                 if (i == plman.ActivePlaylist) {
@@ -987,10 +992,10 @@ PlManager = function () {
                 }
 
                 gr.SetTextRenderingHint(g_image_txt_rendering);
-                gr.DrawString(ico, ico_font, text_color, ico_x, ry, ico_w, this.row_height, StringFormat(1, 1));
+                gr.DrawString(ico, this.ico_font, text_color, ico_x, ry, ico_w, this.row_height, StringFormat(1, 1));
                 if (i == plman.PlayingPlaylist && fb.IsPlaying) {
                     gr.FillSolidRect(ico_x, ry+this.row_height/2, ico_w/2, ico_w/2, g_colors.bg_normal);
-                    gr.DrawString("\uF002", gdi.Font("mnlt2", z7), text_color, ico_x, ry+this.row_height/2, ico_w/2, rh/2, StringFormat(2, 0));
+                    gr.DrawString("\uF002", this.mnlt2_font, text_color, ico_x, ry+this.row_height/2, ico_w/2, rh/2, StringFormat(2, 0));
                 }
                 gr.SetTextRenderingHint(0);
 
@@ -1006,17 +1011,17 @@ PlManager = function () {
 
                 if (this.inputboxID == i) {
                     // Rename inputbox
-                    this.inputbox.font = gdi.Font("Tahoma", z11);
+                    this.inputbox.font = this.edit_font;
                     this.inputbox.w = this.list_x + this.list_w - rx-ico_w-z5*2;
                     this.inputbox.draw(gr, rx + ico_w + z10/2, ry + (rh-z10*2)/2);
                 } else {
                     // Item count
-                    var tk_w = Math.ceil(gr.CalcTextWidth(this.playlist[i].track_count, text_font));
+                    var tk_w = Math.ceil(gr.CalcTextWidth(this.playlist[i].track_count, this.text_font));
                     var tk_x = this.list_x + this.list_w - tk_w - z5;
-                    gr.GdiDrawText(this.playlist[i].track_count, text_font, blendColors(text_color, g_colors.bg_normal, 0.3), 
+                    gr.GdiDrawText(this.playlist[i].track_count, this.text_font, blendColors(text_color, g_colors.bg_normal, 0.3), 
                             tk_x, ry, tk_w, rh, DT_CC);
                     // Pl name
-                    gr.GdiDrawText(this.playlist[i].name, text_font, text_color, rx + ico_w + z10/2, ry, tk_x - rx-ico_w-z5, rh, DT_LC);
+                    gr.GdiDrawText(this.playlist[i].name, this.text_font, text_color, rx + ico_w + z10/2, ry, tk_x - rx-ico_w-z5, rh, DT_LC);
                 }
 
 
@@ -1045,20 +1050,19 @@ PlManager = function () {
         gr.FillSolidRect(this.x+1, this.y+1, this.w-2, this.row_height-1, g_colors.bg_normal);
 
         gr.SetTextRenderingHint(g_image_txt_rendering);
-        gr.DrawString("\uF067", ico_font, text_color2, ico_x, this.y, ico_w, this.row_height, StringFormat(1, 1));
+        gr.DrawString("\uF067", this.ico_font, text_color2, ico_x, this.y, ico_w, this.row_height, StringFormat(1, 1));
         gr.SetTextRenderingHint(0);
 
-        gr.GdiDrawText(__("PLAYLISTS"), gdi.Font(g_fonts.name, z12, 1), text_color2, rx+ico_w+z10/2, this.y, this.w, this.row_height, DT_LC);
+        gr.GdiDrawText(__("PLAYLISTS"), this.text_font, text_color2, rx+ico_w+z10/2, this.y, this.w, this.row_height, DT_LC);
 
         gr.FillSolidRect(this.x, this.y+this.h-this.row_height+1, this.w, this.row_height-2, g_colors.bg_normal);
         gr.FillSolidRect(this.x, this.y+this.row_height-1, this.w, 1, line_color);
         gr.FillSolidRect(this.x, this.y+this.h-this.row_height, this.w, 1, line_color);
-        //gr.DrawRect(this.x, this.y, this.w-1, this.h-1, 1, line_color);
         gr.SetSmoothingMode(4);
         gr.DrawRoundRect(this.x, this.y, this.w-1, this.h-1, z5, z5, 1, line_color);
         gr.SetSmoothingMode(0);
 
-        gr.GdiDrawText("共 " + this.playlist.length + " 项", text_font, text_color2, 
+        gr.GdiDrawText("共 " + this.playlist.length + " 项", this.text_font, text_color2, 
                 rx, this.y+this.h-this.row_height, rw-z5, this.row_height, DT_RC);
 
         if (this.drop_target_id == fb.PlaylistCount) {
@@ -2974,7 +2978,6 @@ function num(strg, nb) {
 function set_buttons() {
     bt = [];
     bt[0] = new Button(images.add, function(x, y) {
-        //console(g_active_pl);
         add_menu(x, y);
     }, __("Add items"));
     bt[1] = new Button(images.sort, function(x, y) {
@@ -2986,7 +2989,9 @@ function set_buttons() {
 
     bt[3] = new Button(images.plman, function() {
         toggle_show_plmanager();
-    }, __("Toggle show playlist manager"));
+    // TODO:
+    //}, __("Toggle show playlist manager"));
+    });
     bt[4] = new Button(images.go2, function() {
         fb.RunMainMenuCommand(__("View/Playlist Manager"));
     }, __("View default playlist manager"));
@@ -3637,6 +3642,7 @@ function on_colors_changed() {
 
 function on_font_changed () {
     get_fonts();
+    plm.load_fonts();
     window.Repaint();
 }
 
