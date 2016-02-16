@@ -3025,12 +3025,17 @@ function add_menu(x, y) {
 
 	var ret = _menu.TrackPopupMenu(x, y);
 
-	for (var i = 1; i < id; i++) {
-		if (i == ret){ 
-			fb.RunMainMenuCommand(__("File/") + cmd[i-1]);
-			break;
-		};
-	};
+    switch (ret) {
+        case 1:
+            fb.AddFiles();
+            break;
+        case 2:
+            fb.AddDirectory();
+            break;
+        case 3:
+            fb.RunMainMenuCommand(__("File/") + cmd[2]);
+            break;
+    }
 	_menu.Dispose();
 
 	bt[0].reset();
@@ -3546,8 +3551,20 @@ function on_key_down(vkey) {
                 is_ctrl_pressed && pl.select_range(0, pl.track_total-1);
                 break;
             case VK_KEY_N:
+                is_ctrl_pressed && plman.CreatePlaylist(plman.PlaylistCount, "");
                 break;
-
+            case VK_KEY_W:
+                is_ctrl_pressed && plman.RemovePlaylist(plman.ActivePlaylist);
+                break;
+            case VK_KEY_P:
+                is_ctrl_pressed && fb.ShowPreferences("0E966267-7DFB-433B-A07C-3F8CDD31A258");
+                break;
+            case VK_KEY_O:
+                is_ctrl_pressed && fb.AddFiles();
+                break;
+            case VK_KEY_S:
+                is_ctrl_pressed && fb.SavePlaylist();
+                break;
         }
 
         if (properties.vim_style_key_binding) {
