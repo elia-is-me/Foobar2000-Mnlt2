@@ -398,6 +398,7 @@ Textbrowser = function() {
 			default:
                 this.lines = ["", "", ""];
                 this.lines = this.lines.concat(processLineWrap(this.content, this.font, this.w));
+				//this.lines = processLineWrap(this.content, this.font, this.w);
 				break;
 		}
 

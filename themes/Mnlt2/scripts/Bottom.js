@@ -35,6 +35,7 @@ if (lang.toLowerCase() == "cn") {
         "Next": "后一首",
         "Peferences": "首选项",
         "Console": "控制台",
+        "Default": "默认",
     }
 }
 
@@ -143,14 +144,15 @@ Seekbar = function() {
 		nob_y = slider_y - z4;
 
 		// Draw time/length
-        if (fb.IsPlaying) {
+        //if (fb.IsPlaying) {
             gr.GdiDrawText(tim, tfont, g_colors.bg_slider_active, this.x, this.y, slider_l, this.h, DT_CC);
             gr.GdiDrawText(len, tfont, g_colors.bg_slider_active, this.x + this.w - slider_r, this.y, slider_r, this.h, DT_CC);
-        }
+        //}
 
 		// Draw slider
 		var pos_w = 0;
 		
+                gr.FillSolidRect(slider_x, slider_y, slider_w, slider_h, g_colors.bg_slider_normal);
 		if (fb.PlaybackLength) {
 			pos_w = Math.floor(fb.PlaybackTime / fb.PlaybackLength * slider_w);
 			if (fb.IsPlaying) {
@@ -553,16 +555,6 @@ function get_colors() {
 function get_fonts() {
 };
 
-function load_image_arr(img) {
-	var img_path = fb.ProfilePath + "Skins\\Mnlt2\\";
-	return [
-		gdi.Image(img_path + img + ".png"), 
-		gdi.Image(img_path + img + "_h.png"),
-		gdi.Image(img_path + img + "_h.png")
-	];
-};
-
-
 
 function get_images() {
 
@@ -799,4 +791,25 @@ function main_menu (x, y) {
     }
 
 }
+
+function on_drag_drop (action, x, y, mask) {
+
+    var idx;
+
+    if (!plman.PlaylistCount) {
+        idx = plman.CreatePlaylist(0, __("Default"));
+        plman.ActivePlaylist = 0;
+    } else {
+        plman.ClearPlaylistSelection(plman.ActivePlaylist);
+        idx = plman.ActivePlaylist;
+    }
+
+    if (idx != undefined) {
+        action.ToPlaylist();
+        action.Playlist = idx;
+        action.ToSelect = true;
+    }
+
+}
+
 

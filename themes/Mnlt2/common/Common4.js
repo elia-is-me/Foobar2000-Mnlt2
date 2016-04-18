@@ -1,10 +1,5 @@
 ﻿// vim: set ft=javascript fileencoding=utf-8 bomb et:
-/*
-Discriptsion: ...
-Update: 2016-02-12
-*/
-
-var VERSION = "0.2.0.2016-02-12"
+// Update: 2016-04-11.1
 
 // ======================================================================
 // Prototype
@@ -211,7 +206,8 @@ Slider.prototype.down = function(x, y) {
 	if (this.is_mouse_over(x, y)) {
 		this.is_drag = true;
 		this.move(x, y);
-	}
+    }
+    return this.is_drag;
 }
 
 Slider.prototype.up = function(x, y) {
@@ -234,10 +230,12 @@ Slider.prototype.update = function() {
 
 
 // Button class
-function Button(func) {
+function Button(func, tiptext) {
 	this.func = func;
 	this.state = 0;
     this.is_down;
+    this.tooltip = window.CreateTooltip();
+    this.tiptext = tiptext;
 }
 
 Button.prototype.draw = function(gr, img, x, y) {
@@ -250,6 +248,10 @@ Button.prototype.draw = function(gr, img, x, y) {
 	gr.DrawImage(img, x, y, this.w, this.h, 0, 0, this.w, this.h, 0, alpha);
 }
 
+Button.prototype.repaint = function() {
+    window.RepaintRect(this.x, this.y, this.w+1, this.h+1);
+}
+
 Button.prototype.is_mouse_over = function(x, y) {
 	return (x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h);
 }
@@ -259,7 +261,7 @@ Button.prototype.change_state = function(s) {
 		return;
 	}
 	this.state = s;
-	window.Repaint();
+    this.repaint();
 }
 Button.prototype.down = function (x, y) {
 	if (this.is_mouse_over(x, y)) {

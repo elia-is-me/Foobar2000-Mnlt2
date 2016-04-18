@@ -98,6 +98,7 @@ if (lang == "cn") {
         "Web": "网络",
         "Search cover": "搜索封面",
         "PLAYLISTS": "播放列表",
+        "Default": "默认",
     }
 } else {
     lang_pack = {};
@@ -326,12 +327,12 @@ function get_fonts() {
     g_fonts.rating2 = gdi.Font("Segoe UI Symbol", z14, 0);
     g_fonts.item_14b = gdi.Font(g_fonts.name_bold, z14, 1);
     g_fonts.info_header = gdi.Font(g_fonts.name, z12, 0);
+    g_fonts.mdl2 = gdi.Font("Segoe MDL2 Assets", z12, 0);
 };
 
 
 function get_images() {
     
-    //images.bg = gdi.Image(fb.ProfilePath + "Skins\\Mnlt2\\bg.jpg");
     cover.max_width = pl.group_header_rows * pl.row_height;
     var cw = cover.max_width;
     if (!cw) cw = 1;
@@ -346,6 +347,7 @@ function get_images() {
     g.FillSolidRect(0, 0, cw, cw, g_colors.bg_normal & 0xa0ffffff);
 
     g.SetTextRenderingHint(g_image_txt_rendering);
+    g.FillSolidRect(0, 0, cw, cw, g_colors.txt_normal & 0x10ffffff);
     g.DrawString(__("No\nCover"), g_fonts.item_14b, blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.2), 
             0, 0, cw, cw, StringFormat(1, 1));
     g.SetTextRenderingHint(0);
@@ -379,7 +381,7 @@ function get_images() {
 
 function get_button_images() {
 
-    var font = gdi.Font("FontAwesome", zoom(16, g_dpi));
+    var font = gdi.Font("Segoe MDL2 Assets", zoom(14, g_dpi));
     //var colors = [RGB(200, 200, 200), RGB(255, 255, 255), RGB(86, 156, 214)];
     var colors = [blendColors(g_colors.txt_normal, g_colors.bg_normal, 0.2), g_colors.txt_normal, g_colors.highlight];
 
@@ -394,7 +396,7 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF055", font, colors[s], 0, 0, w, w, sf);
+        g.DrawString("\uE710", font, colors[s], 0, 0, w, w, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
@@ -408,7 +410,7 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF005", font, colors[s], 0, 0, w, w, sf);
+        g.DrawString("\uE1CF", font, colors[s], 0, 0, w, w, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
@@ -424,7 +426,7 @@ function get_button_images() {
     img.ReleaseGraphics(g);
     images.rat2 = [images.rat[2], img, images.rat[1]];
 
-    var font = gdi.Font("FontAwesome", zoom(14, g_dpi));
+    //var font = gdi.Font("FontAwesome", zoom(14, g_dpi));
     // Sort
     imgarr = [];
     for (s = 0; s < 3; s++) {
@@ -432,7 +434,7 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF161", font, colors[s], 0, 0, w, w, sf);
+        g.DrawString("\uE174", font, colors[s], 0, 0, w, w, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
@@ -446,7 +448,7 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF0C9", font, colors[s], 0, 0, w, w, sf);
+        g.DrawString("\uE169", font, colors[s], 0, 0, w, w, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
@@ -460,7 +462,7 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF067", font, colors[s], 0, 0, w, w, sf);
+        g.DrawString("\uE710", font, colors[s], 0, 0, w, w, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
@@ -491,7 +493,7 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF013", font, colors[s], 0, 0, w, w, sf);
+        g.DrawString("\uE713", font, colors[s], 0, 0, w, w, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
@@ -505,14 +507,14 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF002", font, colors[s], 0, 0, w, w, sf);
+        g.DrawString("\uE1A3", font, colors[s], 0, 0, w, w, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
     }
     images.loupe = imgarr;
 
-    var font2 = gdi.Font("FontAwesome", z14);
+    var font2 = gdi.Font("Segoe MDL2 Assets", z14);
     var w2 = 20;
     // plm_window
     imgarr = [];
@@ -521,7 +523,7 @@ function get_button_images() {
         g = img.GetGraphics();
         g.SetTextRenderingHint(g_image_txt_rendering);
 
-        g.DrawString("\uF045", font2, colors[s], 0, 0, w2, w2, sf);
+        g.DrawString("\uE248", font2, colors[s], 0, 0, w2, w2, sf);
 
         img.ReleaseGraphics(g);
         imgarr[s] = img;
@@ -597,13 +599,6 @@ function format_album_art(image, w, h, raw_bitmap) {
 };
 
 function on_get_album_art_done(metadb, art_id, image, image_path) {
-
-    /*
-    if (art_id == AlbumArtId.front && !image) {
-        if (metadb) {
-            image_cache.hit(metadb, AlbumArtId.front, this.
-            */
-
 
     for (var i = 0, len = pl.groups.length; i < len; i++) {
         //var name = pl.groups[i].name;
@@ -924,8 +919,8 @@ PlManager = function () {
 
     this.load_fonts = function() {
         this.text_font = gdi.Font(g_fonts.name, z11);
-        this.ico_font = gdi.Font("FontAwesome", z14);
-        this.mnlt2_font = gdi.Font("mnlt2", z7);
+        this.ico_font = gdi.Font("Segoe MDL2 Assets", z14);
+        this.mnlt2_font = gdi.Font("Segoe MDL2 Assets", z7);
         this.edit_font = gdi.Font("Tahoma", z11);
     }
     this.load_fonts();
@@ -983,12 +978,12 @@ PlManager = function () {
 
                 // Icon
                 
-                ico = "\uF0C9";
+                ico = "\uE700";
 
                 if (this.playlist[i].is_auto) {
-                    ico = "\uF013";
+                    ico = "\uE713";
                 } else if (this.playlist[i].name.indexOf(__("Search [")) == 0) {
-                    ico = "\uF002";
+                    ico = "\uE721";
                 }
 
                 gr.SetTextRenderingHint(g_image_txt_rendering);
@@ -1450,7 +1445,7 @@ Item = function(metadb, type, list_index, group_index) {
 
 Playlist = function(mode) {
 
-    this.padding_h = window.GetProperty("pl: " + __("Padding left/right"), 20);
+    this.padding_h = window.GetProperty("pl: " + __("Padding left/right"), 0);
     this.padding_v = window.GetProperty("pl: " + __("Padding top/bottom"), 0);
 
     this.padding_h = zoom(this.padding_h, g_dpi);
@@ -1711,7 +1706,7 @@ Playlist = function(mode) {
                         var gh = this.group_header_rows * rh;
 
                         // >> Bg
-                        gr.FillSolidRect(rx, gy, rw, gh-1, g_colors.txt_normal & 0x10ffffff);
+                        //gr.FillSolidRect(rx, gy, rw, gh-1, g_colors.txt_normal & 0x10ffffff);
 
                         var backcolor_sel = setAlpha(g_colors.bg_selected, properties.selection_alpha);
                         var backcolor_light = (Luminance(backcolor_sel) > 0.6);
@@ -1725,7 +1720,7 @@ Playlist = function(mode) {
                         // >> Cover
                         var img = image_cache.hit(metadb, AlbumArtId.front, this.groups[g].name);
 
-                        var p = 1;
+                        var p = 8;
                         cover.max_width = gh - p * 2 - 1;
 
                         var cx = rx + p;
@@ -1743,6 +1738,8 @@ Playlist = function(mode) {
                             gr.DrawImage(images.loading,cx, cy, cw, cw, 0, 0, cw, cw, 0, 225);
                         }
 
+                        gr.FillSolidRect(cover.x + cover.w + z10, gy+gh-1, rx - cover.x + rw - cover.w - z10, 1, g_colors.txt_normal & 0x10ffffff);
+
                         // >> Text
                         var tags = tf_group_header.EvalWithMetadb(metadb).split("|||");
                         var p = z10;
@@ -1755,7 +1752,7 @@ Playlist = function(mode) {
                         }
 
 
-                        var l1y = gy + (gh - z40) / 2;
+                        var l1y = gy + (gh - 50) / 2;
 
                         //
                         var album_x = cover.x + cover.w + z10;
@@ -1763,7 +1760,7 @@ Playlist = function(mode) {
                         gr.GdiDrawText(tags[0], g_fonts.header1, color_l1, album_x, l1y, album_w, gh, DT_LT);
 
                         var color_l2 = color_l1;
-                        var l2y = l1y+z25;
+                        var l2y = l1y+30;
 
                         //
                         var artist_x = album_x;
@@ -1790,9 +1787,9 @@ Playlist = function(mode) {
                         */
 
                         // Draw row split line
-                        if (!properties.show_group_header || properties.show_row_split_line && (this.groups[row.group_index].last != l)) {
+                        //if (!properties.show_group_header || properties.show_row_split_line && (this.groups[row.group_index].last != l)) {
                             gr.FillSolidRect(rx, ry+rh-1, rw, 1, 0x10ffffff & g_colors.txt_normal);
-                        }
+                        //}
 
                         if (is_selected) {
                             txt_color = g_colors.txt_selected;
@@ -1834,7 +1831,7 @@ Playlist = function(mode) {
 
                         if (is_playing) {
 
-                            gr.GdiDrawText(fb.IsPaused ? "\uF003" : "\uF002", gdi.Font("mnlt2", z12), txt_color, tn_x, l1y, tn_w, l1h, DT_RC);
+                            gr.GdiDrawText(fb.IsPaused ? "\uE103" : "\uE102", g_fonts.mdl2, txt_color, tn_x, l1y, tn_w, l1h, DT_RC);
 
                         } else {
                             var queue_index = plman.FindPlaybackQueueItemIndex(metadb, g_active_pl, l);
@@ -2624,6 +2621,9 @@ Playlist = function(mode) {
 
     }
 
+    this.on_drag = function(event, x, y) {
+    }
+
     this.context_menu = function (x, y) {
 
         var _menu = window.CreatePopupMenu();
@@ -3117,16 +3117,17 @@ image_cache = new ImageCache();
 
 window.DlgCode = DLGC_WANTALLKEYS;
 
-var z380 = zoom(380, g_dpi);
+var z320 = zoom(320, g_dpi);
 var z20 = zoom(20, g_dpi);
 var z4 = zoom(4, g_dpi);
 var z60 = zoom(60, g_dpi);
 var z240 = zoom(240, g_dpi);
 var z225 = zoom(225, g_dpi);
+var z15 = zoom(15, g_dpi);
 
 function on_size() {
 
-    ww = Math.max(z380, window.Width);
+    ww = Math.max(z320, window.Width);
     wh = window.Height;
 
     pl.set_size(0, properties.toolbar_height, ww, wh - properties.toolbar_height);
@@ -3136,7 +3137,7 @@ function on_size() {
         plm.set_size(ww-z240, properties.toolbar_height + z5, z225, rows * plm.row_height);
     }
 
-    var bx = z20, by = (properties.toolbar_height - z25) / 2;
+    var bx = z15, by = (properties.toolbar_height - z25) / 2;
     for (var i = 0; i < 3; i++) {
         bt[i].set_xy(bx, by);
         bx += (bt[i].w + z4);
@@ -3173,7 +3174,7 @@ function on_paint(gr) {
 
     txt = ", " + pl.track_total + (pl.track_total > 1 ?__(" tracks") : __(" track"));
     txt_w = gr.CalcTextWidth(txt, g_fonts.info_header);
-    txt_x = pl.list_x+pl.list_w - txt_w;
+    txt_x = pl.list_x+pl.list_w - txt_w - 10;
     gr.GdiDrawText(txt, g_fonts.info_header, g_colors.txt_normal, txt_x, 0, txt_w, properties.toolbar_height, DT_CC);
 
     var txt_x2 = Math.max(txt_x - gr.CalcTextWidth(pl.list_name, g_fonts.info_header), bt[2].x + bt[2].w + bt[3].w + z10);
@@ -3194,6 +3195,8 @@ function on_paint(gr) {
         gr.SetSmoothingMode(0);
 
         bt[4].draw(gr);
+    } else {
+        bt[4].x = -100;
     }
 
 }
@@ -3303,6 +3306,37 @@ function on_mouse_leave() {
             bt[i].reset();
         }
     }
+}
+
+//// drag&drop callbacks
+
+function on_drag_drop (action, x, y, mask) {
+
+    var idx;
+
+    if (!fb.PlaylistCount) {
+        idx = plman.CreatePlaylist(0, __("Default"));
+        plman.ActivePlaylist = 0;
+    } else {
+        plman.ClearPlaylistSelection(g_active_pl);
+        idx = g_active_pl;
+    }
+
+    if (idx != undefined) {
+        action.ToPlaylist();
+        action.Playlist = idx;
+        action.ToSelect = true;
+    }
+
+}
+
+function on_drag_enter(action, x, y, mask) {
+}
+
+function on_drag_leave() {
+}
+
+function on_drag_over(action, x, y, mask) {
 }
 
 //// Playlist callback
@@ -3538,6 +3572,11 @@ function on_key_down(vkey) {
                 CollectGarbage();
                 pl.repaint();
                 break;
+            case VK_ESCAPE:
+                if (plm.visible) {
+                    toggle_show_plmanager();
+                }
+                break;
             case VK_KEY_X:
                 pl.cut();
                 break;
@@ -3681,9 +3720,14 @@ function on_notify_data(name, info) {
         case "Refresh Cover":
             image_cache = new ImageCache();
             window.Repaint();
+            break;
+        case "Drag enter files":
+            pl.scrollbar.step_offset(-pl.total_h);
+            window.Repaint();
+            break;
+
     }
 }
-
 
 
 // -----------------END------------------------------------------------------------------

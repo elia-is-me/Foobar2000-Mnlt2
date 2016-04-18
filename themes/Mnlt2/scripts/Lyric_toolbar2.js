@@ -43,7 +43,7 @@ var COLOR_SCHEME = [
     txt_normal: eval(window.GetProperty(__("Color text normal"), "RGB(70, 70, 70)")),
     txt_selected: eval(window.GetProperty(__("Color text selected"), "RGB(0, 0, 0)")),
     bg_normal: eval(window.GetProperty(__("Color background normal"), "RGB(245, 245, 245)")),
-    bg_selected: eval(window.GetProperty(__("Color background selected"), "RGB(180, 180, 180)")),
+    bg_selected: eval(window.GetProperty(__("Color background selected"), "RGB(110, 110, 110)")),
     highlight: eval(window.GetProperty(__("Color highlight"), "RGB(215, 65, 100)"))
 }
 ];
