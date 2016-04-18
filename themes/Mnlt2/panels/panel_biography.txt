@@ -1,0 +1,6 @@
+﻿// ==PREPROCESSOR==
+// @feature "v1.4"
+// @feature "watch-metadb"
+// @import "%fb2k_profile_path%skins\Mnlt2\common\common3.js"
+// @import "%fb2k_profile_path%skins\Mnlt2\Scripts\Biography.js"
+// ==/PREPROCESSOR==

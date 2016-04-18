@@ -1,0 +1,5 @@
+﻿// ==PREPROCESSOR==
+// @feature "dragdrop"
+// @import "%fb2k_profile_path%themes\Mnlt2\common\common4.js"
+// @import "%fb2k_profile_path%themes\Mnlt2\scripts\Bottom3.js"
+// ==/PREPROCESSOR==
