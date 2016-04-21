@@ -2,8 +2,8 @@
 // @feature "v1.4"
 // @feature "watch-metadb"
 // @feature "dragdrop"
-// @import "%fb2k_profile_path%skins\Mnlt2\common\common3.js"
-// @import "%fb2k_profile_path%Skins\Mnlt2\common\inputbox.js"
-// @import "%fb2k_profile_path%skins\Mnlt2\Scripts\Playlist.js"
+// @import "%fb2k_profile_path%themes\Mnlt2\common\common3.js"
+// @import "%fb2k_profile_path%themes\Mnlt2\common\inputbox.js"
+// @import "%fb2k_profile_path%themes\Mnlt2\Scripts\Playlist.js"
 // ==/PREPROCESSOR==
 
