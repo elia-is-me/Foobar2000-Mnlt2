@@ -925,6 +925,8 @@ PlManager = function () {
     }
     this.load_fonts();
 
+
+    // => Draw playlist manager
     this.draw = function(gr) {
 
         if (!this.visible || this.h < this.row_height*2) {
@@ -1663,6 +1665,8 @@ Playlist = function(mode) {
         return true;
     }
 
+
+    // Draw playlist items
 
     this.draw = function(gr) {
 
