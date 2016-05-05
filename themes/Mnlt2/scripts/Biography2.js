@@ -96,6 +96,16 @@ get_fonts();
 on_metadb_changed();
 
 
+function get_douban_info () {
+
+}
+
+function search_douban () {
+
+}
+
+
+
 
 // Callbacks
 
@@ -294,4 +304,46 @@ function get_fonts() {
 	Fonts.item = gdi.Font(Fonts.name, 12);
 	Fonts.header = gdi.Font(Fonts.name, 14);
 
+}
+
+
+function stripTags(value) {
+	doc.open();
+	var div = doc.createElement("div");
+	div.innerHTML = value.toString().replace(/<[Pp][^>]*>/g, "").replace(/<\/[Pp]>/g, "<br>").replace(/\n/g, "<br>");
+	value = div.innerText.trim();
+	doc.close();
+	return value;
+}
+
+function getElementsByTagName(value, tag) {
+	doc.open();
+	var div = doc.createElement("div");
+	div.innerHTML = value;
+	var data = div.getElementsByTagName(tag);
+	doc.close();
+	return data;
+};
+
+
+function processLineWrap(string, font, width) {
+	var tmp = gdi.CreateImage(1, 1);
+	var g = tmp.GetGraphics();
+	var result = [];
+	var paragraphs = string.split("\n");
+	var l = paragraphs.length;
+	var lines;
+	//alert(paragraphs[0]);
+	for (var i = 0; i < l; i++) {
+		lines = g.EstimateLineWrap(paragraphs[i], font, width).toArray();
+		//alert(lines[0]);
+		var l2 = lines.length;
+		for (var j = 0; j < l2; j+= 2) {
+			result.push(lines[j].trim());
+		}
+	}
+	tmp.ReleaseGraphics(g);
+	tmp.Dispose();
+
+	return result;
 }

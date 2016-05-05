@@ -103,6 +103,8 @@ var DT_LC = DT_VCENTER | DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
 var ww = 0,
 	wh = 0;
 
+var double_clicked = false;
+
 var images = {};
 var bt = [];
 var sk, vol;
@@ -160,7 +162,15 @@ vol = new Slider(images.nob,
 vol.visible = true;
 // -> create buttons
 bt[0] = new Button(function () {fb.Prev() });
-bt[1] = new Button(function () {fb.PlayOrPause() });
+bt[1] = new Button(function () {
+    if (double_clicked) {
+        if (fb.IsPlaying) {
+            fb.Stop();
+        }
+    } else {
+        fb.PlayOrPause();
+    }
+});
 bt[2] = new Button(function () {fb.Next() });
 bt[3] = new Button(function () {
 	var order = fb.PlaybackOrder;
@@ -398,6 +408,9 @@ function on_mouse_lbtn_up(x, y, mask) {
 			return true;
 		}
 	});
+    if (double_clicked) {
+        double_clicked = false;
+    }
 }
 
 function on_mouse_rbtn_up(x, y, mask) {
@@ -405,11 +418,16 @@ function on_mouse_rbtn_up(x, y, mask) {
 }
 
 function on_mouse_lbtn_dblclk(x, y, mask) {
+    double_clicked = true;
 	on_mouse_lbtn_down(x, y, mask);
 }
 
 function on_mouse_leave() {
 	bt.forEach(function (b) { b.leave() });
+}
+
+function on_playback_seek(time) {
+    on_playback_time(time);
 }
 
 function on_playback_time(time) {
