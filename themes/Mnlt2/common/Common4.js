@@ -167,6 +167,7 @@ function Slider (nob_img, func_get, func_set) {
 	})();
 
 	this.pos = this.get();
+    this.is_drag = false;
 }
 
 Slider.prototype.draw = function(gr, x, y, w, h, y_offset, active_color, inactive_color) {
@@ -175,6 +176,7 @@ Slider.prototype.draw = function(gr, x, y, w, h, y_offset, active_color, inactiv
 	}
 	// 进度条背景
 	gr.FillSolidRect(x, y+y_offset, w, h - y_offset * 2, inactive_color);
+    // 进度
 	if (this.pos > 0 && this.pos <= 1) {
 		gr.FillSolidRect(x, y+y_offset, w * this.pos, h-y_offset*2, active_color);
 	}
@@ -184,8 +186,7 @@ Slider.prototype.draw = function(gr, x, y, w, h, y_offset, active_color, inactiv
 		if (!(this.pos >= 0)) {
 			this.pos = 0;
 		}
-		gr.DrawImage(this.nob_img, x+w*this.pos - img_w/2, (h - img_w)/2+y, img_w, img_w,
-				0, 0, img_w, img_w, 0, 255);
+		gr.DrawImage(this.nob_img, x+w*this.pos - img_w/2, (h - img_w)/2+y, img_w, img_w, 0, 0, img_w, img_w, 0, 255);
 	};
 
 	this.x = x;

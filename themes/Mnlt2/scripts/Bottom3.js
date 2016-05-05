@@ -104,6 +104,7 @@ var ww = 0,
 	wh = 0;
 
 var double_clicked = false;
+var nob_pressed = false;
 
 var images = {};
 var bt = [];
@@ -159,7 +160,7 @@ vol = new Slider(images.nob,
 		function (pos) {
 			fb.Volume = pos2vol(pos);
 		});
-vol.visible = true;
+
 // -> create buttons
 bt[0] = new Button(function () {fb.Prev() });
 bt[1] = new Button(function () {
@@ -296,14 +297,23 @@ function on_paint (gr) {
 		bt_x += (bt_w + pad);
 	}
 
+
     // draw volume bar
     if (vol_panel.visible) {
         // vol panel bg
-        vol_panel.x = bt[4].x - 120;
-        vol_panel.y = bt[4].y - 30;
+        if (ww < 930) {
+            vol_panel.x = bt[4].x + bt[4].w/2 - vol_panel.w/2;
+            if (vol_panel.x + vol_panel.w + 2 > ww) {
+                vol_panel.x = ww - 2 - vol_panel.w;
+            }
+            vol_panel.y = 2;
+        } else {
+            vol_panel.x = bt[4].x - vol_panel.w - bt[4].w/2;
+            vol_panel.y = (wh - vol_panel.h) / 2;
+        }
         gr.SetSmoothingMode(2);
-        gr.FillRoundRect(vol_panel.x, vol_panel.y, vol_panel.w, vol_panel.h, 4, 4, RGB(30, 30, 30));
-        gr.DrawRoundRect(vol_panel.x, vol_panel.y, vol_panel.w-1, vol_panel.h-1, 4, 4, 1, 0x25ffffff & Panel.colors.slider_active);
+        gr.FillSolidRect(vol_panel.x, vol_panel.y, vol_panel.w, vol_panel.h, RGB(30, 30, 30));
+        gr.DrawRect(vol_panel.x, vol_panel.y, vol_panel.w-1, vol_panel.h-1, 2, 0x55ffffff & Panel.colors.slider_active);
         gr.SetSmoothingMode(0);
         // vol value
         gr.GdiDrawText(Math.round(fb.Volume+100), time_font, text_color, vol_panel.x, vol_panel.y, 40, vol_panel.h, DT_CC);
@@ -357,7 +367,7 @@ function on_metadb_changed (handle_list, fromhook) {
         return;
     }
 
-    var metadb = fb.IsPlaying ? fb.GetNowPlaying() : fb.GetFocusItem(true);
+    var metadb = fb.IsPlaying ? fb.GetNowPlaying() : null;
     if (metadb) {
         // get cover
         utils.GetAlbumArtAsync(window.ID, metadb, AlbumArtId.front);
@@ -366,7 +376,7 @@ function on_metadb_changed (handle_list, fromhook) {
         artist_text = $("$if2([%album artist%],'...')", metadb);
     } else {
         cover.img = null;
-        album_text = "Unknown album";
+        album_text = "Stop!";
         artist_text = "...";
     }
     window.Repaint();
@@ -388,7 +398,8 @@ function on_mouse_move (x, y) {
 }
 
 function on_mouse_lbtn_down (x, y, mask) {
-    if (vol_panel.visible && is_over_rect(x, y, vol_panel.x, vol_panel.y, vol_panel.w, vol_panel.h)) {
+    var over_vol_panel = vol_panel.visible && is_over_rect(x, y, vol_panel.x, vol_panel.y, vol_panel.w, vol_panel.h)
+    if (over_vol_panel ) {
         vol.down(x, y);
     } else {
         if (fb.IsPlaying) {
@@ -396,14 +407,22 @@ function on_mouse_lbtn_down (x, y, mask) {
         }
     }
 
-	bt.find(function (b) { return b.down(x, y) });
+	bt.forEach(function (b) { 
+        if (!over_vol_panel) {
+            b.down(x, y);
+            return true;
+        }
+    });
 }
 
 function on_mouse_lbtn_up(x, y, mask) {
 	sk.up(x, y);
     vol.up(x, y);
+
+    var over_vol_panel = vol_panel.visible && is_over_rect(x, y, vol_panel.x, vol_panel.y, vol_panel.w, vol_panel.h)
+
 	bt.forEach(function (b) {
-		if (b.up(x, y)) {
+		if (!over_vol_panel && b.up(x, y)) {
 			b.on_click(x, y);
 			return true;
 		}
@@ -486,6 +505,7 @@ function on_drag_drop (action, x, y, mask) {
 }
 
 function on_volume_change(val) {
+    vol.update();
 }
 
 
