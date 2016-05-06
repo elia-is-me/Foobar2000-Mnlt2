@@ -1611,7 +1611,6 @@ Playlist = function(mode) {
                         this.rows[r++] = new Item(metadb, -1, null, g-1);
                     }
                 }
-                //var ta = Math.max(properties.extra_group_rows, 5);
                 var ta = properties.extra_group_rows;
                 for (var k = 0; k < ta; k++) {
                     this.rows[r++] = new Item(null, -2, null, g-1);
