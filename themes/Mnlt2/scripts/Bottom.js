@@ -408,9 +408,11 @@ function on_mouse_lbtn_down (x, y, mask) {
     if (over_vol_panel ) {
         vol.down(x, y);
     } else {
-        vol_panel.visible = false;
         if (fb.IsPlaying) {
             sk.down(x, y);
+        }
+        if (!bt[4].is_mouse_over(x, y) && vol_panel.visible) {
+            vol_panel.visible = false;
         }
         window.Repaint();
     }
@@ -421,6 +423,7 @@ function on_mouse_lbtn_down (x, y, mask) {
             return true;
         }
     });
+
 }
 
 function on_mouse_lbtn_up(x, y, mask) {

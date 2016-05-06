@@ -17,6 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
+/*
 var Language = new function() {
 
 	var lang = window.GetProperty("界面语言(lang)(cn:中文, en: English)", "auto").toLowerCase();
@@ -60,8 +61,10 @@ var Language = new function() {
 function lmap (name) {
 	return Language.Map(name);
 }
+*/
 
 
+/*
 var fso = new ActiveXObject("Scripting.FileSystemObject");
 var Img = new ActiveXObject("WIA.ImageFile.1");
 var IP = new ActiveXObject("WIA.ImageProcess.1");
@@ -70,6 +73,7 @@ IP.Filters.Add(IP.FilterInfos("Crop").FilterID);//ID = 2
 IP.Filters.Add(IP.FilterInfos("Convert").FilterID);//ID = 3
 var WshShell = new ActiveXObject("WScript.Shell");
 var htmlfile = new ActiveXObject('htmlfile');
+*/
 
 var g_font = gdi.Font("Segoe Ui", 12, 0);
 var time_f = fb.CreateProfiler("time_f"),
@@ -83,6 +87,7 @@ var mouse_l_hold_f = false,
     repaint_main1 = false,
     repaint_main2 = false,
     repaint_main = true,
+    repaint_forced = false,
     hold_shift = false,
     mouse_in = false,
     hold_scroll = false,
@@ -96,6 +101,8 @@ var ww = window.Width,
 
 var mouse_x = 0,
     mouse_y = 0;
+
+var window_vis = false;
 
 var start = 0,
     end = 0,
@@ -187,8 +194,9 @@ function on_paint (gr) {
         return;
     }
 
-    if (repaint_main) {
+    if (repaint_main || !repaint_forced) {
         repaint_main = false;
+        repaint_forced = false;
 
         if (list.length < 1) {
             return;
@@ -213,7 +221,7 @@ function on_paint (gr) {
             gr.GdiDrawText(list[i].title, font_1, 0xff000000, 32, y_, ww-32-54, row_height, DT_LC);
         }
 
-        var lenf_ = row_height * Math.round(list.length + 0.499);
+        var lenf_ = row_height * list.length;
         var scr2_ = Math.min(Math.round(wh * wh / lenf_) + 1, wh);
         if (list.length * row_height > wh) {
             max_scroll = lenf_;
@@ -241,10 +249,15 @@ function on_mouse_wheel(step) {
 }
 
 var g_time = window.SetInterval(function() {
-    if (!window.IsVisible || ww == 0 || wh == 0) {
+    if (!window.IsVisible) {
+        window_vis = false;
         return;
     }
-    var repaint_1 = repaint_2 = false;
+    var repaint_2 = false;
+    if (!window_vis) {
+        window_vis = true;
+    }
+
     time_dl = time_scroll.Time;
     time_scroll.Reset();
     if (scroll < 0) {
@@ -263,18 +276,45 @@ var g_time = window.SetInterval(function() {
         repaint_2 = true;
     }
     ////////////////////////////////////////////////////////////////////////////////////
-    if (repaint_1 && repaint_2) {
+    if (repaint_2) {
         repaint_main = true;
-        window.Repaint();
-    } else if (repaint_1) {
-    } else if (repaint_2) {
-        repaint_main = true;
+        repaint_forced = true;
         window.Repaint();
     }
-}, 30);
+}, 16);
+
+function on_mouse_lbtn_down(x, y, mask) {
+    if (x > ww - 8) {
+        hold_scroll = true;
+        scroll = (y * max_scroll / wh) - wh/2;
+    }
+}
+
+function on_mouse_move(x, y) {
+    if (mouse_x == x && mouse_y == y){
+        return;
+    }
+    if (hold_scroll) {
+        scroll = (y * max_scroll / wh) - wh / 2;
+    }
+    mouse_x = x;
+    mouse_y = y;
+}
+
+function on_mouse_leave() {
+    mouse_x = mouse_y = 0;
+    hold_scroll = false;
+    repaint();
+}
+
+function on_mouse_lbtn_up(x, y, mask) {
+    hold_scroll = false;
+    scroll = Math.round(scroll / row_height) * row_height;
+}
 
 
 
+/*
 on_load();
 
 function on_load(){
@@ -334,3 +374,4 @@ function on_load(){
     }
 
 }
+*/
