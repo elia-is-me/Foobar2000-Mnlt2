@@ -11,6 +11,8 @@
 // -> WSH Panel Mod Plus 1.5.7+
 //
 // Update: 2016-05-06
+//
+// 技术验证用，请勿用于日常使用。
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +87,9 @@ var mouse_l_hold_f = false,
     mouse_in = false,
     hold_scroll = false,
     isvisible = false;
+var shift_index = 0,
+    time_reset_loading = 30,
+    max_scroll = window.Height;
 
 var ww = window.Width,
     wh = window.Height;
@@ -98,6 +103,7 @@ var start = 0,
     time_dl = 0;
 
 var scroll = 0, scroll_ = 0;
+var scr1 = 0, scr2 = window.Height;
 
 var list = [], list_al = [], list_ar = [], list_ge = [],
     list_dr = [], list_img = [];
@@ -108,8 +114,15 @@ var tf_group = fb.TitleFormat("[%album artist%]^^[%album%]");
 var tf_title = fb.TitleFormat("%title%");
 var tf_artist = fb.TitleFormat("[%artist%]");
 var tf_rating = fb.TitleFormat("[%rating%]");
-var tf_tracknumber = fb.TitleFormat("%if2([%tracknumber%],-)");
+var tf_tracknumber = fb.TitleFormat("$if2([%track number%],-)");
 var tf_length = fb.TitleFormat("%length%");
+
+var DT_LT = DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
+var DT_LC = DT_LT | DT_VCENTER | DT_LT;
+var DT_RC = DT_RIGHT | DT_VCENTER | DT_LT;
+var DT_CC = DT_CENTER | DT_VCENTER | DT_LT;
+
+var font_1 = gdi.Font("Segoe Ui", 12);
 
 window.DlgCode = 0x0081;
 
@@ -119,11 +132,11 @@ function on_size() {
     if (ww == 0 || wh == 0) {
         return;
     }
-    /*
-     var scroll_t = xx;
-     */
-    //max_scroll = scroll_ + ww;
+    var scroll_t = Math.floor(scroll / row_height);
+    scroll_ = scroll = scroll_t * row_height;
+    max_scroll = scroll_ + wh;
     row_count = Math.ceil(wh / row_height);
+    repaint();
 }
 
 function repaint () {
@@ -154,7 +167,7 @@ function load_list(reload) {
         item.idx = k;
         item.title = tf_title.EvalWithMetadb(item.metadb);
         item.tracknumber = tf_tracknumber.EvalWithMetadb(item.metadb);
-        item.length = tf_length.EvalWithMetadb(item.metadb);
+        item.duration = tf_length.EvalWithMetadb(item.metadb);
         list.push(item);
         count++;
         k++;
@@ -164,8 +177,9 @@ function load_list(reload) {
 
 var t____ = window.SetTimeout(function() {
     init_list();
+    repaint();
     window.ClearTimeout(t____);
-}, 800);
+}, 200);
 
 function on_paint (gr) {
 
@@ -173,7 +187,7 @@ function on_paint (gr) {
         return;
     }
 
-    //if (repaint_main) {
+    if (repaint_main) {
         repaint_main = false;
 
         if (list.length < 1) {
@@ -181,22 +195,82 @@ function on_paint (gr) {
         }
 
         var row_h = 24;
-        start = Math.max(0, Math.round(scroll_ / row_height));
-        end = Math.min(start+row_count, list.length-1);
+        start = Math.max(0, Math.round(scroll_ / row_height + 0.4));
+        //end = Math.min(start+row_count, list.length-1);
+        end = Math.round((scroll_ + wh) / row_height - 0.5);
+        end = (list.length < end) ? list.length : end;
+        var sss = (1 - Math.pow(0.9, time_dl / 10));
 
         for (var i = start; i < end; i++) {
-            gr.FillSolidRect(2, 2 + (i-start) * row_height, 100, row_height - 4, 0x55000000);
+            //var y_ = (i-start) * row_height;
+            var y_ = (i + 0.1) * row_height - scroll_;
+            var ry = (i-start) * row_height;
+            if (i % 2) {
+                gr.FillSolidRect(2, y_, ww - 4 - 4, row_height, 0x10000000);
+            }
+            gr.GdiDrawText(list[i].tracknumber, font_1, 0xff000000, 2, y_, 30, row_height, DT_CC);
+            gr.GdiDrawText(list[i].duration, font_1, 0xff000000, ww-4-50, y_, 50, row_height, DT_CC);
+            gr.GdiDrawText(list[i].title, font_1, 0xff000000, 32, y_, ww-32-54, row_height, DT_LC);
         }
 
-    //}
+        var lenf_ = row_height * Math.round(list.length + 0.499);
+        var scr2_ = Math.min(Math.round(wh * wh / lenf_) + 1, wh);
+        if (list.length * row_height > wh) {
+            max_scroll = lenf_;
+        }
+        scr1 = scroll_ / lenf_ * wh;
+        scr2 += (scr2_ - scr2) * sss;
+        if (scr2 < wh) {
+            gr.DrawLine(ww-4, 0, ww-4, wh, 7, 0x60000000);
+            gr.DrawLine(ww-4, scr1, ww-4, scr1+scr2, 5, 0xa0ffffff);
+            ((scr2_ - scr2) * sss > 1) && repaint();
+        }
+
+    }
+}
+
+function on_mouse_wheel(step) {
+    scroll -= step * row_height * 3;
+    if (scroll < 0 || (list.length * row_height < ww)) {
+        scroll = 0;
+    }
+    if (scroll > max_scroll - wh) {
+        scroll = max_scroll - wh;
+    }
+    time_reset_loading = 30;
 }
 
 var g_time = window.SetInterval(function() {
     if (!window.IsVisible || ww == 0 || wh == 0) {
         return;
     }
-
     var repaint_1 = repaint_2 = false;
+    time_dl = time_scroll.Time;
+    time_scroll.Reset();
+    if (scroll < 0) {
+        scroll = 0;
+    } else if (scroll + wh > max_scroll) {
+        scroll = max_scroll - wh;
+    }
+    if (Math.abs(scroll - scroll_) > 0.4) {
+        scroll_ += (scroll - scroll_) * (1-Math.pow(0.9, time_dl / 12));
+        repaint_2 = true;
+    }
+    end = Math.min(end, list.length);
+    
+    if (repaint_main1 == repaint_main2) {
+        repaint_main2 = !repaint_main1;
+        repaint_2 = true;
+    }
+    ////////////////////////////////////////////////////////////////////////////////////
+    if (repaint_1 && repaint_2) {
+        repaint_main = true;
+        window.Repaint();
+    } else if (repaint_1) {
+    } else if (repaint_2) {
+        repaint_main = true;
+        window.Repaint();
+    }
 }, 30);
 
 

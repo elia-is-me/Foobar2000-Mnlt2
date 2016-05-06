@@ -384,6 +384,11 @@ function on_metadb_changed (handle_list, fromhook) {
 
 }
 
+function on_mouse_wheel(step) {
+    if (vol_panel.visible) {
+        fb.Volume += step * Math.exp(-fb.Volume / 33.333);
+    }
+}
 
 function on_mouse_move (x, y) {
 	if (fb.IsPlaying) {
@@ -403,9 +408,11 @@ function on_mouse_lbtn_down (x, y, mask) {
     if (over_vol_panel ) {
         vol.down(x, y);
     } else {
+        vol_panel.visible = false;
         if (fb.IsPlaying) {
             sk.down(x, y);
         }
+        window.Repaint();
     }
 
 	bt.forEach(function (b) { 
