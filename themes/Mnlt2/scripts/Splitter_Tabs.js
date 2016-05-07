@@ -159,6 +159,7 @@ function show_panel(id) {
 			$Splitter.ShowPanel(i, 0);
 		};
 	};
+    // always show search panel
     $Splitter.ShowPanel(4, 1);
 };
 

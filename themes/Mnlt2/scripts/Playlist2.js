@@ -145,6 +145,7 @@ function on_size() {
     row_count = Math.ceil(wh / row_height);
     repaint();
 }
+on_size();
 
 function repaint () {
     repaint_main1 = repaint_main2;
@@ -211,7 +212,7 @@ function on_paint (gr) {
 
         for (var i = start; i < end; i++) {
             //var y_ = (i-start) * row_height;
-            var y_ = (i + 0.1) * row_height - scroll_;
+            var y_ = (i + 0.0) * row_height - scroll_;
             var ry = (i-start) * row_height;
             if (i % 2) {
                 gr.FillSolidRect(2, y_, ww - 4 - 4, row_height, 0x10000000);
@@ -238,8 +239,8 @@ function on_paint (gr) {
 }
 
 function on_mouse_wheel(step) {
-    scroll -= step * row_height * 3;
-    if (scroll < 0 || (list.length * row_height < ww)) {
+    scroll -= step * row_height * row_count;
+    if (scroll < 0 || (list.length * row_height < wh)) {
         scroll = 0;
     }
     if (scroll > max_scroll - wh) {

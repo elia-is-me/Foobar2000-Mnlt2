@@ -17,3 +17,15 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 
 
+var DT_LT = DT_CALCRECT | DT_END_ELLIPSIS | DT_NOPREFIX;
+var DT_LC = DT_LT | DT_VCENTER | DT_LT;
+var DT_RC = DT_RIGHT | DT_VCENTER | DT_LT;
+var DT_CC = DT_CENTER | DT_VCENTER | DT_LT;
+
+var time_f = fb.CreateProfiler("time_f"),
+    time_s = fb.CreateProfiler("time_s"),
+    time_r = fb.CreateProfiler("time_r"),
+    time_h = fb.CreateProfiler(),
+    time_scroll = fb.CreateProfiler("Time delay paint");
+
+
