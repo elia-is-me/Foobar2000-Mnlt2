@@ -12,6 +12,7 @@ $Splitter.CreatePanel(PanelClassNames.WSHMP, 1, true); // wsh extra 1
 $Splitter.CreatePanel(PanelClassNames.WSHMP, 2, true); // Wsh extra 2
 
 
+
 $Splitter.ShowPanel(0, 1);
 $Splitter.ShowPanel(1, 1);
 $Splitter.ShowPanel(2, 0); //WSH 1: xiami cover download panel

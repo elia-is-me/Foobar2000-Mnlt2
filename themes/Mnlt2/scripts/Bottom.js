@@ -324,7 +324,7 @@ function on_paint (gr) {
     // draw cover & album info
     cover.visible = (ww >= 510);
 
-    if (cover.visible) {
+    if (cover.visible && fb.IsPlaying) {
 
         // calc cover y
         cover.x = 10;
@@ -377,8 +377,8 @@ function on_metadb_changed (handle_list, fromhook) {
         artist_text = $("$if2([%album artist%],'...')", metadb);
     } else {
         cover.img = null;
-        album_text = "Stop!";
-        artist_text = "...";
+        album_text = "";
+        artist_text = "";
     }
     window.Repaint();
 
